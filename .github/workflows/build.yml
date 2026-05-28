@@ -22,13 +22,14 @@ jobs:
     - name: Setup Android SDK
       uses: android-actions/setup-android@v3
 
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+    - name: Install Gradle
+      run: |
+        sdk install gradle 8.5 2>/dev/null || true
+        cd $GITHUB_WORKSPACE
+        gradle wrapper --gradle-version 8.5
 
     - name: Build with Gradle
-      run: ./gradlew assembleDebug --no-daemon
-      env:
-        CI: true
+      run: ./gradlew assembleDebug --no-daemon --stacktrace
 
     - name: Upload APK
       uses: actions/upload-artifact@v4
