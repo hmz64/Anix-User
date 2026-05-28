@@ -30,7 +30,7 @@ data class RegisterRequest(
 )
 
 data class AuthResponse(
-    val token: String,
+    @SerializedName("access_token") val token: String,
     val user: User
 )
 
@@ -44,11 +44,12 @@ data class User(
     val level: Int = 1,
     val xp: Int = 0,
     val xpToNextLevel: Int = 100,
-    val premium: Boolean = false,
-    val premiumExpiresAt: String? = null,
-    val privacyMode: Boolean = false,
+    val bio: String = "",
+    @SerializedName("is_premium") val premium: Boolean = false,
+    @SerializedName("privacy_setting") val privacySetting: String = "public",
+    val role: String = "user",
     val createdAt: String = "",
-    val role: String = "user"
+    val lastActiveAt: String? = null
 )
 
 data class UserSession(
@@ -72,7 +73,7 @@ data class UpdateBannerRequest(
 )
 
 data class PrivacyRequest(
-    val privacyMode: Boolean
+    @SerializedName("privacy_setting") val privacySetting: String = "public"
 )
 
 data class ToggleFavoriteRequest(
@@ -80,8 +81,8 @@ data class ToggleFavoriteRequest(
 )
 
 data class UpdateProgressRequest(
-    val episodeId: String,
-    val position: Int,
+    @SerializedName("episode_id") val episodeId: String,
+    val progress: Int = 0,
     val completed: Boolean = false
 )
 

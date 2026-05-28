@@ -51,7 +51,7 @@ interface ApiService {
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<AnimeSeries>>>
 
-    @GET("api/anime/genres")
+    @GET("api/genres")
     suspend fun getGenres(): Response<ApiResponse<List<Genre>>>
 
     @GET("api/anime/{id}")
@@ -61,112 +61,127 @@ interface ApiService {
     suspend fun getAnimeEpisodes(@Path("id") id: String): Response<ApiResponse<List<Episode>>>
 
     // Episode
-    @GET("api/episode/{id}")
-    suspend fun getEpisodeDetail(@Path("id") id: String): Response<ApiResponse<Episode>>
+    @GET("api/episode/{episodeId}")
+    suspend fun getEpisodeDetail(@Path("episodeId") id: String): Response<ApiResponse<Episode>>
 
-    @GET("api/episode/{id}/streams")
-    suspend fun getEpisodeStreams(@Path("id") id: String): Response<ApiResponse<List<EpisodeStream>>>
+    @GET("api/episode/{episodeId}/streams")
+    suspend fun getEpisodeStreams(@Path("episodeId") id: String): Response<ApiResponse<List<EpisodeStream>>>
+
+    @POST("api/play/resolve")
+    suspend fun resolveStream(@Body request: StreamResolveRequest): Response<ApiResponse<StreamResolveResponse>>
 
     // Comments
-    @GET("api/comments")
+    @GET("api/episode/{episodeId}/comments")
     suspend fun getComments(
-        @Query("animeId") animeId: String,
-        @Query("episodeId") episodeId: String? = null,
+        @Path("episodeId") episodeId: String,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<Comment>>>
 
-    @POST("api/comments")
-    suspend fun createComment(@Body request: CreateCommentRequest): Response<ApiResponse<Comment>>
+    @POST("api/episode/{episodeId}/comment")
+    suspend fun createComment(
+        @Path("episodeId") episodeId: String,
+        @Body request: CreateCommentRequest
+    ): Response<ApiResponse<Comment>>
 
-    @DELETE("api/comments/{id}")
-    suspend fun deleteComment(@Path("id") id: String): Response<ApiResponse<Unit>>
+    @DELETE("api/episode/{episodeId}/comment/{commentId}")
+    suspend fun deleteComment(
+        @Path("episodeId") episodeId: String,
+        @Path("commentId") commentId: String
+    ): Response<ApiResponse<Unit>>
 
-    @POST("api/comments/{id}/report")
+    @POST("api/episode/{episodeId}/comment/{commentId}/report")
     suspend fun reportComment(
-        @Path("id") id: String,
+        @Path("episodeId") episodeId: String,
+        @Path("commentId") commentId: String,
         @Body request: ReportCommentRequest
     ): Response<ApiResponse<Unit>>
 
     // User
+    @GET("api/user/profile")
+    suspend fun getMyProfile(): Response<ApiResponse<User>>
+
     @GET("api/user/profile/{userId}")
     suspend fun getUserProfile(@Path("userId") userId: String): Response<ApiResponse<User>>
 
-    @GET("api/user/stats")
+    @GET("api/user/profile/stats")
     suspend fun getUserStats(): Response<ApiResponse<UserStats>>
 
-    @GET("api/user/history")
+    @GET("api/user/profile/history")
     suspend fun getWatchHistory(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<WatchHistory>>>
 
-    @GET("api/user/favorites")
+    @GET("api/user/profile/favorites")
     suspend fun getFavorites(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<UserFavorite>>>
 
-    @GET("api/user/comments")
+    @GET("api/user/profile/comments")
     suspend fun getUserComments(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<Comment>>>
 
-    @GET("api/user/activities")
+    @GET("api/user/profile/activities")
     suspend fun getUserActivities(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<WatchHistory>>>
 
-    @PUT("api/user/name")
+    @PUT("api/user/update/name")
     suspend fun updateName(@Body request: UpdateNameRequest): Response<ApiResponse<User>>
 
-    @PUT("api/user/banner")
+    @PUT("api/user/update/banner")
     suspend fun updateBanner(@Body request: UpdateBannerRequest): Response<ApiResponse<User>>
 
-    @PUT("api/user/privacy")
+    @PUT("api/user/update/privacy")
     suspend fun updatePrivacy(@Body request: PrivacyRequest): Response<ApiResponse<User>>
 
-    @POST("api/user/favorites")
-    suspend fun toggleFavorite(@Body request: ToggleFavoriteRequest): Response<ApiResponse<UserFavorite>>
+    @POST("api/user/favorites/{animeId}")
+    suspend fun toggleFavorite(@Path("animeId") animeId: String): Response<ApiResponse<UserFavorite>>
 
-    @PUT("api/user/progress")
+    @POST("api/user/progress")
     suspend fun updateProgress(@Body request: UpdateProgressRequest): Response<ApiResponse<Unit>>
 
     // Chat
     @GET("api/chat/conversations")
     suspend fun getConversations(): Response<ApiResponse<List<Conversation>>>
 
-    @GET("api/chat/conversations/{id}")
+    @GET("api/chat/conversation/{convId}/messages")
     suspend fun getConversationMessages(
-        @Path("id") id: String,
+        @Path("convId") convId: String,
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 50
     ): Response<ApiResponse<List<Message>>>
 
-    @POST("api/chat/messages")
-    suspend fun sendMessage(@Body request: SendMessageRequest): Response<ApiResponse<Message>>
+    @POST("api/chat/conversation/{convId}/send")
+    suspend fun sendMessage(
+        @Path("convId") convId: String,
+        @Body request: SendMessageRequest
+    ): Response<ApiResponse<Message>>
 
-    @PUT("api/chat/conversations/{id}/read")
-    suspend fun markConversationRead(@Path("id") id: String): Response<ApiResponse<Unit>>
+    @POST("api/chat/conversation/{convId}/read")
+    suspend fun markConversationRead(@Path("convId") convId: String): Response<ApiResponse<Unit>>
 
     @GET("api/chat/friends")
     suspend fun getFriends(): Response<ApiResponse<List<User>>>
 
-    @POST("api/chat/friends/request")
+    @POST("api/chat/friend/request")
     suspend fun sendFriendRequest(@Body request: Map<String, String>): Response<ApiResponse<FriendRequest>>
 
-    @PUT("api/chat/friends/request/{id}")
-    suspend fun respondFriendRequest(
-        @Path("id") id: String,
-        @Body action: FriendRequestAction
-    ): Response<ApiResponse<FriendRequest>>
+    @POST("api/chat/friend/request/respond")
+    suspend fun respondFriendRequest(@Body request: FriendRequestAction): Response<ApiResponse<FriendRequest>>
 
-    @GET("api/chat/users/search")
+    @GET("api/chat/search/friend")
     suspend fun searchUsers(
         @Query("q") query: String
     ): Response<ApiResponse<List<SearchUsersResponse>>>
+
+    @POST("api/chat/conversation/user/{userId}")
+    suspend fun getOrCreateConversation(@Path("userId") userId: String): Response<ApiResponse<Conversation>>
 
     // Clans
     @GET("api/clans")
@@ -181,21 +196,34 @@ interface ApiService {
     @GET("api/clans/{id}")
     suspend fun getClanDetail(@Path("id") id: String): Response<ApiResponse<Clan>>
 
+    @GET("api/clans/me")
+    suspend fun getMyClan(): Response<ApiResponse<Clan>>
+
+    @GET("api/clans/leaderboard")
+    suspend fun getClanLeaderboard(
+        @Query("page") page: Int = 1,
+        @Query("limit") limit: Int = 20
+    ): Response<ApiResponse<List<Clan>>>
+
+    @GET("api/clans/upgrade/catalog")
+    suspend fun getUpgradeCatalog(): Response<ApiResponse<List<ClanUpgrade>>>
+
     @GET("api/clans/{id}/members")
     suspend fun getClanMembers(@Path("id") id: String): Response<ApiResponse<List<ClanMember>>>
 
     @POST("api/clans/{id}/join")
     suspend fun joinClan(@Path("id") id: String): Response<ApiResponse<Unit>>
 
-    @POST("api/clans/{id}/kick")
+    @POST("api/clans/{id}/kick/{userId}")
     suspend fun kickMember(
-        @Path("id") id: String,
-        @Body request: KickMemberRequest
+        @Path("id") clanId: String,
+        @Path("userId") userId: String
     ): Response<ApiResponse<Unit>>
 
-    @PUT("api/clans/{id}/role")
+    @POST("api/clans/{id}/role/{userId}")
     suspend fun updateMemberRole(
-        @Path("id") id: String,
+        @Path("id") clanId: String,
+        @Path("userId") userId: String,
         @Body request: UpdateRoleRequest
     ): Response<ApiResponse<Unit>>
 
@@ -211,90 +239,71 @@ interface ApiService {
     @GET("api/clans/{id}/wallet")
     suspend fun getClanWallet(@Path("id") id: String): Response<ApiResponse<ClanWallet>>
 
-    @GET("api/clans/upgrades")
-    suspend fun getUpgradeCatalog(): Response<ApiResponse<List<ClanUpgrade>>>
-
-    @POST("api/clans/{id}/upgrades")
+    @POST("api/clans/{id}/upgrade/purchase")
     suspend fun purchaseUpgrade(
         @Path("id") id: String,
         @Body request: PurchaseUpgradeRequest
     ): Response<ApiResponse<ClanUpgrade>>
 
-    @GET("api/clans/leaderboard")
-    suspend fun getClanLeaderboard(
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20
-    ): Response<ApiResponse<List<Clan>>>
-
-    @GET("api/clans/my")
-    suspend fun getMyClan(): Response<ApiResponse<Clan>>
-
     // Giveaways
-    @GET("api/giveaways")
+    @GET("api/giveaway")
     suspend fun getGiveaways(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<Giveaway>>>
 
-    @GET("api/giveaways/{id}")
+    @GET("api/giveaway/{id}")
     suspend fun getGiveawayDetail(@Path("id") id: String): Response<ApiResponse<Giveaway>>
 
-    @POST("api/giveaways")
+    @POST("api/giveaway")
     suspend fun createGiveaway(@Body request: CreateGiveawayRequest): Response<ApiResponse<Giveaway>>
 
-    @POST("api/giveaways/{id}/claim")
+    @POST("api/giveaway/{id}/claim")
     suspend fun claimGiveaway(@Path("id") id: String): Response<ApiResponse<Unit>>
 
-    @GET("api/giveaways/top")
+    @GET("api/giveaway/top-givers")
     suspend fun getTopGivers(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<TopGiver>>>
 
     // Social
-    @GET("api/social/feed")
+    @GET("api/social/line")
     suspend fun getSocialFeed(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<SocialPost>>>
 
-    @POST("api/social/posts")
+    @POST("api/social/line/post")
     suspend fun createPost(@Body request: CreatePostRequest): Response<ApiResponse<SocialPost>>
 
     // Notifications
-    @GET("api/notifications")
+    @GET("api/notification/list")
     suspend fun getNotifications(
         @Query("page") page: Int = 1,
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<Notification>>>
 
-    @GET("api/notifications/unread")
+    @GET("api/notification/unread-count")
     suspend fun getUnreadCount(): Response<ApiResponse<Int>>
 
-    @PUT("api/notifications/read")
+    @POST("api/notification/mark-read")
     suspend fun markAllNotificationsRead(): Response<ApiResponse<Unit>>
 
-    @PUT("api/notifications/{id}/read")
-    suspend fun markNotificationRead(@Path("id") id: String): Response<ApiResponse<Unit>>
-
-    @POST("api/notifications/token")
+    @POST("api/notification/token/upsert")
     suspend fun upsertNotificationToken(@Body request: NotificationToken): Response<ApiResponse<Unit>>
 
-    @DELETE("api/notifications/token")
+    @DELETE("api/notification/token/delete")
     suspend fun deleteNotificationToken(): Response<ApiResponse<Unit>>
 
     // Premium
     @POST("api/premium/gift")
     suspend fun giftPremium(@Body request: GiftPremiumRequest): Response<ApiResponse<PremiumSubscription>>
 
-    @PUT("api/premium")
+    @POST("api/premium/update")
     suspend fun updatePremium(@Body request: Map<String, String>): Response<ApiResponse<PremiumSubscription>>
 
-    // Play
-    @POST("api/play/resolve")
-    suspend fun resolveStream(@Body request: StreamResolveRequest): Response<ApiResponse<StreamResolveResponse>>
-
-    // Banners
+    // Banners (public - needs to be added to backend)
     @GET("api/banners")
     suspend fun getBanners(): Response<ApiResponse<List<Banner>>>
 }

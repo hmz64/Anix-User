@@ -12,12 +12,12 @@ class AuthRepository(
     suspend fun login(email: String, password: String): Result<AuthResponse> {
         return try {
             val response = api.login(LoginRequest(email, password))
-            if (response.isSuccessful && response.body()?.success == true) {
-                val authResponse = response.body()!!.data!!
-                ServiceLocator.saveToken(authResponse.token)
-                Result.success(authResponse)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                ServiceLocator.saveToken(body.data.token)
+                Result.success(body.data)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Login failed"))
+                Result.failure(Exception(body?.error ?: "Login failed"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -27,12 +27,12 @@ class AuthRepository(
     suspend fun register(username: String, email: String, password: String): Result<AuthResponse> {
         return try {
             val response = api.register(RegisterRequest(username, email, password))
-            if (response.isSuccessful && response.body()?.success == true) {
-                val authResponse = response.body()!!.data!!
-                ServiceLocator.saveToken(authResponse.token)
-                Result.success(authResponse)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                ServiceLocator.saveToken(body.data.token)
+                Result.success(body.data)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Registration failed"))
+                Result.failure(Exception(body?.error ?: "Registration failed"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -42,10 +42,11 @@ class AuthRepository(
     suspend fun me(): Result<User> {
         return try {
             val response = api.me()
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Result.success(body.data)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to get user"))
+                Result.failure(Exception(body?.error ?: "Failed to get user"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -66,10 +67,10 @@ class AuthRepository(
     suspend fun refreshToken(): Result<AuthResponse> {
         return try {
             val response = api.refreshToken()
-            if (response.isSuccessful && response.body()?.success == true) {
-                val authResponse = response.body()!!.data!!
-                ServiceLocator.saveToken(authResponse.token)
-                Result.success(authResponse)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                ServiceLocator.saveToken(body.data.token)
+                Result.success(body.data)
             } else {
                 Result.failure(Exception("Token refresh failed"))
             }

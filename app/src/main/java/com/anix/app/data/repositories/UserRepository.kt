@@ -96,13 +96,14 @@ class UserRepository(private val api: ApiService) {
         }
     }
 
-    suspend fun updatePrivacy(privacyMode: Boolean): Result<User> {
+    suspend fun updatePrivacy(privacySetting: String): Result<User> {
         return try {
-            val response = api.updatePrivacy(PrivacyRequest(privacyMode))
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
+            val response = api.updatePrivacy(PrivacyRequest(privacySetting))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Result.success(body.data)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to update privacy"))
+                Result.failure(Exception(body?.error ?: "Failed to update privacy"))
             }
         } catch (e: Exception) {
             Result.failure(e)

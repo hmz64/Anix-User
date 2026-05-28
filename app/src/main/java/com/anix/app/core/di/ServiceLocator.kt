@@ -1,6 +1,7 @@
 package com.anix.app.core.di
 
 import android.content.Context
+import android.util.Log
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
@@ -49,34 +50,44 @@ object ServiceLocator {
     fun getSocialRepository(): SocialRepository = _socialRepository!!
     fun getUserRepository(): UserRepository = _userRepository!!
 
-    fun getDataStore(): DataStore<Preferences> {
-        return context!!.dataStore
+    fun getDataStore(): DataStore<Preferences>? {
+        return context?.dataStore
     }
 
     fun getToken(): String? {
-        return runBlocking {
-            context?.let {
-                it.dataStore.data.first()[PreferencesKeys.AUTH_TOKEN]
+        val ds = getDataStore() ?: return null
+        return try {
+            runBlocking {
+                ds.data.first()[PreferencesKeys.AUTH_TOKEN]
             }
+        } catch (e: Exception) {
+            Log.e("ServiceLocator", "Failed to get token", e)
+            null
         }
     }
 
     fun saveToken(token: String) {
+        val ds = getDataStore() ?: return
         runBlocking {
-            context?.let {
-                it.dataStore.edit { preferences ->
+            try {
+                ds.edit { preferences ->
                     preferences[PreferencesKeys.AUTH_TOKEN] = token
                 }
+            } catch (e: Exception) {
+                Log.e("ServiceLocator", "Failed to save token", e)
             }
         }
     }
 
     fun clearToken() {
+        val ds = getDataStore() ?: return
         runBlocking {
-            context?.let {
-                it.dataStore.edit { preferences ->
+            try {
+                ds.edit { preferences ->
                     preferences.remove(PreferencesKeys.AUTH_TOKEN)
                 }
+            } catch (e: Exception) {
+                Log.e("ServiceLocator", "Failed to clear token", e)
             }
         }
     }

@@ -44,7 +44,7 @@ fun SettingsScreen(
     onBack: () -> Unit
 ) {
     var username by remember { mutableStateOf("") }
-    var privacyMode by remember { mutableStateOf(false) }
+    var privacySetting by remember { mutableStateOf("public") }
     var bannerUrl by remember { mutableStateOf("") }
     val scope = rememberCoroutineScope()
 
@@ -124,11 +124,11 @@ fun SettingsScreen(
                 Text("Hide your activity from others", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
             Switch(
-                checked = privacyMode,
+                checked = privacySetting == "private",
                 onCheckedChange = {
-                    privacyMode = it
+                    privacySetting = if (it) "private" else "public"
                     scope.launch {
-                        ServiceLocator.getUserRepository().updatePrivacy(it)
+                        ServiceLocator.getUserRepository().updatePrivacy(privacySetting)
                     }
                 },
                 colors = SwitchDefaults.colors(
