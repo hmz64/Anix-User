@@ -34,6 +34,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -58,6 +59,7 @@ import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoBadge
 import com.anix.app.ui.components.NeoButton
 import com.anix.app.ui.components.NeoCard
+import kotlinx.coroutines.launch
 
 @Composable
 fun AnimeDetailScreen(
@@ -72,6 +74,7 @@ fun AnimeDetailScreen(
     var error by remember { mutableStateOf<String?>(null) }
     var isFavorited by remember { mutableStateOf(false) }
     var selectedTab by remember { mutableIntStateOf(0) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(animeId) {
         val repo = ServiceLocator.getAnimeRepository()
@@ -191,8 +194,10 @@ fun AnimeDetailScreen(
                     NeoButton(
                         text = if (isFavorited) "Favorited" else "Add to Favorites",
                         onClick = {
-                            ServiceLocator.getUserRepository().toggleFavorite(animeId)
-                            isFavorited = !isFavorited
+                            scope.launch {
+                                ServiceLocator.getUserRepository().toggleFavorite(animeId)
+                                isFavorited = !isFavorited
+                            }
                         },
                         backgroundColor = if (isFavorited) Color.Red else Primary,
                         modifier = Modifier.weight(1f)

@@ -39,9 +39,8 @@ fun NeoTextField(
     OutlinedTextField(
         value = value,
         onValueChange = onValueChange,
-        modifier = modifier,
+        modifier = modifier.border(2.dp, if (isError) Color.Red else BorderBlack, shape),
         shape = shape,
-        border = BorderStroke(2.dp, if (isError) Color.Red else BorderBlack),
         label = if (label.isNotEmpty()) {
             { Text(label, fontWeight = FontWeight.Bold) }
         } else null,

@@ -13,10 +13,12 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.Typography
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
@@ -89,7 +91,7 @@ fun AnixTheme(
     )
 }
 
-val Typography = MaterialTheme.typography.copy(
+val Typography = Typography(
     displayLarge = TextStyle(
         fontWeight = FontWeight.Bold,
         fontSize = 32.sp,
@@ -182,11 +184,16 @@ val Typography = MaterialTheme.typography.copy(
     ),
 )
 
-val Shapes = MaterialTheme.shapes
+val Shapes = androidx.compose.material3.Shapes(
+    small = RoundedCornerShape(4.dp),
+    medium = RoundedCornerShape(8.dp),
+    large = RoundedCornerShape(12.dp)
+)
 
 val NeoBorder = BorderStroke(2.dp, BorderBlack)
 val NeoShape = RoundedCornerShape(8.dp)
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun NeoBrutalismCard(
     modifier: Modifier = Modifier,
@@ -196,14 +203,9 @@ fun NeoBrutalismCard(
     val shape = RoundedCornerShape(8.dp)
     val cardModifier = modifier
         .border(NeoBorder, shape)
-        .let { if (onClick != null) it else it }
 
     Card(
-        modifier = if (onClick != null) {
-            cardModifier
-        } else {
-            cardModifier
-        },
+        modifier = cardModifier,
         shape = shape,
         colors = CardDefaults.cardColors(containerColor = Surface),
         elevation = CardDefaults.cardElevation(defaultElevation = 0.dp),
