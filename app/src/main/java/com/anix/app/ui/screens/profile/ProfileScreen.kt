@@ -31,6 +31,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +58,7 @@ import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoBadge
 import com.anix.app.ui.components.NeoButton
 import com.anix.app.ui.components.NeoCard
+import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(
@@ -72,6 +74,7 @@ fun ProfileScreen(
     var history by remember { mutableStateOf<List<WatchHistory>>(emptyList()) }
     var favorites by remember { mutableStateOf<List<UserFavorite>>(emptyList()) }
     var comments by remember { mutableStateOf<List<Comment>>(emptyList()) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         val authRepo = ServiceLocator.getAuthRepository()
@@ -165,7 +168,7 @@ fun ProfileScreen(
                             Text("XP", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
                             Spacer(modifier = Modifier.width(8.dp))
                             LinearProgressIndicator(
-                                progress = { if (u.xpToNextLevel > 0) u.xp.toFloat() / u.xpToNextLevel else 0f },
+                                progress = if (u.xpToNextLevel > 0) u.xp.toFloat() / u.xpToNextLevel else 0f,
                                 modifier = Modifier
                                     .weight(1f)
                                     .height(12.dp)
@@ -198,7 +201,9 @@ fun ProfileScreen(
                         NeoButton(
                             text = "Logout",
                             onClick = {
-                                ServiceLocator.getAuthRepository().logout()
+                                scope.launch {
+                                    ServiceLocator.getAuthRepository().logout()
+                                }
                                 onLogout()
                             },
                             backgroundColor = Color.Red,

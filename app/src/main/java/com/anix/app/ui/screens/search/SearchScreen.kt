@@ -18,7 +18,8 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
-import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.items as gridItems
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -32,6 +33,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -54,6 +56,7 @@ import com.anix.app.ui.components.EmptyState
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoTextField
+import kotlinx.coroutines.launch
 
 @Composable
 fun SearchScreen(
@@ -66,6 +69,7 @@ fun SearchScreen(
     var isLoading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     var hasSearched by remember { mutableStateOf(false) }
+    val scope = rememberCoroutineScope()
 
     LaunchedEffect(Unit) {
         ServiceLocator.getAnimeRepository().getGenres().onSuccess { genres = it }
@@ -75,16 +79,18 @@ fun SearchScreen(
         isLoading = true
         hasSearched = true
         error = null
-        val repo = ServiceLocator.getAnimeRepository()
-        val response = if (query.isNotBlank()) {
-            repo.searchAnime(query)
-        } else if (selectedGenre != null) {
-            repo.getAnimeList(genre = selectedGenre)
-        } else {
-            repo.getAnimeList()
+        scope.launch {
+            val repo = ServiceLocator.getAnimeRepository()
+            val response = if (query.isNotBlank()) {
+                repo.searchAnime(query)
+            } else if (selectedGenre != null) {
+                repo.getAnimeList(genre = selectedGenre)
+            } else {
+                repo.getAnimeList()
+            }
+            response.onSuccess { results = it }.onFailure { error = it.message }
+            isLoading = false
         }
-        response.onSuccess { results = it }.onFailure { error = it.message }
-        isLoading = false
     }
 
     Box(
@@ -148,7 +154,7 @@ fun SearchScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        items(results) { anime ->
+                        gridItems(results) { anime ->
                             AnimeSearchItem(
                                 anime = anime,
                                 onClick = { onAnimeClick(anime.id) }
