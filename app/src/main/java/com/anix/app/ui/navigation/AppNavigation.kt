@@ -215,7 +215,8 @@ fun AppNavigation() {
 
 @Composable
 fun MainScreen(navController: NavHostController) {
-    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val tabNavController = rememberNavController()
+    val navBackStackEntry by tabNavController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
     Scaffold(
@@ -240,8 +241,8 @@ fun MainScreen(navController: NavHostController) {
                         },
                         selected = selected,
                         onClick = {
-                            navController.navigate(item.route) {
-                                popUpTo(navController.graph.findStartDestination().id) {
+                            tabNavController.navigate(item.route) {
+                                popUpTo(tabNavController.graph.findStartDestination().id) {
                                     saveState = true
                                 }
                                 launchSingleTop = true
@@ -261,7 +262,7 @@ fun MainScreen(navController: NavHostController) {
         }
     ) { innerPadding ->
         NavHost(
-            navController = navController,
+            navController = tabNavController,
             startDestination = Routes.HOME,
             modifier = Modifier.padding(innerPadding)
         ) {
