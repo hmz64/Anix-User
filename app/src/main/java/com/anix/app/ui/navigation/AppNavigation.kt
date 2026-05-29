@@ -1,6 +1,8 @@
 package com.anix.app.ui.navigation
 
 import android.util.Log
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
@@ -25,6 +27,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -37,6 +40,7 @@ import androidx.navigation.navArgument
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
+import com.anix.app.ui.components.FloatingMiniPlayer
 import com.anix.app.ui.screens.auth.LoginScreen
 import com.anix.app.ui.screens.auth.RegisterScreen
 import com.anix.app.ui.screens.chat.ChatDetailScreen
@@ -51,6 +55,7 @@ import com.anix.app.ui.screens.home.AnimeListScreen
 import com.anix.app.ui.screens.home.HomeScreen
 import com.anix.app.ui.screens.notifications.NotificationsScreen
 import com.anix.app.ui.screens.onboarding.OnboardingScreen
+import com.anix.app.ui.screens.player.PlayerViewModel
 import com.anix.app.ui.screens.player.VideoPlayerScreen
 import com.anix.app.ui.screens.profile.ProfileScreen
 import com.anix.app.ui.screens.profile.UserProfileScreen
@@ -107,11 +112,19 @@ val bottomNavItems = listOf(
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
+    val playerViewModel: PlayerViewModel = viewModel()
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
-    NavHost(
-        navController = navController,
-        startDestination = Routes.SPLASH
-    ) {
+    val showMiniPlayer = playerViewModel.isMiniPlayerVisible
+        && currentRoute != Routes.SETTINGS
+        && currentRoute?.startsWith("player/") != true
+
+    Box(modifier = Modifier.fillMaxSize()) {
+        NavHost(
+            navController = navController,
+            startDestination = Routes.SPLASH
+        ) {
         composable(Routes.SPLASH) {
             SplashScreen(
                 onNavigateToLogin = { Log.d("AnixNav", "onNavigateToLogin"); navController.navigate(Routes.LOGIN) { popUpTo(Routes.SPLASH) { inclusive = true } } },
@@ -149,7 +162,8 @@ fun AppNavigation() {
                 episodeId = episodeId,
                 animeId = animeId,
                 onBack = { Log.d("AnixNav", "onBack: VideoPlayer($episodeId)"); navController.popBackStack() },
-                onCommentsClick = { Log.d("AnixNav", "onCommentsClick: anime=$animeId ep=$episodeId"); navController.navigate(Routes.comments(animeId, episodeId)) }
+                onCommentsClick = { Log.d("AnixNav", "onCommentsClick: anime=$animeId ep=$episodeId"); navController.navigate(Routes.comments(animeId, episodeId)) },
+                playerViewModel = playerViewModel
             )
         }
         composable(Routes.COMMENTS, arguments = listOf(
@@ -297,9 +311,13 @@ fun MainScreen(navController: NavHostController) {
                             indicatorColor = Surface
                         )
                     )
-                }
-            }
         }
+    }
+
+    if (showMiniPlayer) {
+        FloatingMiniPlayer(viewModel = playerViewModel)
+    }
+}
     ) { innerPadding ->
         NavHost(
             navController = tabNavController,

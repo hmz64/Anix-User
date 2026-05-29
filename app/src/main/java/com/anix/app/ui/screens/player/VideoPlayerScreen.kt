@@ -96,6 +96,7 @@ import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoBadge
 import com.anix.app.ui.components.NeoChip
 import com.anix.app.ui.components.NeoTextField
+import com.anix.app.ui.screens.player.PlayerViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.min
 
@@ -112,6 +113,7 @@ fun VideoPlayerScreen(
     animeId: String? = null,
     onBack: () -> Unit,
     onCommentsClick: ((String) -> Unit)? = null,
+    playerViewModel: PlayerViewModel? = null,
     viewModel: VideoPlayerViewModel = viewModel()
 ) {
     val state by viewModel.uiState.collectAsStateWithLifecycle()
@@ -230,7 +232,15 @@ fun VideoPlayerScreen(
                             quality = state.currentQuality,
                             onToggleControls = { showControls = !showControls },
                             onBack = {
-                                exoPlayer.stop(); onBack()
+                                if (exoPlayer.isPlaying && playerViewModel != null) {
+                                    playerViewModel.playMedia(
+                                        MediaItem.fromUri(state.videoUrl),
+                                        state.anime?.title ?: "Now Playing"
+                                    )
+                                } else {
+                                    exoPlayer.stop()
+                                }
+                                onBack()
                             },
                             onFullscreen = {
                                 (context as? Activity)?.let { act ->
