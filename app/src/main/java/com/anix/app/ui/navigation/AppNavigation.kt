@@ -1,5 +1,6 @@
 package com.anix.app.ui.navigation
 
+import android.util.Log
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
@@ -307,9 +308,9 @@ fun MainScreen(navController: NavHostController) {
         ) {
             composable(Routes.HOME) {
                 HomeScreen(
-                    onAnimeClick = { navController.navigate(Routes.animeDetail(it)) },
-                    onSeeAllClick = { category -> navController.navigate(Routes.animeList(category)) },
-                    onGenreClick = { genre -> navController.navigate(Routes.animeList(genre)) }
+                    onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); try { navController.navigate(Routes.animeDetail(id)) } catch (e: Exception) { Log.e("AnixNav", "nav failed", e) } },
+                    onSeeAllClick = { category -> Log.d("AnixNav", "onSeeAllClick: $category"); try { navController.navigate(Routes.animeList(category)) } catch (e: Exception) { Log.e("AnixNav", "nav failed", e) } },
+                    onGenreClick = { genre -> Log.d("AnixNav", "onGenreClick: $genre"); try { navController.navigate(Routes.animeList(genre)) } catch (e: Exception) { Log.e("AnixNav", "nav failed", e) } }
                 )
             }
             composable(Routes.SEARCH) {
