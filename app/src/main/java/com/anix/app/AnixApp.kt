@@ -5,7 +5,7 @@ import android.os.Build
 import android.util.Log
 import coil.ImageLoader
 import coil.ImageLoaderFactory
-import coil.gif.AnimatedImageDecoder
+import coil.gif.ImageDecoderDecoder
 import com.anix.app.core.di.ServiceLocator
 
 class AnixApp : Application(), ImageLoaderFactory {
@@ -22,7 +22,7 @@ class AnixApp : Application(), ImageLoaderFactory {
         return ImageLoader.Builder(this)
             .components {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
-                    add(AnimatedImageDecoder.Factory())
+                    add(ImageDecoderDecoder.Factory())
                 }
             }
             .build()
