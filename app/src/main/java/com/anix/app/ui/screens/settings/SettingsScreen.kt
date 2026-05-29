@@ -102,19 +102,20 @@ fun SettingsScreen(
     val imagePickerLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
-        uri?.let {
-            context.contentResolver.takePersistableUriPermission(it, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+        if (uri != null) {
             if (showAvatarPicker) {
-                val inputStream = context.contentResolver.openInputStream(it)
-                val file = java.io.File(context.cacheDir, "avatar_upload.jpg")
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val ext = uri.lastPathSegment?.substringAfterLast('.') ?: "jpg"
+                val file = java.io.File(context.cacheDir, "avatar_upload_${System.currentTimeMillis()}.$ext")
                 file.outputStream().use { output -> inputStream?.copyTo(output) }
                 inputStream?.close()
                 val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
                 val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
                 viewModel.updateAvatar(part)
             } else if (showBannerPicker) {
-                val inputStream = context.contentResolver.openInputStream(it)
-                val file = java.io.File(context.cacheDir, "banner_upload.jpg")
+                val inputStream = context.contentResolver.openInputStream(uri)
+                val ext = uri.lastPathSegment?.substringAfterLast('.') ?: "jpg"
+                val file = java.io.File(context.cacheDir, "banner_upload_${System.currentTimeMillis()}.$ext")
                 file.outputStream().use { output -> inputStream?.copyTo(output) }
                 inputStream?.close()
                 val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
@@ -122,6 +123,8 @@ fun SettingsScreen(
                 viewModel.updateBanner(part)
             }
         }
+        showAvatarPicker = false
+        showBannerPicker = false
     }
 
     if (showLogoutConfirm) {
