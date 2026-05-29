@@ -6,6 +6,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -37,12 +38,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anix.app.core.di.ServiceLocator
-import com.anix.app.core.model.AnimeSeries
+import com.anix.app.data.models.AnimeSeries
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
-import com.anix.app.data.repository.AnimeRepository
+import com.anix.app.data.repositories.AnimeRepository
 import com.anix.app.ui.components.AnimeCard
 import com.anix.app.ui.components.EmptyState
 import com.anix.app.ui.components.ErrorState

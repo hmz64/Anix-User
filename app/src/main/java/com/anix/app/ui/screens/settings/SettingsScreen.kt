@@ -51,6 +51,7 @@ import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
 import com.anix.app.ui.components.NeoButton
+import com.anix.app.ui.components.NeoCard
 import com.anix.app.ui.components.NeoTextField
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -219,7 +220,7 @@ fun SettingsScreen(
                         Spacer(modifier = Modifier.height(4.dp))
                         Text("Terms of Service", color = Primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://anix.app/terms"))) })
                         Spacer(modifier = Modifier.height(8.dp))
-                        NeoButton(text = "Clear Cache", onClick = { com.anix.app.ui.components.AsyncImage::class }, backgroundColor = Surface, textColor = Color.Black, modifier = Modifier.fillMaxWidth())
+                        NeoButton(text = "Clear Cache", onClick = { }, backgroundColor = Surface, textColor = Color.Black, modifier = Modifier.fillMaxWidth())
                         Spacer(modifier = Modifier.height(8.dp))
                         NeoButton(text = "Send Feedback", onClick = {
                             context.startActivity(Intent(Intent.ACTION_SENDTO).apply {

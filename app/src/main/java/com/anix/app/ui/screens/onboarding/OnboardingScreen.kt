@@ -28,6 +28,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.datastore.preferences.core.edit
 import com.anix.app.core.di.PreferencesKeys
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.theme.AccentLime
@@ -37,6 +38,7 @@ import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Secondary
 import com.anix.app.core.theme.TextBlack
 import com.anix.app.ui.components.NeoButton
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 @Composable
@@ -121,28 +123,30 @@ fun OnboardingScreen(onComplete: () -> Unit) {
     }
 }
 
+private data class OnboardingPage(val title: String, val description: String, val emoji: String, val accentColor: Color)
+
 @Composable
 private fun OnboardingPageContent(page: Int) {
     val (title, description, emoji, accentColor) = when (page) {
-        0 -> Triple(
+        0 -> OnboardingPage(
             "Welcome to Anix",
             "Discover, watch, and track your favorite anime series all in one place with a bold new experience.",
             "\uD83C\uDFAC",
             Primary
         )
-        1 -> Triple(
+        1 -> OnboardingPage(
             "Watch Anywhere",
             "Stream your favorite anime on mobile, tablet, or desktop. Pick up right where you left off across all your devices.",
             "\uD83D\uDCF1",
             AccentLime
         )
-        2 -> Triple(
+        2 -> OnboardingPage(
             "Join Community",
             "Connect with fellow fans, join exclusive clans, participate in epic giveaways, and share your passion for anime.",
             "\uD83E\uDD1D",
             Secondary
         )
-        else -> Triple("", "", "", Color.White)
+        else -> OnboardingPage("", "", "", Color.White)
     }
 
     Box(

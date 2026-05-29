@@ -134,4 +134,8 @@ class AnimeRepository(private val api: ApiService) {
             Result.failure(e)
         }
     }
+
+    suspend fun getAnimeByCategory(category: String, page: Int = 1, genre: String? = null, status: String? = null, type: String? = null, sortBy: String? = null): Result<List<AnimeSeries>> {
+        return getAnimeList(page = page, genre = genre, sort = sortBy)
+    }
 }

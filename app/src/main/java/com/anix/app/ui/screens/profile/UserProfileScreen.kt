@@ -34,57 +34,44 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.theme.AccentOrange
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
-import com.anix.app.data.model.User
-import com.anix.app.data.model.UserStats
+import com.anix.app.data.models.User
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoBadge
 import com.anix.app.ui.components.NeoButton
-import com.anix.app.util.ServiceLocator
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 data class UserProfileUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
-    val user: User? = null,
-    val isFriend: Boolean = false,
-    val hasSentRequest: Boolean = false
+    val user: User? = null
 )
 
 class UserProfileViewModel {
     var uiState by mutableStateOf(UserProfileUiState())
         private set
 
-    fun loadProfile(userId: String) {
+    suspend fun loadProfile(userId: String) {
         uiState = uiState.copy(isLoading = true, error = null)
-        try {
-            val profile = ServiceLocator.getUserRepository().getProfile(userId)
-            uiState = uiState.copy(
-                isLoading = false,
-                user = profile.user,
-                isFriend = profile.isFriend,
-                hasSentRequest = profile.hasSentRequest
-            )
-        } catch (e: Exception) {
-            uiState = uiState.copy(
-                isLoading = false,
-                error = e.message ?: "Failed to load profile"
-            )
-        }
+        ServiceLocator.getUserRepository().getProfile(userId)
+            .onSuccess { user ->
+                uiState = uiState.copy(isLoading = false, user = user)
+            }
+            .onFailure { e ->
+                uiState = uiState.copy(isLoading = false, error = e.message ?: "Failed to load profile")
+            }
     }
 
     fun sendFriendRequest(userId: String) {
-        try {
+        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
             ServiceLocator.getChatRepository().sendFriendRequest(userId)
-            uiState = uiState.copy(hasSentRequest = true)
-        } catch (e: Exception) {
-            uiState = uiState.copy(
-                error = e.message ?: "Failed to send friend request"
-            )
         }
     }
 }
@@ -128,17 +115,13 @@ fun UserProfileScreen(
                 )
             }
             state.user == null -> {
-                EmptyState(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(32.dp)
-                )
+                Box(modifier = Modifier.fillMaxSize().padding(32.dp), contentAlignment = Alignment.Center) {
+                    Text(text = "User not found", fontSize = 16.sp, color = BorderBlack, textAlign = TextAlign.Center)
+                }
             }
             else -> {
                 ProfileContent(
                     user = state.user!!,
-                    isFriend = state.isFriend,
-                    hasSentRequest = state.hasSentRequest,
                     onChatClick = { onChatClick(userId) },
                     onSendFriendRequest = { viewModel.sendFriendRequest(userId) }
                 )
@@ -174,8 +157,6 @@ private fun Header(onBack: () -> Unit) {
 @Composable
 private fun ProfileContent(
     user: User,
-    isFriend: Boolean,
-    hasSentRequest: Boolean,
     onChatClick: () -> Unit,
     onSendFriendRequest: () -> Unit
 ) {
@@ -185,19 +166,17 @@ private fun ProfileContent(
 
     ProfileInfoSection(user = user, isLimited = isLimited)
 
-    if (!isLimited) {
-        StatsSection(userId = user.id)
-    }
-
     Spacer(modifier = Modifier.height(24.dp))
 
-    ActionButtons(
-        onChatClick = onChatClick,
-        onSendFriendRequest = onSendFriendRequest,
-        isFriend = isFriend,
-        hasSentRequest = hasSentRequest,
-        isLimited = isLimited
-    )
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
+        horizontalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
+        NeoButton(text = "Send Message", onClick = onChatClick, modifier = Modifier.weight(1f))
+        if (!isLimited) {
+            NeoButton(text = "Add Friend", onClick = onSendFriendRequest, modifier = Modifier.weight(1f))
+        }
+    }
 
     Spacer(modifier = Modifier.height(32.dp))
 }
@@ -225,9 +204,7 @@ private fun BannerSection(bannerUrl: String?) {
 @Composable
 private fun ProfileInfoSection(user: User, isLimited: Boolean) {
     Column(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Box(
@@ -247,136 +224,17 @@ private fun ProfileInfoSection(user: User, isLimited: Boolean) {
                 )
             }
         }
-
         Spacer(modifier = Modifier.height(8.dp))
-
-        Text(
-            text = user.username,
-            fontSize = 22.sp,
-            fontWeight = FontWeight.Bold,
-            color = BorderBlack
-        )
-
+        Text(text = user.username, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = BorderBlack)
         Spacer(modifier = Modifier.height(4.dp))
-
-        NeoBadge(
-            text = "Lv. ${user.level}",
-            color = AccentOrange
-        )
-
-        if (user.bio != null && !isLimited) {
+        NeoBadge(text = "Lv. ${user.level}", color = AccentOrange)
+        if (user.bio.isNotBlank() && !isLimited) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = user.bio,
-                fontSize = 14.sp,
-                color = BorderBlack,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            )
+            Text(text = user.bio, fontSize = 14.sp, color = BorderBlack, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
         }
-
         if (isLimited) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text(
-                text = "This profile is private",
-                fontSize = 13.sp,
-                color = BorderBlack,
-                textAlign = TextAlign.Center
-            )
+            Text(text = "This profile is private", fontSize = 13.sp, color = BorderBlack, textAlign = TextAlign.Center)
         }
-    }
-}
-
-@Composable
-private fun StatsSection(userId: String) {
-    val stats = remember(userId) {
-        try {
-            ServiceLocator.getUserRepository().getUserStats(userId)
-        } catch (_: Exception) {
-            null
-        }
-    }
-
-    if (stats != null) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp)
-                .border(2.dp, BorderBlack)
-                .background(Surface)
-                .padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            StatItem(label = "Comments", value = stats.totalComments)
-            StatItem(label = "Favorites", value = stats.totalFavorites)
-            StatItem(label = "Watched", value = stats.totalWatched)
-            StatItem(label = "XP", value = stats.totalXp)
-        }
-    }
-}
-
-@Composable
-private fun StatItem(label: String, value: Int) {
-    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(
-            text = value.toString(),
-            fontSize = 18.sp,
-            fontWeight = FontWeight.Bold,
-            color = Primary
-        )
-        Text(
-            text = label,
-            fontSize = 11.sp,
-            color = BorderBlack
-        )
-    }
-}
-
-@Composable
-private fun ActionButtons(
-    onChatClick: () -> Unit,
-    onSendFriendRequest: () -> Unit,
-    isFriend: Boolean,
-    hasSentRequest: Boolean,
-    isLimited: Boolean
-) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(12.dp)
-    ) {
-        NeoButton(
-            text = "Send Message",
-            onClick = onChatClick,
-            modifier = Modifier.weight(1f)
-        )
-
-        if (!isLimited && !isFriend) {
-            NeoButton(
-                text = if (hasSentRequest) "Request Sent" else "Add Friend",
-                onClick = onSendFriendRequest,
-                enabled = !hasSentRequest,
-                modifier = Modifier.weight(1f)
-            )
-        }
-    }
-}
-
-@Composable
-private fun EmptyState(modifier: Modifier = Modifier) {
-    Box(
-        modifier = modifier,
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = "User not found",
-            fontSize = 16.sp,
-            color = BorderBlack,
-            textAlign = TextAlign.Center
-        )
     }
 }

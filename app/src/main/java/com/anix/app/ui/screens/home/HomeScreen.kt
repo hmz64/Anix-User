@@ -344,7 +344,7 @@ private fun ContinueWatchingItem(
                 color = Color.White
             )
             Text(
-                text = "Eps. ${history.episode?.episodeNumber ?: "?"}",
+                text = "Eps. ${history.episode?.number ?: "?"}",
                 style = MaterialTheme.typography.bodySmall,
                 color = Color.White.copy(alpha = 0.8f)
             )
