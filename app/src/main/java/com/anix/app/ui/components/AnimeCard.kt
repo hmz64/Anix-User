@@ -3,6 +3,7 @@ import androidx.compose.foundation.border
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
@@ -39,6 +40,7 @@ fun AnimeCard(
             .clip(shape)
             .background(Color.White, shape)
             .border(BorderStroke(2.dp, BorderBlack), shape)
+            .clickable { onClick() }
     ) {
         Box(
             modifier = Modifier

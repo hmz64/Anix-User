@@ -42,8 +42,8 @@ fun NeoChip(
                     style = Stroke(width = 2.dp.toPx())
                 )
             }
-            .clickable { onClick() }
-            .padding(horizontal = 16.dp, vertical = 8.dp),
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+            .clickable { onClick() },
         style = MaterialTheme.typography.labelMedium,
         fontWeight = FontWeight.Bold,
         color = textColor

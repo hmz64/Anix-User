@@ -277,8 +277,8 @@ private fun ScheduleItem(anime: AnimeSeries, onClick: () -> Unit) {
             .clip(RoundedCornerShape(8.dp))
             .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(8.dp))
             .background(Surface)
-            .clickable { onClick() }
-            .padding(8.dp),
+            .padding(8.dp)
+            .clickable { onClick() },
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
