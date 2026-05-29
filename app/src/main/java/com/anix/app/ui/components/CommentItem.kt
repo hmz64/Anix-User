@@ -1,5 +1,4 @@
 package com.anix.app.ui.components
-import androidx.compose.foundation.border
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.matchParentSize
@@ -98,70 +96,69 @@ fun CommentItem(
                     color = if (bannerUrl != null) Color.White else Color.Unspecified
                 )
                 Spacer(modifier = Modifier.height(8.dp))
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            if (onReply != null) {
-                Text(
-                    text = "Reply",
-                    modifier = Modifier.clickable { onReply() },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Primary,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-            if (onReport != null) {
-                Text(
-                    text = "Report",
-                    modifier = Modifier.clickable { onReport(comment) },
-                    style = MaterialTheme.typography.labelMedium,
-                    color = Color.Red,
-                    fontWeight = FontWeight.Bold
-                )
-            }
-        }
-        if (comment.replies.isNotEmpty()) {
-            Spacer(modifier = Modifier.height(8.dp))
-            comment.replies.take(3).forEach { reply ->
                 Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 16.dp, top = 4.dp)
-                        .border(BorderStroke(1.dp, BorderBlack.copy(alpha = 0.3f)), RoundedCornerShape(6.dp))
-                        .padding(8.dp)
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    AsyncImage(
-                        model = ApiClient.resolveUrl(reply.userAvatar),
-                        contentDescription = reply.username,
-                        modifier = Modifier
-                            .size(24.dp)
-                            .clip(CircleShape),
-                        contentScale = ContentScale.Crop
-                    )
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Column {
+                    if (onReply != null) {
                         Text(
-                            text = reply.username,
-                            style = MaterialTheme.typography.labelSmall,
+                            text = "Reply",
+                            modifier = Modifier.clickable { onReply() },
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Primary,
                             fontWeight = FontWeight.Bold
                         )
+                    }
+                    if (onReport != null) {
                         Text(
-                            text = reply.content,
-                            style = MaterialTheme.typography.bodySmall
+                            text = "Report",
+                            modifier = Modifier.clickable { onReport(comment) },
+                            style = MaterialTheme.typography.labelMedium,
+                            color = Color.Red,
+                            fontWeight = FontWeight.Bold
                         )
-            }
-        }
-    }
-}
-
-            if (comment.replyCount > 3 && onViewReplies != null) {
-                Text(
-                    text = "View ${comment.replyCount} more replies",
-                    modifier = Modifier.padding(start = 16.dp, top = 4.dp),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = Primary,
-                    fontWeight = FontWeight.Bold
-                )
+                    }
+                }
+                if (comment.replies.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    comment.replies.take(3).forEach { reply ->
+                        Row(
+                            modifier = Modifier.padding(start = 16.dp, top = 4.dp)
+                        ) {
+                            AsyncImage(
+                                model = reply.userAvatar?.let { ApiClient.resolveUrl(it) },
+                                contentDescription = reply.username,
+                                modifier = Modifier
+                                    .size(24.dp)
+                                    .clip(CircleShape)
+                                    .border(BorderStroke(1.dp, BorderBlack), CircleShape),
+                                contentScale = ContentScale.Crop
+                            )
+                            Spacer(modifier = Modifier.width(6.dp))
+                            Column {
+                                Text(
+                                    text = reply.username,
+                                    style = MaterialTheme.typography.labelSmall,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Text(
+                                    text = reply.content,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
+                    if (comment.replyCount > 3 && onViewReplies != null) {
+                        Text(
+                            text = "View ${comment.replyCount} more replies",
+                            modifier = Modifier
+                                .padding(start = 16.dp, top = 4.dp)
+                                .clickable { onViewReplies() },
+                            style = MaterialTheme.typography.labelSmall,
+                            color = Primary,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
         }
     }
