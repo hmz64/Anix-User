@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    private const val DEFAULT_BASE_URL = "http://10.0.2.2:8080/"
+    private const val DEFAULT_BASE_URL = "http://192.168.1.15:8080/"
     private var baseUrl: String = DEFAULT_BASE_URL
     private var apiService: ApiService? = null
     private var okHttpClient: OkHttpClient? = null
