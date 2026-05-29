@@ -89,7 +89,7 @@ class AnimeListViewModel(
                     status = state.statusFilter,
                     type = state.typeFilter,
                     sortBy = state.sortBy
-                )
+                ).getOrDefault(emptyList())
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -118,7 +118,7 @@ class AnimeListViewModel(
                     status = state.statusFilter,
                     type = state.typeFilter,
                     sortBy = state.sortBy
-                )
+                ).getOrDefault(emptyList())
                 _uiState.update {
                     it.copy(
                         isLoading = false,
@@ -230,7 +230,7 @@ fun AnimeListScreen(
                 }
 
                 uiState.animeList.isEmpty() -> {
-                    EmptyState()
+                    EmptyState(message = "No anime found")
                 }
 
                 else -> {
@@ -261,7 +261,9 @@ fun AnimeListScreen(
                                 key = { it.id }
                             ) { anime ->
                                 AnimeCard(
-                                    anime = anime,
+                                    posterUrl = anime.poster,
+                                    title = anime.title,
+                                    rating = anime.rating,
                                     onClick = { onAnimeClick(anime.id) }
                                 )
                             }

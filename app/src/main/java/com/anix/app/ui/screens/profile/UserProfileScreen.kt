@@ -45,7 +45,9 @@ import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoBadge
 import com.anix.app.ui.components.NeoButton
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 data class UserProfileUiState(
@@ -57,20 +59,23 @@ data class UserProfileUiState(
 class UserProfileViewModel {
     var uiState by mutableStateOf(UserProfileUiState())
         private set
+    private val scope = CoroutineScope(Dispatchers.IO)
 
-    suspend fun loadProfile(userId: String) {
+    fun loadProfile(userId: String) {
         uiState = uiState.copy(isLoading = true, error = null)
-        ServiceLocator.getUserRepository().getProfile(userId)
-            .onSuccess { user ->
-                uiState = uiState.copy(isLoading = false, user = user)
-            }
-            .onFailure { e ->
-                uiState = uiState.copy(isLoading = false, error = e.message ?: "Failed to load profile")
-            }
+        scope.launch {
+            ServiceLocator.getUserRepository().getProfile(userId)
+                .onSuccess { user ->
+                    uiState = uiState.copy(isLoading = false, user = user)
+                }
+                .onFailure { e ->
+                    uiState = uiState.copy(isLoading = false, error = e.message ?: "Failed to load profile")
+                }
+        }
     }
 
     fun sendFriendRequest(userId: String) {
-        kotlinx.coroutines.CoroutineScope(Dispatchers.IO).launch {
+        scope.launch {
             ServiceLocator.getChatRepository().sendFriendRequest(userId)
         }
     }
@@ -227,7 +232,7 @@ private fun ProfileInfoSection(user: User, isLimited: Boolean) {
         Spacer(modifier = Modifier.height(8.dp))
         Text(text = user.username, fontSize = 22.sp, fontWeight = FontWeight.Bold, color = BorderBlack)
         Spacer(modifier = Modifier.height(4.dp))
-        NeoBadge(text = "Lv. ${user.level}", color = AccentOrange)
+        NeoBadge(text = "Lv. ${user.level}", backgroundColor = AccentOrange)
         if (user.bio.isNotBlank() && !isLimited) {
             Spacer(modifier = Modifier.height(8.dp))
             Text(text = user.bio, fontSize = 14.sp, color = BorderBlack, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp))
