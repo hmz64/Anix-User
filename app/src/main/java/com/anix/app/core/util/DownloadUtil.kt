@@ -15,7 +15,7 @@ import java.io.File
 import java.io.FileInputStream
 
 fun downloadVideoMp4(context: Context, videoUrl: String, fileName: String) {
-    Toast.makeText(context, "sedang di download, sabar ya~", Toast.LENGTH_SHORT).show()
+    Toast.makeText(context, "Sedang didownload, sabar ya~", Toast.LENGTH_SHORT).show()
 
     val downloadManager = context.getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
     val uri = Uri.parse(videoUrl)
@@ -23,7 +23,7 @@ fun downloadVideoMp4(context: Context, videoUrl: String, fileName: String) {
     val request = DownloadManager.Request(uri).apply {
         setTitle("Mengunduh Video")
         setDescription("Menyiapkan file $fileName...")
-        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE)
+        setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
         setMimeType("video/mp4")
         setDestinationInExternalFilesDir(context, Environment.DIRECTORY_MOVIES, "$fileName.mp4")
     }
