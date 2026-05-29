@@ -883,7 +883,7 @@ private fun CommentRow(comment: Comment, isOwn: Boolean, onDelete: () -> Unit) {
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
         AsyncImage(
-            model = ApiClient.resolveUrl(comment.userAvatar).ifEmpty { null },
+            model = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null },
             contentDescription = null,
             modifier = Modifier.size(36.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
             contentScale = ContentScale.Crop
