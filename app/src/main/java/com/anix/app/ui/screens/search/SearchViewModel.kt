@@ -31,6 +31,7 @@ class SearchViewModel : ViewModel() {
     val uiState: StateFlow<SearchUiState> = _uiState.asStateFlow()
 
     private var searchJob: Job? = null
+    private val recentCache = mutableListOf<String>()
 
     init {
         loadGenres()
@@ -50,8 +51,6 @@ class SearchViewModel : ViewModel() {
             recentSearches = getRecentFromMemory()
         )
     }
-
-    private val recentCache = mutableListOf<String>()
 
     private fun getRecentFromMemory(): List<String> = recentCache.toList()
 
