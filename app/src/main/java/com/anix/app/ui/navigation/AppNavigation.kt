@@ -309,7 +309,7 @@ fun MainScreen(navController: NavHostController) {
                 HomeScreen(
                     onAnimeClick = { navController.navigate(Routes.animeDetail(it)) },
                     onSeeAllClick = { category -> navController.navigate(Routes.animeList(category)) },
-                    onGenreClick = { genre -> navController.navigate(Routes.animeList("genre/$genre")) }
+                    onGenreClick = { genre -> navController.navigate(Routes.animeList(genre)) }
                 )
             }
             composable(Routes.SEARCH) {
