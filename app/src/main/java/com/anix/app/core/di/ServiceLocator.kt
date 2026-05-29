@@ -9,7 +9,11 @@ import androidx.datastore.preferences.preferencesDataStore
 import com.anix.app.core.network.ApiClient
 import com.anix.app.core.network.ApiService
 import com.anix.app.data.repositories.*
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 
 private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(name = "anix_preferences")
@@ -17,6 +21,8 @@ private val Context.dataStore: DataStore<Preferences> by preferencesDataStore(na
 object ServiceLocator {
 
     private var context: Context? = null
+    private var cachedToken: String? = null
+    private var scope: CoroutineScope? = null
     private var _apiService: ApiService? = null
     private var _animeRepository: AnimeRepository? = null
     private var _authRepository: AuthRepository? = null
@@ -29,6 +35,7 @@ object ServiceLocator {
 
     fun init(ctx: Context) {
         context = ctx.applicationContext
+        scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         _apiService = ApiClient.getApiService(ctx)
         _animeRepository = AnimeRepository(getApiService())
         _authRepository = AuthRepository(getApiService(), ctx)
@@ -38,6 +45,13 @@ object ServiceLocator {
         _notificationRepository = NotificationRepository(getApiService())
         _socialRepository = SocialRepository(getApiService())
         _userRepository = UserRepository(getApiService())
+
+        val ds = context?.dataStore
+        if (ds != null) {
+            runBlocking(Dispatchers.IO) {
+                cachedToken = ds.data.first()[PreferencesKeys.AUTH_TOKEN]
+            }
+        }
     }
 
     fun getApiService(): ApiService = _apiService!!
@@ -54,23 +68,13 @@ object ServiceLocator {
         return context?.dataStore
     }
 
-    fun getToken(): String? {
-        val ds = getDataStore() ?: return null
-        return try {
-            runBlocking {
-                ds.data.first()[PreferencesKeys.AUTH_TOKEN]
-            }
-        } catch (e: Exception) {
-            Log.e("ServiceLocator", "Failed to get token", e)
-            null
-        }
-    }
+    fun getToken(): String? = cachedToken
 
     fun saveToken(token: String) {
-        val ds = getDataStore() ?: return
-        runBlocking {
+        cachedToken = token
+        scope?.launch {
             try {
-                ds.edit { preferences ->
+                getDataStore()?.edit { preferences ->
                     preferences[PreferencesKeys.AUTH_TOKEN] = token
                 }
             } catch (e: Exception) {
@@ -80,10 +84,10 @@ object ServiceLocator {
     }
 
     fun clearToken() {
-        val ds = getDataStore() ?: return
-        runBlocking {
+        cachedToken = null
+        scope?.launch {
             try {
-                ds.edit { preferences ->
+                getDataStore()?.edit { preferences ->
                     preferences.remove(PreferencesKeys.AUTH_TOKEN)
                 }
             } catch (e: Exception) {

@@ -2,6 +2,7 @@ package com.anix.app.ui.screens.auth
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -21,155 +21,95 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.ImeAction
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
-import com.anix.app.core.di.ServiceLocator
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anix.app.core.theme.Background
+import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
-import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoButton
 import com.anix.app.ui.components.NeoTextField
-import kotlinx.coroutines.launch
 
 @Composable
 fun RegisterScreen(
+    onLoginClick: () -> Unit,
     onRegisterSuccess: () -> Unit,
-    onNavigateToLogin: () -> Unit
+    viewModel: RegisterViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var username by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
-    var isLoading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    val scope = rememberCoroutineScope()
+    var showPassword by remember { mutableStateOf(false) }
+    var localError by remember { mutableStateOf<String?>(null) }
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-    ) {
+    if (uiState.registerSuccess != null) {
+        onRegisterSuccess()
+        return
+    }
+
+    Box(modifier = Modifier.fillMaxSize().background(Background).verticalScroll(rememberScrollState())) {
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(24.dp),
+            modifier = Modifier.fillMaxWidth().padding(24.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Text(
-                text = "Create Account",
-                style = MaterialTheme.typography.headlineLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.height(32.dp))
+            Text("Register", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+            Spacer(modifier = Modifier.height(24.dp))
 
+            NeoTextField(value = username, onValueChange = { username = it; localError = null }, placeholder = "Username", modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(12.dp))
+            NeoTextField(value = email, onValueChange = { email = it; localError = null }, placeholder = "Email", modifier = Modifier.fillMaxWidth())
+            Spacer(modifier = Modifier.height(12.dp))
             NeoTextField(
-                value = username,
-                onValueChange = { username = it; error = null },
-                label = "Username",
-                placeholder = "Choose a username",
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Next)
+                value = password, onValueChange = { password = it; localError = null },
+                placeholder = "Password", modifier = Modifier.fillMaxWidth(),
+                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                trailingIcon = {
+                    Text(
+                        if (showPassword) "Hide" else "Show",
+                        modifier = Modifier.clickable { showPassword = !showPassword }.padding(8.dp),
+                        style = MaterialTheme.typography.labelSmall, color = Primary, fontWeight = FontWeight.Bold
+                    )
+                }
             )
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             NeoTextField(
-                value = email,
-                onValueChange = { email = it; error = null },
-                label = "Email",
-                placeholder = "Enter your email",
-                modifier = Modifier.fillMaxWidth(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Email,
-                    imeAction = ImeAction.Next
-                )
+                value = confirmPassword, onValueChange = { confirmPassword = it; localError = null },
+                placeholder = "Confirm Password", modifier = Modifier.fillMaxWidth(),
+                visualTransformation = PasswordVisualTransformation()
             )
-            Spacer(modifier = Modifier.height(16.dp))
-            NeoTextField(
-                value = password,
-                onValueChange = { password = it; error = null },
-                label = "Password",
-                placeholder = "Create a password",
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Next
-                )
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            NeoTextField(
-                value = confirmPassword,
-                onValueChange = { confirmPassword = it; error = null },
-                label = "Confirm Password",
-                placeholder = "Repeat your password",
-                modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation(),
-                keyboardOptions = KeyboardOptions(
-                    keyboardType = KeyboardType.Password,
-                    imeAction = ImeAction.Done
-                )
-            )
+            Spacer(modifier = Modifier.height(8.dp))
 
-            if (error != null) {
+            val errorMsg = localError ?: uiState.error
+            if (errorMsg != null) {
+                Text(errorMsg, color = Color.Red, style = MaterialTheme.typography.bodySmall)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = error!!,
-                    color = Color.Red,
-                    style = MaterialTheme.typography.bodySmall
-                )
             }
 
-            Spacer(modifier = Modifier.height(24.dp))
             NeoButton(
-                text = "Register",
+                text = if (uiState.isLoading) "Loading..." else "Register",
                 onClick = {
                     when {
-                        username.isBlank() || email.isBlank() || password.isBlank() -> {
-                            error = "Please fill all fields"; return@NeoButton
-                        }
-                        password != confirmPassword -> {
-                            error = "Passwords don't match"; return@NeoButton
-                        }
-                        password.length < 6 -> {
-                            error = "Password must be at least 6 characters"; return@NeoButton
-                        }
-                    }
-                    isLoading = true
-                    error = null
-                    scope.launch {
-                        val result = ServiceLocator.getAuthRepository().register(username, email, password)
-                        isLoading = false
-                        result.fold(
-                            onSuccess = { onRegisterSuccess() },
-                            onFailure = { error = it.message ?: "Registration failed" }
-                        )
+                        username.length < 3 -> localError = "Username must be at least 3 characters"
+                        !email.contains("@") -> localError = "Invalid email"
+                        password.length < 8 -> localError = "Password must be at least 8 characters"
+                        password != confirmPassword -> localError = "Passwords do not match"
+                        else -> viewModel.register(username, email, password)
                     }
                 },
-                modifier = Modifier.fillMaxWidth(),
-                enabled = !isLoading
+                backgroundColor = Primary, modifier = Modifier.fillMaxWidth(), enabled = !uiState.isLoading
             )
-
             Spacer(modifier = Modifier.height(16.dp))
-            Text(
-                text = "Already have an account? Login",
-                modifier = Modifier.clickable { onNavigateToLogin() },
-                style = MaterialTheme.typography.bodyMedium,
-                color = Primary,
-                fontWeight = FontWeight.Bold
-            )
-        }
-
-        if (isLoading) {
-            LoadingIndicator()
+            Text("Already have an account? Login", color = Primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onLoginClick() })
         }
     }
 }

@@ -1,10 +1,11 @@
 package com.anix.app.ui.screens.settings
-import androidx.compose.foundation.border
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -12,150 +13,71 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
-import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.anix.app.core.di.ServiceLocator
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
 import com.anix.app.ui.components.NeoButton
 import com.anix.app.ui.components.NeoTextField
-import kotlinx.coroutines.launch
 
 @Composable
 fun SettingsScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onLogout: () -> Unit,
+    viewModel: SettingsViewModel = viewModel()
 ) {
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var username by remember { mutableStateOf("") }
-    var privacySetting by remember { mutableStateOf("public") }
-    var bannerUrl by remember { mutableStateOf("") }
-    val scope = rememberCoroutineScope()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "← Settings",
-            modifier = Modifier.clickable { onBack() },
-            style = MaterialTheme.typography.titleMedium,
-            fontWeight = FontWeight.Bold,
-            color = Primary
-        )
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Update Username
-        Text("Update Username", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        NeoTextField(
-            value = username,
-            onValueChange = { username = it },
-            placeholder = "New username",
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        NeoButton(
-            text = "Save Username",
-            onClick = {
-                scope.launch {
-                    ServiceLocator.getUserRepository().updateName(username)
-                }
-            },
-            backgroundColor = Primary,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Update Banner
-        Text("Update Banner URL", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        NeoTextField(
-            value = bannerUrl,
-            onValueChange = { bannerUrl = it },
-            placeholder = "Banner image URL",
-            modifier = Modifier.fillMaxWidth()
-        )
-        Spacer(modifier = Modifier.height(8.dp))
-        NeoButton(
-            text = "Save Banner",
-            onClick = {
-                scope.launch {
-                    ServiceLocator.getUserRepository().updateBanner(bannerUrl)
-                }
-            },
-            backgroundColor = Primary,
-            modifier = Modifier.fillMaxWidth()
-        )
-
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // Privacy Toggle
+    Column(modifier = Modifier.fillMaxSize().background(Background)) {
         Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp))
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier.fillMaxWidth().background(Surface).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(0.dp)).padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text("Privacy Mode", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-                Text("Hide your activity from others", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-            }
-            Switch(
-                checked = privacySetting == "private",
-                onCheckedChange = {
-                    privacySetting = if (it) "private" else "public"
-                    scope.launch {
-                        ServiceLocator.getUserRepository().updatePrivacy(privacySetting)
-                    }
-                },
-                colors = SwitchDefaults.colors(
-                    checkedThumbColor = Color.White,
-                    checkedTrackColor = Primary,
-                    uncheckedThumbColor = Color.White,
-                    uncheckedTrackColor = Color.LightGray
-                )
-            )
+            Text("← Back", modifier = Modifier.clickable { onBack() }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Primary)
+            Spacer(modifier = Modifier.width(12.dp))
+            Text("Settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
         }
 
-        Spacer(modifier = Modifier.height(24.dp))
-
-        // App Info
-        Text("App Info", style = MaterialTheme.typography.titleSmall, fontWeight = FontWeight.Bold)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Anix v1.0.0", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-        Text("Neo Brutalism Edition", style = MaterialTheme.typography.bodyMedium, color = Color.Gray)
-
-        Spacer(modifier = Modifier.height(32.dp))
-
-        NeoButton(
-            text = "Back",
-            onClick = onBack,
-            backgroundColor = Surface,
-            textColor = Color.Black,
-            modifier = Modifier.fillMaxWidth()
-        )
+        LazyColumn(modifier = Modifier.fillMaxSize().padding(16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            item {
+                Text("Account", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+            }
+            item {
+                Column(modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(8.dp)).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp)).padding(12.dp)) {
+                    Text("Update Username", fontWeight = FontWeight.Bold)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    NeoTextField(value = username, onValueChange = { username = it }, placeholder = "New username", modifier = Modifier.fillMaxWidth())
+                    Spacer(modifier = Modifier.height(8.dp))
+                    NeoButton(text = "Save", onClick = { viewModel.updateUsername(username) }, backgroundColor = Primary, modifier = Modifier.fillMaxWidth(), enabled = !uiState.isLoading)
+                    if (uiState.successMessage != null) { Text(uiState.successMessage!!, color = Color.Green) }
+                    if (uiState.error != null) { Text(uiState.error!!, color = Color.Red) }
+                }
+            }
+            item {
+                Column(modifier = Modifier.fillMaxWidth().background(Color(0xFFFFE0E0), RoundedCornerShape(8.dp)).border(BorderStroke(2.dp, Color.Red), RoundedCornerShape(8.dp)).padding(12.dp)) {
+                    Text("Danger Zone", fontWeight = FontWeight.Bold, color = Color.Red)
+                    Spacer(modifier = Modifier.height(8.dp))
+                    NeoButton(text = "Logout", onClick = onLogout, backgroundColor = Color.Red, modifier = Modifier.fillMaxWidth())
+                }
+            }
+        }
     }
 }

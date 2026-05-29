@@ -1,8 +1,8 @@
 package com.anix.app.ui.screens.detail
-import androidx.compose.foundation.border
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -14,87 +14,57 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.FavoriteBorder
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.theme.AccentOrange
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
-import com.anix.app.data.models.AnimeSeries
-import com.anix.app.data.models.Episode
 import com.anix.app.ui.components.EpisodeItem
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoBadge
 import com.anix.app.ui.components.NeoButton
-import com.anix.app.ui.components.NeoCard
-import kotlinx.coroutines.launch
 
 @Composable
 fun AnimeDetailScreen(
     animeId: String,
     onEpisodeClick: (String) -> Unit,
     onBack: () -> Unit,
-    onCommentsClick: () -> Unit
+    onCommentsClick: () -> Unit,
+    viewModel: AnimeDetailViewModel = viewModel()
 ) {
-    var anime by remember { mutableStateOf<AnimeSeries?>(null) }
-    var episodes by remember { mutableStateOf<List<Episode>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var isFavorited by remember { mutableStateOf(false) }
-    var selectedTab by remember { mutableIntStateOf(0) }
-    val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     LaunchedEffect(animeId) {
-        val repo = ServiceLocator.getAnimeRepository()
-        repo.getAnimeDetail(animeId).onSuccess {
-            anime = it
-            isFavorited = it.isFavorited
-        }.onFailure { error = it.message }
-
-        repo.getAnimeEpisodes(animeId).onSuccess {
-            episodes = it
-        }
-        isLoading = false
+        viewModel.loadAnime(animeId)
     }
 
-    if (isLoading) {
+    if (uiState.isLoading) {
         LoadingIndicator()
-    } else if (error != null && anime == null) {
-        ErrorState(message = error!!, onRetry = { isLoading = true; error = null })
-    } else if (anime != null) {
-        val a = anime!!
+    } else if (uiState.error != null && uiState.anime == null) {
+        ErrorState(message = uiState.error!!, onRetry = { viewModel.loadAnime(animeId) })
+    } else if (uiState.anime != null) {
+        val a = uiState.anime!!
         Column(
             modifier = Modifier
                 .fillMaxSize()
@@ -192,14 +162,9 @@ fun AnimeDetailScreen(
                 // Favorite Button
                 Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     NeoButton(
-                        text = if (isFavorited) "Favorited" else "Add to Favorites",
-                        onClick = {
-                            scope.launch {
-                                ServiceLocator.getUserRepository().toggleFavorite(animeId)
-                                isFavorited = !isFavorited
-                            }
-                        },
-                        backgroundColor = if (isFavorited) Color.Red else Primary,
+                        text = if (uiState.isFavorited) "Favorited" else "Add to Favorites",
+                        onClick = { viewModel.toggleFavorite(animeId) },
+                        backgroundColor = if (uiState.isFavorited) Color.Red else Primary,
                         modifier = Modifier.weight(1f)
                     )
                     NeoButton(
@@ -215,13 +180,13 @@ fun AnimeDetailScreen(
 
                 // Episodes Section
                 Text(
-                    text = "Episodes (${episodes.size})",
+                    text = "Episodes (${uiState.episodes.size})",
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold
                 )
                 Spacer(modifier = Modifier.height(8.dp))
 
-                episodes.forEach { episode ->
+                uiState.episodes.forEach { episode ->
                     EpisodeItem(
                         episode = episode,
                         onClick = { onEpisodeClick(episode.id) }

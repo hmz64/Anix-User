@@ -1,5 +1,4 @@
 package com.anix.app.ui.screens.splash
-import androidx.compose.foundation.border
 
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween

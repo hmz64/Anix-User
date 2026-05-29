@@ -2,6 +2,7 @@ package com.anix.app.core.network
 
 import android.content.Context
 import com.anix.app.core.di.ServiceLocator
+import com.anix.app.BuildConfig
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
@@ -17,8 +18,8 @@ import java.util.concurrent.TimeUnit
 
 object ApiClient {
 
-    private const val DEFAULT_BASE_URL = "http://192.168.1.15:8080/"
-    private var baseUrl: String = DEFAULT_BASE_URL
+    private val defaultBaseUrl: String = BuildConfig.BASE_URL
+    private var baseUrl: String = defaultBaseUrl
     private var apiService: ApiService? = null
     private var okHttpClient: OkHttpClient? = null
 
@@ -67,7 +68,7 @@ object ApiClient {
     private fun getOkHttpClient(context: Context): OkHttpClient {
         if (okHttpClient == null) {
             val loggingInterceptor = HttpLoggingInterceptor().apply {
-                level = HttpLoggingInterceptor.Level.BODY
+                level = if (BuildConfig.DEBUG) HttpLoggingInterceptor.Level.BODY else HttpLoggingInterceptor.Level.NONE
             }
 
             val authInterceptor = Interceptor { chain ->

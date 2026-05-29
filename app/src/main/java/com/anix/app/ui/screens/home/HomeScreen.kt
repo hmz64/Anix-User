@@ -21,11 +21,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -33,14 +29,13 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
-import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Banner
-import com.anix.app.data.models.Genre
 import com.anix.app.ui.components.AnimeCard
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
@@ -49,33 +44,15 @@ import com.anix.app.ui.components.NeoChip
 @Composable
 fun HomeScreen(
     onAnimeClick: (String) -> Unit,
-    onSeeAllClick: (String) -> Unit
+    onSeeAllClick: (String) -> Unit,
+    viewModel: HomeViewModel = viewModel()
 ) {
-    var trendingAnime by remember { mutableStateOf<List<AnimeSeries>>(emptyList()) }
-    var newReleases by remember { mutableStateOf<List<AnimeSeries>>(emptyList()) }
-    var genres by remember { mutableStateOf<List<Genre>>(emptyList()) }
-    var banners by remember { mutableStateOf<List<Banner>>(emptyList()) }
-    var isLoading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        val repo = ServiceLocator.getAnimeRepository()
-        try {
-            repo.getAnimeList(sort = "rating").onSuccess { trendingAnime = it }
-            repo.getAnimeList(sort = "newest").onSuccess { newReleases = it }
-            repo.getGenres().onSuccess { genres = it }
-            repo.getBanners().onSuccess { banners = it }
-            error = null
-        } catch (e: Exception) {
-            error = e.message
-        }
-        isLoading = false
-    }
-
-    if (isLoading) {
+    if (uiState.isLoading) {
         LoadingIndicator()
-    } else if (error != null) {
-        ErrorState(message = error!!, onRetry = { isLoading = true; error = null })
+    } else if (uiState.error != null) {
+        ErrorState(message = uiState.error!!, onRetry = { viewModel.loadData() })
     } else {
         Column(
             modifier = Modifier
@@ -84,7 +61,7 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState())
         ) {
             // Banner Carousel
-            if (banners.isNotEmpty()) {
+            if (uiState.banners.isNotEmpty()) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -92,13 +69,13 @@ fun HomeScreen(
                         .padding(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    banners.forEach { banner ->
+                    uiState.banners.forEach { banner ->
                         BannerItem(
                             banner = banner,
                             modifier = Modifier
                                 .width(340.dp)
                                 .height(180.dp),
-                            onClick = { onAnimeClick(banner.animeId) }
+                            onClick = { if (banner.linkUrl.isNotEmpty()) onAnimeClick(banner.linkUrl) }
                         )
                     }
                 }
@@ -117,7 +94,7 @@ fun HomeScreen(
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                trendingAnime.take(10).forEach { anime ->
+                uiState.trendingAnime.take(10).forEach { anime ->
                     AnimeCard(
                         posterUrl = anime.poster,
                         title = anime.title,
@@ -144,7 +121,7 @@ fun HomeScreen(
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                genres.forEach { genre ->
+                uiState.genres.forEach { genre ->
                     NeoChip(text = genre.name, onClick = { })
                 }
             }
@@ -162,7 +139,7 @@ fun HomeScreen(
                     .padding(horizontal = 12.dp),
                 horizontalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                newReleases.take(10).forEach { anime ->
+                uiState.newReleases.take(10).forEach { anime ->
                     AnimeCard(
                         posterUrl = anime.poster,
                         title = anime.title,
@@ -235,9 +212,9 @@ private fun BannerItem(
                 fontWeight = FontWeight.Bold,
                 color = Color.White
             )
-            if (banner.subtitle.isNotEmpty()) {
+            if (banner.linkUrl.isNotEmpty()) {
                 Text(
-                    text = banner.subtitle,
+                    text = banner.linkUrl,
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.White.copy(alpha = 0.8f)
                 )

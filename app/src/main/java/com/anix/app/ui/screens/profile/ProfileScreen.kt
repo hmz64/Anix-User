@@ -1,8 +1,8 @@
 package com.anix.app.ui.screens.profile
-import androidx.compose.foundation.border
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,8 +14,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -26,13 +24,7 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -40,59 +32,35 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.theme.AccentOrange
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
-import com.anix.app.data.models.Comment
-import com.anix.app.data.models.User
-import com.anix.app.data.models.UserFavorite
-import com.anix.app.data.models.UserStats
-import com.anix.app.data.models.WatchHistory
 import com.anix.app.ui.components.EmptyState
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoBadge
 import com.anix.app.ui.components.NeoButton
-import com.anix.app.ui.components.NeoCard
-import kotlinx.coroutines.launch
 
 @Composable
 fun ProfileScreen(
     onSettingsClick: () -> Unit,
     onAnimeClick: (String) -> Unit,
-    onLogout: () -> Unit
+    onLogout: () -> Unit,
+    viewModel: ProfileViewModel = viewModel()
 ) {
-    var user by remember { mutableStateOf<User?>(null) }
-    var stats by remember { mutableStateOf<UserStats?>(null) }
-    var isLoading by remember { mutableStateOf(true) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var selectedTab by remember { mutableIntStateOf(0) }
-    var history by remember { mutableStateOf<List<WatchHistory>>(emptyList()) }
-    var favorites by remember { mutableStateOf<List<UserFavorite>>(emptyList()) }
-    var comments by remember { mutableStateOf<List<Comment>>(emptyList()) }
-    val scope = rememberCoroutineScope()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(Unit) {
-        val authRepo = ServiceLocator.getAuthRepository()
-        val userRepo = ServiceLocator.getUserRepository()
-        authRepo.me().onSuccess { user = it }.onFailure { error = it.message }
-        userRepo.getUserStats().onSuccess { stats = it }
-        userRepo.getWatchHistory().onSuccess { history = it }
-        userRepo.getFavorites().onSuccess { favorites = it }
-        userRepo.getUserComments().onSuccess { comments = it }
-        isLoading = false
-    }
-
-    if (isLoading) {
+    if (uiState.isLoading) {
         LoadingIndicator()
-    } else if (error != null && user == null) {
-        ErrorState(message = error!!, onRetry = { isLoading = true; error = null })
-    } else if (user != null) {
-        val u = user!!
+    } else if (uiState.error != null && uiState.user == null) {
+        ErrorState(message = uiState.error!!, onRetry = { viewModel.loadProfile() })
+    } else if (uiState.user != null) {
+        val u = uiState.user!!
         Box(
             modifier = Modifier
                 .fillMaxSize()
@@ -184,15 +152,15 @@ fun ProfileScreen(
                         Spacer(modifier = Modifier.height(16.dp))
 
                         // Stats row
-                        if (stats != null) {
+                        if (uiState.stats != null) {
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.SpaceEvenly
                             ) {
-                                StatItem("Comments", "${stats!!.totalComments}")
-                                StatItem("Favorites", "${stats!!.totalFavorites}")
-                                StatItem("Watched", "${stats!!.totalWatched}")
-                                StatItem("XP", "${stats!!.totalXp}")
+                                StatItem("Comments", "${uiState.stats!!.totalComments}")
+                                StatItem("Favorites", "${uiState.stats!!.totalFavorites}")
+                                StatItem("Watched", "${uiState.stats!!.totalWatched}")
+                                StatItem("XP", "${uiState.stats!!.totalXp}")
                             }
                         }
 
@@ -201,9 +169,7 @@ fun ProfileScreen(
                         NeoButton(
                             text = "Logout",
                             onClick = {
-                                scope.launch {
-                                    ServiceLocator.getAuthRepository().logout()
-                                }
+                                viewModel.logout()
                                 onLogout()
                             },
                             backgroundColor = Color.Red,
@@ -216,29 +182,29 @@ fun ProfileScreen(
                     // Tabs
                     val tabs = listOf("History", "Favorites", "Comments")
                     TabRow(
-                        selectedTabIndex = selectedTab,
+                        selectedTabIndex = uiState.selectedTab,
                         containerColor = Surface,
                         contentColor = Primary
                     ) {
                         tabs.forEachIndexed { index, title ->
                             Tab(
-                                selected = selectedTab == index,
-                                onClick = { selectedTab = index },
+                                selected = uiState.selectedTab == index,
+                                onClick = { viewModel.setSelectedTab(index) },
                                 text = {
                                     Text(
                                         title,
-                                        fontWeight = if (selectedTab == index) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (selectedTab == index) Primary else Color.Black
+                                        fontWeight = if (uiState.selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                                        color = if (uiState.selectedTab == index) Primary else Color.Black
                                     )
                                 }
                             )
                         }
                     }
 
-                    when (selectedTab) {
+                    when (uiState.selectedTab) {
                         0 -> { // History
-                            if (history.isEmpty()) EmptyState(message = "No watch history")
-                            else history.forEach { h ->
+                            if (uiState.history.isEmpty()) EmptyState(message = "No watch history")
+                            else uiState.history.forEach { h ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -262,8 +228,8 @@ fun ProfileScreen(
                             }
                         }
                         1 -> { // Favorites
-                            if (favorites.isEmpty()) EmptyState(message = "No favorites yet")
-                            else favorites.forEach { f ->
+                            if (uiState.favorites.isEmpty()) EmptyState(message = "No favorites yet")
+                            else uiState.favorites.forEach { f ->
                                 Row(
                                     modifier = Modifier
                                         .fillMaxWidth()
@@ -284,8 +250,8 @@ fun ProfileScreen(
                             }
                         }
                         2 -> { // Comments
-                            if (comments.isEmpty()) EmptyState(message = "No comments yet")
-                            else comments.forEach { c ->
+                            if (uiState.comments.isEmpty()) EmptyState(message = "No comments yet")
+                            else uiState.comments.forEach { c ->
                                 Column(
                                     modifier = Modifier
                                         .fillMaxWidth()

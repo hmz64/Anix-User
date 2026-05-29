@@ -14,7 +14,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -29,12 +28,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -44,54 +38,24 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
-import com.anix.app.data.models.AnimeSeries
-import com.anix.app.data.models.Genre
 import com.anix.app.ui.components.EmptyState
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoTextField
-import kotlinx.coroutines.launch
 
 @Composable
 fun SearchScreen(
-    onAnimeClick: (String) -> Unit
+    onAnimeClick: (String) -> Unit,
+    viewModel: SearchViewModel = viewModel()
 ) {
-    var query by remember { mutableStateOf("") }
-    var results by remember { mutableStateOf<List<AnimeSeries>>(emptyList()) }
-    var genres by remember { mutableStateOf<List<Genre>>(emptyList()) }
-    var selectedGenre by remember { mutableStateOf<String?>(null) }
-    var isLoading by remember { mutableStateOf(false) }
-    var error by remember { mutableStateOf<String?>(null) }
-    var hasSearched by remember { mutableStateOf(false) }
-    val scope = rememberCoroutineScope()
-
-    LaunchedEffect(Unit) {
-        ServiceLocator.getAnimeRepository().getGenres().onSuccess { genres = it }
-    }
-
-    fun search() {
-        isLoading = true
-        hasSearched = true
-        error = null
-        scope.launch {
-            val repo = ServiceLocator.getAnimeRepository()
-            val response = if (query.isNotBlank()) {
-                repo.searchAnime(query)
-            } else if (selectedGenre != null) {
-                repo.getAnimeList(genre = selectedGenre)
-            } else {
-                repo.getAnimeList()
-            }
-            response.onSuccess { results = it }.onFailure { error = it.message }
-            isLoading = false
-        }
-    }
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Box(
         modifier = Modifier
@@ -100,8 +64,8 @@ fun SearchScreen(
     ) {
         Column(modifier = Modifier.fillMaxSize()) {
             NeoTextField(
-                value = query,
-                onValueChange = { query = it },
+                value = uiState.query,
+                onValueChange = { viewModel.setQuery(it) },
                 placeholder = "Search anime...",
                 modifier = Modifier
                     .fillMaxWidth()
@@ -110,21 +74,21 @@ fun SearchScreen(
                     Icon(Icons.Default.Search, contentDescription = "Search")
                 },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { search() }),
+                keyboardActions = KeyboardActions(onSearch = { viewModel.search() }),
                 singleLine = true
             )
 
-            if (genres.isNotEmpty()) {
+            if (uiState.genres.isNotEmpty()) {
                 LazyRow(
                     contentPadding = PaddingValues(horizontal = 12.dp),
                     horizontalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(genres.take(15)) { genre ->
-                        val isSelected = selectedGenre == genre.slug
+                    items(uiState.genres.take(15)) { genre ->
+                        val isSelected = uiState.selectedGenre == genre.slug
                         Text(
                             text = genre.name,
                             modifier = Modifier
-                                .clickable { selectedGenre = if (isSelected) null else genre.slug; search() }
+                                .clickable { viewModel.selectGenre(genre.slug) }
                                 .background(
                                     if (isSelected) Primary else Surface,
                                     RoundedCornerShape(20.dp)
@@ -140,12 +104,11 @@ fun SearchScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Results area
             when {
-                isLoading && results.isEmpty() -> LoadingIndicator()
-                error != null && results.isEmpty() -> ErrorState(message = error!!, onRetry = { search() })
-                !hasSearched -> EmptyState(message = "Search for your favorite anime")
-                results.isEmpty() -> EmptyState(message = "No results found")
+                uiState.isLoading && uiState.results.isEmpty() -> LoadingIndicator()
+                uiState.error != null && uiState.results.isEmpty() -> ErrorState(message = uiState.error!!, onRetry = { viewModel.search() })
+                !uiState.hasSearched -> EmptyState(message = "Search for your favorite anime")
+                uiState.results.isEmpty() -> EmptyState(message = "No results found")
                 else -> {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),
@@ -154,7 +117,7 @@ fun SearchScreen(
                         verticalArrangement = Arrangement.spacedBy(8.dp),
                         modifier = Modifier.fillMaxSize()
                     ) {
-                        gridItems(results) { anime ->
+                        gridItems(uiState.results) { anime ->
                             AnimeSearchItem(
                                 anime = anime,
                                 onClick = { onAnimeClick(anime.id) }

@@ -418,9 +418,8 @@ data class CreatePostRequest(
 // Banner
 data class Banner(
     val id: String = "",
-    val image: String = "",
+    @SerializedName("image_url") val image: String = "",
     val title: String = "",
-    val subtitle: String = "",
-    val animeId: String = "",
-    val active: Boolean = true
+    @SerializedName("link_url") val linkUrl: String = "",
+    @SerializedName("is_active") val active: Boolean = true
 )
