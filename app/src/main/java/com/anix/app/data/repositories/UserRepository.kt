@@ -298,4 +298,18 @@ class UserRepository(private val api: ApiService) {
             Result.failure(e)
         }
     }
+
+    suspend fun updateProgress(episodeId: String, position: Long, completed: Boolean = false): Result<Unit> {
+        return try {
+            val response = api.updateProgress(UpdateProgressRequest(episodeId, progress = position.toInt(), completed = completed))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to update progress"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

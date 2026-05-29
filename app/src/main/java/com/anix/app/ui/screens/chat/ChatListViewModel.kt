@@ -1,5 +1,7 @@
 package com.anix.app.ui.screens.chat
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.data.models.Conversation
 import com.anix.app.data.models.FriendRequest

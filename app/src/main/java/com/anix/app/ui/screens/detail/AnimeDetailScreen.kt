@@ -44,7 +44,6 @@ import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
-import com.anix.app.core.theme.SurfaceWhite
 import com.anix.app.ui.components.EpisodeItem
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator

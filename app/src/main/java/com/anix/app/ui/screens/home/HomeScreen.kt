@@ -41,7 +41,7 @@ import coil.compose.AsyncImage
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
-import com.anix.app.core.theme.SurfaceWhite
+import com.anix.app.core.theme.Surface
 import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Banner
 import com.anix.app.data.models.Genre
@@ -276,7 +276,7 @@ private fun ScheduleItem(anime: AnimeSeries, onClick: () -> Unit) {
             .fillMaxWidth()
             .clip(RoundedCornerShape(8.dp))
             .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(8.dp))
-            .background(SurfaceWhite)
+            .background(Surface)
             .clickable { onClick() }
             .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
