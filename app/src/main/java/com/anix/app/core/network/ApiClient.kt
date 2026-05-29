@@ -7,7 +7,6 @@ import com.google.gson.GsonBuilder
 import com.google.gson.JsonDeserializationContext
 import com.google.gson.JsonDeserializer
 import com.google.gson.JsonElement
-import com.google.gson.reflect.TypeToken
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -31,7 +30,7 @@ object ApiClient {
     private val gson: Gson by lazy {
         GsonBuilder()
             .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)
-            .registerTypeAdapter(object : TypeToken<String>() {}.type, StringAdapter())
+            .registerTypeHierarchyAdapter(String::class.java, StringAdapter())
             .create()
     }
 
