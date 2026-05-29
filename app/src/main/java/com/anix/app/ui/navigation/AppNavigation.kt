@@ -56,8 +56,6 @@ import com.anix.app.ui.screens.profile.ProfileScreen
 import com.anix.app.ui.screens.profile.UserProfileScreen
 import com.anix.app.ui.screens.search.SearchScreen
 import com.anix.app.ui.screens.settings.SettingsScreen
-import com.anix.app.ui.screens.social.SocialFeedScreen
-import com.anix.app.ui.screens.social.SocialPostDetailScreen
 import com.anix.app.ui.screens.splash.SplashScreen
 
 object Routes {
@@ -77,12 +75,10 @@ object Routes {
     const val GIVEAWAY_DETAIL = "giveaway/{giveawayId}"
     const val PROFILE = "profile"
     const val NOTIFICATIONS = "notifications"
-    const val SOCIAL_FEED = "social"
     const val SETTINGS = "settings"
     const val ONBOARDING = "onboarding"
     const val ANIME_LIST = "anime_list/{category}"
     const val USER_PROFILE = "user/{userId}"
-    const val SOCIAL_POST_DETAIL = "post/{postId}"
 
     fun animeDetail(id: String) = "anime/$id"
     fun videoPlayer(episodeId: String, animeId: String) = "player/$episodeId/$animeId"
@@ -92,7 +88,6 @@ object Routes {
     fun giveawayDetail(id: String) = "giveaway/$id"
     fun animeList(category: String) = "anime_list/$category"
     fun userProfile(userId: String) = "user/$userId"
-    fun socialPostDetail(postId: String) = "post/$postId"
 }
 
 data class BottomNavItem(
@@ -106,7 +101,6 @@ val bottomNavItems = listOf(
     BottomNavItem("Home", Icons.Filled.Home, Icons.Outlined.Home, Routes.HOME),
     BottomNavItem("Search", Icons.Filled.Search, Icons.Outlined.Search, Routes.SEARCH),
     BottomNavItem("Chat", Icons.Filled.Chat, Icons.Outlined.Chat, Routes.CHAT_LIST),
-    BottomNavItem("Feed", Icons.Filled.Notifications, Icons.Outlined.Notifications, Routes.SOCIAL_FEED),
     BottomNavItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, Routes.PROFILE),
 )
 
@@ -220,12 +214,6 @@ fun AppNavigation() {
                 onChatClick = { convId -> Log.d("AnixNav", "onChatClick: $convId"); navController.navigate(Routes.chatDetail(convId)) })
         }
 
-        composable(Routes.SOCIAL_POST_DETAIL, arguments = listOf(navArgument("postId") { type = NavType.StringType })) {
-            val postId = it.arguments?.getString("postId") ?: return@composable
-            SocialPostDetailScreen(postId = postId,
-                onBack = { Log.d("AnixNav", "onBack: SocialPostDetail($postId)"); navController.popBackStack() })
-        }
-
         composable(Routes.ONBOARDING) {
             OnboardingScreen(onComplete = { Log.d("AnixNav", "onComplete: Onboarding"); navController.navigate(Routes.LOGIN) { popUpTo(Routes.ONBOARDING) { inclusive = true } } })
         }
@@ -240,10 +228,6 @@ fun AppNavigation() {
 
         composable(Routes.CHAT_LIST) {
             ChatListScreen(onChatClick = { id -> Log.d("AnixNav", "onChatClick: $id"); navController.navigate(Routes.chatDetail(id)) })
-        }
-
-        composable(Routes.SOCIAL_FEED) {
-            SocialFeedScreen(onPostClick = { id -> Log.d("AnixNav", "onPostClick: $id") })
         }
 
         composable(Routes.HOME) {
@@ -334,9 +318,6 @@ fun MainScreen(navController: NavHostController) {
             }
             composable(Routes.CHAT_LIST) {
                 ChatListScreen(onChatClick = { id -> Log.d("AnixNav", "onChatClick: $id"); navController.navigate(Routes.chatDetail(id)) })
-            }
-            composable(Routes.SOCIAL_FEED) {
-                SocialFeedScreen(onPostClick = { postId -> Log.d("AnixNav", "onPostClick: $postId"); navController.navigate(Routes.socialPostDetail(postId)) })
             }
             composable(Routes.PROFILE) {
                 ProfileScreen(

@@ -881,33 +881,52 @@ private fun SortChip(text: String, selected: Boolean, onClick: () -> Unit) {
 
 @Composable
 private fun CommentRow(comment: Comment, isOwn: Boolean, onDelete: () -> Unit) {
+    val bannerUrl = ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null }
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
-        AsyncImage(
-            model = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null },
-            contentDescription = null,
-            modifier = Modifier.size(36.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(Modifier.width(8.dp))
-        Column(Modifier.weight(1f)) {
-            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                Text(comment.username, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Dark)
-                Box(
-                    Modifier
-                        .border(1.5.dp, BorderBlack, RoundedCornerShape(4.dp))
-                        .background(Color(0xFFFF6B35))
-                        .padding(horizontal = 4.dp, vertical = 1.dp)
-                ) {
-                    Text("Lvl. ${comment.userLevel}", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold)
-                }
-                Text(comment.createdAt, fontSize = 11.sp, color = Color.Gray)
+        Box(
+            Modifier.weight(1f)
+        ) {
+            if (bannerUrl != null) {
+                AsyncImage(
+                    model = bannerUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.3f)))
             }
-            Text(comment.content, fontSize = 13.sp, color = Dark, modifier = Modifier.padding(top = 2.dp))
-            Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                TextButton(onClick = {}) { Text("Balas", fontSize = 12.sp) }
-                if (isOwn) TextButton(onClick = onDelete) { Text("Hapus", color = Color.Red, fontSize = 12.sp) }
+            Row(
+                Modifier.fillMaxWidth().then(if (bannerUrl != null) Modifier.padding(8.dp) else Modifier),
+                verticalAlignment = Alignment.Top
+            ) {
+                AsyncImage(
+                    model = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null },
+                    contentDescription = null,
+                    modifier = Modifier.size(36.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(Modifier.width(8.dp))
+                Column(Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                        Text(comment.username, fontWeight = FontWeight.Bold, fontSize = 13.sp, color = if (bannerUrl != null) Color.White else Dark)
+                        Box(
+                            Modifier
+                                .border(1.5.dp, BorderBlack, RoundedCornerShape(4.dp))
+                                .background(Color(0xFFFF6B35))
+                                .padding(horizontal = 4.dp, vertical = 1.dp)
+                        ) {
+                            Text("Lvl. ${comment.userLevel}", fontSize = 10.sp, color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                        Text(comment.createdAt, fontSize = 11.sp, color = if (bannerUrl != null) Color.White.copy(alpha = 0.8f) else Color.Gray)
+                    }
+                    Text(comment.content, fontSize = 13.sp, color = if (bannerUrl != null) Color.White else Dark, modifier = Modifier.padding(top = 2.dp))
+                    Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        TextButton(onClick = {}) { Text("Balas", fontSize = 12.sp, color = if (bannerUrl != null) Color.White else Color.Unspecified) }
+                        if (isOwn) TextButton(onClick = onDelete) { Text("Hapus", color = Color.Red, fontSize = 12.sp) }
+                    }
+                }
             }
         }
     }

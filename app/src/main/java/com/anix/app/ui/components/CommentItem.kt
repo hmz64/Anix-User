@@ -40,48 +40,61 @@ fun CommentItem(
     onReport: ((Comment) -> Unit)? = null,
     onViewReplies: (() -> Unit)? = null
 ) {
+    val bannerUrl = ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null }
     Column(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp, horizontal = 8.dp)
             .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp))
-            .padding(12.dp)
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(
-                model = ApiClient.resolveUrl(comment.userAvatar),
-                contentDescription = comment.username,
-                modifier = Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .border(BorderStroke(1.5.dp, BorderBlack), CircleShape),
-                contentScale = ContentScale.Crop
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = comment.username,
-                style = MaterialTheme.typography.labelLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Spacer(modifier = Modifier.width(6.dp))
-            NeoBadge(
-                text = "Lv.${comment.userLevel}",
-                backgroundColor = AccentOrange,
-                textColor = Color.White
-            )
-            Spacer(modifier = Modifier.weight(1f))
-            Text(
-                text = comment.createdAt.take(10),
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-        }
-        Spacer(modifier = Modifier.height(8.dp))
-        Text(
-            text = comment.content,
-            style = MaterialTheme.typography.bodyMedium
-        )
-        Spacer(modifier = Modifier.height(8.dp))
+        Box {
+            if (bannerUrl != null) {
+                AsyncImage(
+                    model = bannerUrl,
+                    contentDescription = null,
+                    modifier = Modifier.fillMaxWidth(),
+                    contentScale = ContentScale.Crop
+                )
+                Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.3f)))
+            }
+            Column(Modifier.padding(12.dp).then(if (bannerUrl != null) Modifier.fillMaxWidth() else Modifier)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AsyncImage(
+                        model = ApiClient.resolveUrl(comment.userAvatar),
+                        contentDescription = comment.username,
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(CircleShape)
+                            .border(BorderStroke(1.5.dp, BorderBlack), CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(
+                        text = comment.username,
+                        style = MaterialTheme.typography.labelLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = if (bannerUrl != null) Color.White else Color.Unspecified
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    NeoBadge(
+                        text = "Lv.${comment.userLevel}",
+                        backgroundColor = AccentOrange,
+                        textColor = Color.White
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(
+                        text = comment.createdAt.take(10),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (bannerUrl != null) Color.White.copy(alpha = 0.8f) else Color.Gray
+                    )
+                }
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = comment.content,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = if (bannerUrl != null) Color.White else Color.Unspecified
+                )
+                Spacer(modifier = Modifier.height(8.dp))
         Row(
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
@@ -133,9 +146,11 @@ fun CommentItem(
                             text = reply.content,
                             style = MaterialTheme.typography.bodySmall
                         )
-                    }
-                }
             }
+        }
+    }
+}
+
             if (comment.replyCount > 3 && onViewReplies != null) {
                 Text(
                     text = "View ${comment.replyCount} more replies",

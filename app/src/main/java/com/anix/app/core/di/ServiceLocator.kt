@@ -8,7 +8,13 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.preferencesDataStore
 import com.anix.app.core.network.ApiClient
 import com.anix.app.core.network.ApiService
-import com.anix.app.data.repositories.*
+import com.anix.app.data.repositories.AnimeRepository
+import com.anix.app.data.repositories.AuthRepository
+import com.anix.app.data.repositories.ChatRepository
+import com.anix.app.data.repositories.ClanRepository
+import com.anix.app.data.repositories.GiveawayRepository
+import com.anix.app.data.repositories.NotificationRepository
+import com.anix.app.data.repositories.UserRepository
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -30,7 +36,6 @@ object ServiceLocator {
     private var _clanRepository: ClanRepository? = null
     private var _giveawayRepository: GiveawayRepository? = null
     private var _notificationRepository: NotificationRepository? = null
-    private var _socialRepository: SocialRepository? = null
     private var _userRepository: UserRepository? = null
 
     fun init(ctx: Context) {
@@ -43,7 +48,6 @@ object ServiceLocator {
         _clanRepository = ClanRepository(getApiService())
         _giveawayRepository = GiveawayRepository(getApiService())
         _notificationRepository = NotificationRepository(getApiService())
-        _socialRepository = SocialRepository(getApiService())
         _userRepository = UserRepository(getApiService())
 
         val ds = context?.dataStore
@@ -61,7 +65,6 @@ object ServiceLocator {
     fun getClanRepository(): ClanRepository = _clanRepository!!
     fun getGiveawayRepository(): GiveawayRepository = _giveawayRepository!!
     fun getNotificationRepository(): NotificationRepository = _notificationRepository!!
-    fun getSocialRepository(): SocialRepository = _socialRepository!!
     fun getUserRepository(): UserRepository = _userRepository!!
 
     fun getDataStore(): DataStore<Preferences>? {

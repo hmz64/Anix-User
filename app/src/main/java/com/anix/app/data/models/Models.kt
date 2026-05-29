@@ -153,6 +153,7 @@ data class Comment(
     val username: String = "",
     val userAvatar: String = "",
     val userLevel: Int = 1,
+    val userBanner: String = "",
     val animeId: String = "",
     val episodeId: String? = null,
     val parentId: String? = null,
@@ -403,25 +404,6 @@ data class GiftPremiumRequest(
     val userId: String,
     val plan: String,
     val duration: Int
-)
-
-// Social
-data class SocialPost(
-    val id: String = "",
-    val userId: String = "",
-    val username: String = "",
-    val userAvatar: String = "",
-    val content: String = "",
-    val image: String? = null,
-    val likeCount: Int = 0,
-    val commentCount: Int = 0,
-    val isLiked: Boolean = false,
-    val createdAt: String = ""
-)
-
-data class CreatePostRequest(
-    val content: String,
-    val image: String? = null
 )
 
 // Banner

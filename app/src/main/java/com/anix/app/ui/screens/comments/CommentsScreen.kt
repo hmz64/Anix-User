@@ -175,24 +175,33 @@ private fun CommentItem(
     onReply: () -> Unit,
     onReport: () -> Unit
 ) {
+    val bannerUrl = ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null }
     Column(
         modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(8.dp))
-            .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(8.dp)).padding(12.dp)
+            .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(8.dp))
     ) {
-        Row(verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(model = ApiClient.resolveUrl(comment.userAvatar), contentDescription = "", modifier = Modifier.size(28.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(comment.username, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-            Spacer(modifier = Modifier.weight(1f))
-            Text(comment.createdAt.take(10), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        }
-        Spacer(modifier = Modifier.height(4.dp))
-        Text(comment.content, style = MaterialTheme.typography.bodyMedium)
-        Spacer(modifier = Modifier.height(4.dp))
-        Row {
-            Text("Reply", style = MaterialTheme.typography.labelSmall, color = Primary, modifier = Modifier.clickable { onReply() })
-            Spacer(modifier = Modifier.width(16.dp))
-            Text("Report", style = MaterialTheme.typography.labelSmall, color = Color.Red, modifier = Modifier.clickable { onReport() })
+        Box {
+            if (bannerUrl != null) {
+                AsyncImage(model = bannerUrl, contentDescription = "", modifier = Modifier.fillMaxWidth(), contentScale = ContentScale.Crop)
+                Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.3f)))
+            }
+            Column(Modifier.padding(12.dp)) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AsyncImage(model = ApiClient.resolveUrl(comment.userAvatar), contentDescription = "", modifier = Modifier.size(28.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text(comment.username, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = if (bannerUrl != null) Color.White else Color.Unspecified)
+                    Spacer(modifier = Modifier.weight(1f))
+                    Text(comment.createdAt.take(10), style = MaterialTheme.typography.bodySmall, color = if (bannerUrl != null) Color.White.copy(alpha = 0.8f) else Color.Gray)
+                }
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(comment.content, style = MaterialTheme.typography.bodyMedium, color = if (bannerUrl != null) Color.White else Color.Unspecified)
+                Spacer(modifier = Modifier.height(4.dp))
+                Row {
+                    Text("Reply", style = MaterialTheme.typography.labelSmall, color = Primary, modifier = Modifier.clickable { onReply() })
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Text("Report", style = MaterialTheme.typography.labelSmall, color = Color.Red, modifier = Modifier.clickable { onReport() })
+                }
+            }
         }
     }
 }

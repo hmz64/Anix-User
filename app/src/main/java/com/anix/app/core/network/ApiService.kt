@@ -296,25 +296,6 @@ interface ApiService {
         @Query("limit") limit: Int = 20
     ): Response<ApiResponse<List<TopGiver>>>
 
-    // Social
-    @GET("api/social/line")
-    suspend fun getSocialFeed(
-        @Query("page") page: Int = 1,
-        @Query("limit") limit: Int = 20
-    ): Response<ApiResponse<List<SocialPost>>>
-
-    @POST("api/social/line/post")
-    suspend fun createPost(@Body request: CreatePostRequest): Response<ApiResponse<SocialPost>>
-
-    @POST("api/social/line/post/{postId}/like")
-    suspend fun likePost(@Path("postId") postId: String): Response<ApiResponse<Unit>>
-
-    @GET("api/social/line/post/{postId}/comments")
-    suspend fun getPostComments(@Path("postId") postId: String): Response<ApiResponse<List<Comment>>>
-
-    @POST("api/social/line/post/{postId}/comment")
-    suspend fun createPostComment(@Path("postId") postId: String, @Body request: CreateCommentRequest): Response<ApiResponse<Comment>>
-
     // Notifications
     @GET("api/notification/list")
     suspend fun getNotifications(
