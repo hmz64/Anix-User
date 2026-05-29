@@ -93,7 +93,7 @@ fun EpisodeItem(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 Text(
-                    text = "${episode.duration} min",
+                    text = episode.duration,
                     style = MaterialTheme.typography.bodySmall,
                     color = Color.Gray
                 )

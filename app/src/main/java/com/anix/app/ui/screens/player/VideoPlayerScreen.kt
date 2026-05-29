@@ -62,7 +62,9 @@ import kotlinx.coroutines.delay
 @Composable
 fun VideoPlayerScreen(
     episodeId: String,
+    animeId: String? = null,
     onBack: () -> Unit,
+    onCommentsClick: ((String) -> Unit)? = null,
     viewModel: VideoPlayerViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -176,6 +178,24 @@ fun VideoPlayerScreen(
                         fontWeight = FontWeight.Bold,
                         style = MaterialTheme.typography.labelLarge
                     )
+
+                    if (animeId != null && onCommentsClick != null) {
+                        Text(
+                            text = "Comments",
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(12.dp)
+                                .background(Color.White, RoundedCornerShape(6.dp))
+                                .padding(horizontal = 12.dp, vertical = 6.dp)
+                                .clickable {
+                                    exoPlayer.pause()
+                                    onCommentsClick(animeId)
+                                },
+                            color = Color.Black,
+                            fontWeight = FontWeight.Bold,
+                            style = MaterialTheme.typography.labelLarge
+                        )
+                    }
 
                     // Center controls
                     Row(

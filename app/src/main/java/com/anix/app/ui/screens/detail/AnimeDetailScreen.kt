@@ -55,7 +55,6 @@ fun AnimeDetailScreen(
     animeId: String,
     onEpisodeClick: (String) -> Unit,
     onBack: () -> Unit,
-    onCommentsClick: () -> Unit,
     viewModel: AnimeDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -206,7 +205,6 @@ fun AnimeDetailScreen(
                                 style = MaterialTheme.typography.titleLarge,
                                 fontWeight = FontWeight.Bold
                             )
-                            NeoButton(text = "Comments", onClick = onCommentsClick, backgroundColor = Surface, textColor = Color.Black)
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         uiState.episodes.forEach { episode ->

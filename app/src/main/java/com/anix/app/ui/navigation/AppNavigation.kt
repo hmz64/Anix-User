@@ -67,7 +67,7 @@ object Routes {
     const val HOME = "home"
     const val SEARCH = "search"
     const val ANIME_DETAIL = "anime/{animeId}"
-    const val VIDEO_PLAYER = "player/{episodeId}"
+    const val VIDEO_PLAYER = "player/{episodeId}/{animeId}"
     const val COMMENTS = "comments/{animeId}"
     const val CHAT_LIST = "chat_list"
     const val CHAT_DETAIL = "chat/{conversationId}"
@@ -85,8 +85,8 @@ object Routes {
     const val SOCIAL_POST_DETAIL = "post/{postId}"
 
     fun animeDetail(id: String) = "anime/$id"
-    fun videoPlayer(episodeId: String) = "player/$episodeId"
-    fun comments(animeId: String) = "comments/$animeId"
+    fun videoPlayer(episodeId: String, animeId: String) = "player/$episodeId/$animeId"
+    fun comments(animeId: String, episodeId: String) = "comments/$animeId/$episodeId"
     fun chatDetail(id: String) = "chat/$id"
     fun clanDetail(id: String) = "clan/$id"
     fun giveawayDetail(id: String) = "giveaway/$id"
@@ -120,72 +120,82 @@ fun AppNavigation() {
     ) {
         composable(Routes.SPLASH) {
             SplashScreen(
-                onNavigateToLogin = { navController.navigate(Routes.LOGIN) { popUpTo(Routes.SPLASH) { inclusive = true } } },
-                onNavigateToHome = { navController.navigate(Routes.HOME) { popUpTo(Routes.SPLASH) { inclusive = true } } },
-                onNavigateToOnboarding = { navController.navigate(Routes.ONBOARDING) { popUpTo(Routes.SPLASH) { inclusive = true } } }
+                onNavigateToLogin = { Log.d("AnixNav", "onNavigateToLogin"); navController.navigate(Routes.LOGIN) { popUpTo(Routes.SPLASH) { inclusive = true } } },
+                onNavigateToHome = { Log.d("AnixNav", "onNavigateToHome"); navController.navigate(Routes.HOME) { popUpTo(Routes.SPLASH) { inclusive = true } } },
+                onNavigateToOnboarding = { Log.d("AnixNav", "onNavigateToOnboarding"); navController.navigate(Routes.ONBOARDING) { popUpTo(Routes.SPLASH) { inclusive = true } } }
             )
         }
         composable(Routes.LOGIN) {
             LoginScreen(
-                onLoginSuccess = { navController.navigate(Routes.HOME) { popUpTo(Routes.LOGIN) { inclusive = true } } },
-                onRegisterClick = { navController.navigate(Routes.REGISTER) }
+                onLoginSuccess = { Log.d("AnixNav", "onLoginSuccess"); navController.navigate(Routes.HOME) { popUpTo(Routes.LOGIN) { inclusive = true } } },
+                onRegisterClick = { Log.d("AnixNav", "onRegisterClick"); navController.navigate(Routes.REGISTER) }
             )
         }
         composable(Routes.REGISTER) {
             RegisterScreen(
-                onRegisterSuccess = { navController.navigate(Routes.HOME) { popUpTo(Routes.REGISTER) { inclusive = true } } },
-                onLoginClick = { navController.popBackStack() }
+                onRegisterSuccess = { Log.d("AnixNav", "onRegisterSuccess"); navController.navigate(Routes.HOME) { popUpTo(Routes.REGISTER) { inclusive = true } } },
+                onLoginClick = { Log.d("AnixNav", "onLoginClick"); navController.popBackStack() }
             )
         }
         composable(Routes.ANIME_DETAIL, arguments = listOf(navArgument("animeId") { type = NavType.StringType })) {
             val animeId = it.arguments?.getString("animeId") ?: return@composable
             AnimeDetailScreen(
                 animeId = animeId,
-                onEpisodeClick = { episodeId -> navController.navigate(Routes.videoPlayer(episodeId)) },
-                onBack = { navController.popBackStack() },
-                onCommentsClick = { navController.navigate(Routes.comments(animeId)) }
+                onEpisodeClick = { episodeId -> Log.d("AnixNav", "onEpisodeClick: $episodeId"); navController.navigate(Routes.videoPlayer(episodeId, animeId)) },
+                onBack = { Log.d("AnixNav", "onBack: AnimeDetail"); navController.popBackStack() }
             )
         }
-        composable(Routes.VIDEO_PLAYER, arguments = listOf(navArgument("episodeId") { type = NavType.StringType })) {
+        composable(Routes.VIDEO_PLAYER, arguments = listOf(
+            navArgument("episodeId") { type = NavType.StringType },
+            navArgument("animeId") { type = NavType.StringType }
+        )) {
             val episodeId = it.arguments?.getString("episodeId") ?: return@composable
+            val animeId = it.arguments?.getString("animeId") ?: return@composable
             VideoPlayerScreen(
                 episodeId = episodeId,
-                onBack = { navController.popBackStack() }
+                animeId = animeId,
+                onBack = { Log.d("AnixNav", "onBack: VideoPlayer($episodeId)"); navController.popBackStack() },
+                onCommentsClick = { Log.d("AnixNav", "onCommentsClick: anime=$animeId ep=$episodeId"); navController.navigate(Routes.comments(animeId, episodeId)) }
             )
         }
-        composable(Routes.COMMENTS, arguments = listOf(navArgument("animeId") { type = NavType.StringType })) {
+        composable(Routes.COMMENTS, arguments = listOf(
+            navArgument("animeId") { type = NavType.StringType },
+            navArgument("episodeId") { type = NavType.StringType }
+        )) {
             val animeId = it.arguments?.getString("animeId") ?: return@composable
+            val episodeId = it.arguments?.getString("episodeId") ?: return@composable
             CommentsScreen(
                 animeId = animeId,
-                episodeId = animeId,
-                onBack = { navController.popBackStack() }
+                episodeId = episodeId,
+                onBack = { Log.d("AnixNav", "onBack: Comments"); navController.popBackStack() }
             )
         }
         composable(Routes.CHAT_DETAIL, arguments = listOf(navArgument("conversationId") { type = NavType.StringType })) {
             val conversationId = it.arguments?.getString("conversationId") ?: return@composable
             ChatDetailScreen(
                 conversationId = conversationId,
-                onBack = { navController.popBackStack() }
+                onBack = { Log.d("AnixNav", "onBack: ChatDetail($conversationId)"); navController.popBackStack() }
             )
         }
         composable(Routes.CLAN_DETAIL, arguments = listOf(navArgument("clanId") { type = NavType.StringType })) {
             val clanId = it.arguments?.getString("clanId") ?: return@composable
             ClanDetailScreen(
                 clanId = clanId,
-                onBack = { navController.popBackStack() }
+                onBack = { Log.d("AnixNav", "onBack: ClanDetail($clanId)"); navController.popBackStack() }
             )
         }
         composable(Routes.GIVEAWAY_DETAIL, arguments = listOf(navArgument("giveawayId") { type = NavType.StringType })) {
             val giveawayId = it.arguments?.getString("giveawayId") ?: return@composable
             GiveawayDetailScreen(
                 giveawayId = giveawayId,
-                onBack = { navController.popBackStack() }
+                onBack = { Log.d("AnixNav", "onBack: GiveawayDetail($giveawayId)"); navController.popBackStack() }
             )
         }
         composable(Routes.SETTINGS) {
             SettingsScreen(
-                onBack = { navController.popBackStack() },
+                onBack = { Log.d("AnixNav", "onBack: Settings"); navController.popBackStack() },
                 onLogout = {
+                    Log.d("AnixNav", "onLogout");
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -193,42 +203,47 @@ fun AppNavigation() {
             )
         }
         composable(Routes.NOTIFICATIONS) {
-            NotificationsScreen(onBack = { navController.popBackStack() })
+            NotificationsScreen(onBack = { Log.d("AnixNav", "onBack: Notifications"); navController.popBackStack() })
         }
 
         composable(Routes.ANIME_LIST, arguments = listOf(navArgument("category") { type = NavType.StringType })) {
             val category = it.arguments?.getString("category") ?: return@composable
-            AnimeListScreen(category = category, onAnimeClick = { navController.navigate(Routes.animeDetail(it)) }, onBack = { navController.popBackStack() })
+            AnimeListScreen(category = category,
+                onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) },
+                onBack = { Log.d("AnixNav", "onBack: AnimeList"); navController.popBackStack() })
         }
 
         composable(Routes.USER_PROFILE, arguments = listOf(navArgument("userId") { type = NavType.StringType })) {
             val userId = it.arguments?.getString("userId") ?: return@composable
-            UserProfileScreen(userId = userId, onBack = { navController.popBackStack() }, onChatClick = { navController.navigate(Routes.chatDetail(it)) })
+            UserProfileScreen(userId = userId,
+                onBack = { Log.d("AnixNav", "onBack: UserProfile($userId)"); navController.popBackStack() },
+                onChatClick = { convId -> Log.d("AnixNav", "onChatClick: $convId"); navController.navigate(Routes.chatDetail(convId)) })
         }
 
         composable(Routes.SOCIAL_POST_DETAIL, arguments = listOf(navArgument("postId") { type = NavType.StringType })) {
             val postId = it.arguments?.getString("postId") ?: return@composable
-            SocialPostDetailScreen(postId = postId, onBack = { navController.popBackStack() })
+            SocialPostDetailScreen(postId = postId,
+                onBack = { Log.d("AnixNav", "onBack: SocialPostDetail($postId)"); navController.popBackStack() })
         }
 
         composable(Routes.ONBOARDING) {
-            OnboardingScreen(onComplete = { navController.navigate(Routes.LOGIN) { popUpTo(Routes.ONBOARDING) { inclusive = true } } })
+            OnboardingScreen(onComplete = { Log.d("AnixNav", "onComplete: Onboarding"); navController.navigate(Routes.LOGIN) { popUpTo(Routes.ONBOARDING) { inclusive = true } } })
         }
 
         composable(Routes.GIVEAWAY_LIST) {
-            GiveawayListScreen(onGiveawayClick = { navController.navigate(Routes.giveawayDetail(it)) })
+            GiveawayListScreen(onGiveawayClick = { id -> Log.d("AnixNav", "onGiveawayClick: $id"); navController.navigate(Routes.giveawayDetail(id)) })
         }
 
         composable(Routes.CLAN_LIST) {
-            ClanListScreen(onClanClick = { navController.navigate(Routes.clanDetail(it)) })
+            ClanListScreen(onClanClick = { id -> Log.d("AnixNav", "onClanClick: $id"); navController.navigate(Routes.clanDetail(id)) })
         }
 
         composable(Routes.CHAT_LIST) {
-            ChatListScreen(onChatClick = { navController.navigate(Routes.chatDetail(it)) })
+            ChatListScreen(onChatClick = { id -> Log.d("AnixNav", "onChatClick: $id"); navController.navigate(Routes.chatDetail(id)) })
         }
 
         composable(Routes.SOCIAL_FEED) {
-            SocialFeedScreen(onPostClick = { })
+            SocialFeedScreen(onPostClick = { id -> Log.d("AnixNav", "onPostClick: $id") })
         }
 
         composable(Routes.HOME) {
@@ -236,14 +251,15 @@ fun AppNavigation() {
         }
 
         composable(Routes.SEARCH) {
-            SearchScreen(onAnimeClick = { navController.navigate(Routes.animeDetail(it)) })
+            SearchScreen(onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) })
         }
 
         composable(Routes.PROFILE) {
             ProfileScreen(
-                onSettingsClick = { navController.navigate(Routes.SETTINGS) },
-                onAnimeClick = { navController.navigate(Routes.animeDetail(it)) },
+                onSettingsClick = { Log.d("AnixNav", "onSettingsClick"); navController.navigate(Routes.SETTINGS) },
+                onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) },
                 onLogout = {
+                    Log.d("AnixNav", "onLogout");
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }
@@ -314,19 +330,20 @@ fun MainScreen(navController: NavHostController) {
                 )
             }
             composable(Routes.SEARCH) {
-                SearchScreen(onAnimeClick = { navController.navigate(Routes.animeDetail(it)) })
+                SearchScreen(onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) })
             }
             composable(Routes.CHAT_LIST) {
-                ChatListScreen(onChatClick = { navController.navigate(Routes.chatDetail(it)) })
+                ChatListScreen(onChatClick = { id -> Log.d("AnixNav", "onChatClick: $id"); navController.navigate(Routes.chatDetail(id)) })
             }
             composable(Routes.SOCIAL_FEED) {
-                SocialFeedScreen(onPostClick = { postId -> navController.navigate(Routes.socialPostDetail(postId)) })
+                SocialFeedScreen(onPostClick = { postId -> Log.d("AnixNav", "onPostClick: $postId"); navController.navigate(Routes.socialPostDetail(postId)) })
             }
             composable(Routes.PROFILE) {
                 ProfileScreen(
-                    onSettingsClick = { navController.navigate(Routes.SETTINGS) },
-                    onAnimeClick = { navController.navigate(Routes.animeDetail(it)) },
+                    onSettingsClick = { Log.d("AnixNav", "onSettingsClick"); navController.navigate(Routes.SETTINGS) },
+                    onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) },
                     onLogout = {
+                        Log.d("AnixNav", "onLogout");
                         navController.navigate(Routes.LOGIN) {
                             popUpTo(0) { inclusive = true }
                         }

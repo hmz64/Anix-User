@@ -103,7 +103,7 @@ data class AnimeSeries(
     val duration: String = "",
     val genres: List<Genre> = emptyList(),
     val episodes: List<Episode> = emptyList(),
-    val isFavorited: Boolean = false,
+    @SerializedName("is_favorited") val isFavorited: Boolean = false,
     val createdAt: String = ""
 )
 
@@ -119,7 +119,7 @@ data class Episode(
     val number: Int = 0,
     val title: String = "",
     val thumbnail: String = "",
-    val duration: Int = 0,
+    val duration: String = "",
     val description: String = "",
     val streams: List<EpisodeStream> = emptyList(),
     val releaseDate: String = "",
