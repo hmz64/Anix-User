@@ -28,6 +28,12 @@ object ApiClient {
         apiService = null
     }
 
+    fun resolveUrl(path: String?): String? {
+        if (path.isNullOrBlank()) return null
+        if (path.startsWith("http://") || path.startsWith("https://")) return path
+        return baseUrl.trimEnd('/') + "/" + path.trimStart('/')
+    }
+
     private val gson: Gson by lazy {
         GsonBuilder()
             .setFieldNamingPolicy(com.google.gson.FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES)

@@ -48,6 +48,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.anix.app.BuildConfig
+import com.anix.app.core.di.ServiceLocator
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -197,7 +199,7 @@ fun SettingsScreen(
                     NeoCard {
                         Column(modifier = Modifier.padding(12.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                             AsyncImage(
-                                model = user?.avatar,
+                                model = ApiClient.resolveUrl(user?.avatar),
                                 contentDescription = "Avatar",
                                 modifier = Modifier.size(100.dp).clip(CircleShape).border(BorderStroke(3.dp, BorderBlack), CircleShape),
                                 contentScale = ContentScale.Crop
@@ -215,7 +217,7 @@ fun SettingsScreen(
                             Box(modifier = Modifier.fillMaxWidth().height(100.dp).background(Primary).clip(RoundedCornerShape(8.dp)).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp))) {
                                 if (!user?.banner.isNullOrBlank()) {
                                     AsyncImage(
-                                        model = user?.banner,
+                                        model = ApiClient.resolveUrl(user?.banner),
                                         contentDescription = "Banner",
                                         modifier = Modifier.fillMaxSize(),
                                         contentScale = ContentScale.Crop
