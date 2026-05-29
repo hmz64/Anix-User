@@ -19,8 +19,6 @@ class UserRepository(private val api: ApiService) {
         }
     }
 
-    suspend fun updatePrivacy(privacySetting: String): Result<Unit> {
-
     suspend fun getUserStats(): Result<UserStats> {
         return try {
             val response = api.getUserStats()
