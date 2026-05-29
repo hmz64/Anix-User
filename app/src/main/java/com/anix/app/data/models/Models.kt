@@ -47,6 +47,8 @@ data class User(
     val bio: String = "",
     @SerializedName("is_premium") val premium: Boolean = false,
     @SerializedName("privacy_setting") val privacySetting: String = "public",
+    @SerializedName("show_leaderboard") val showLeaderboard: Boolean = true,
+    @SerializedName("push_enabled") val pushEnabled: Boolean = true,
     val role: String = "",
     val createdAt: String = "",
     val lastActiveAt: String? = null

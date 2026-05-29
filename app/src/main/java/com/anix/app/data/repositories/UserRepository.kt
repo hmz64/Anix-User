@@ -117,6 +117,20 @@ class UserRepository(private val api: ApiService) {
         }
     }
 
+    suspend fun deleteAccount(username: String): Result<Unit> {
+        return try {
+            val response = api.deleteAccountWithBody(mapOf("username" to username))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to delete account"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updatePrivacy(privacySetting: String): Result<Unit> {
         return try {
             val response = api.updatePrivacy(PrivacyRequest(privacySetting))

@@ -134,6 +134,9 @@ interface ApiService {
     @PUT("api/user/update/name")
     suspend fun updateName(@Body request: UpdateNameRequest): Response<ApiResponse<User>>
 
+    @PUT("api/user/update/name")
+    suspend fun updateNameRaw(@Body request: Map<String, @JvmSuppressWildcards Any>): Response<ApiResponse<User>>
+
     @PUT("api/user/update/banner")
     suspend fun updateBanner(@Body request: UpdateBannerRequest): Response<ApiResponse<User>>
 
@@ -156,6 +159,9 @@ interface ApiService {
 
     @DELETE("api/user/delete")
     suspend fun deleteAccount(): Response<ApiResponse<Unit>>
+
+    @HTTP(method = "DELETE", path = "api/user/delete", hasBody = true)
+    suspend fun deleteAccountWithBody(@Body request: Map<String, String>): Response<ApiResponse<Unit>>
 
     @POST("api/user/favorites/{animeId}")
     suspend fun toggleFavorite(@Path("animeId") animeId: String): Response<ApiResponse<UserFavorite>>
