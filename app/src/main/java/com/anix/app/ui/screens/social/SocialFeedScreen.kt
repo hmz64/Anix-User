@@ -72,10 +72,10 @@ fun SocialFeedScreen(
                 uiState.isLoading -> LoadingIndicator()
                 uiState.error != null -> ErrorState(message = uiState.error!!, onRetry = { viewModel.loadFeed() })
                 else -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                        items(uiState.posts) { post ->
-                            PostCard(post = post, onLike = { viewModel.likePost(post.id) }, onClick = { onPostClick(post.id) })
-                        }
+            LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(uiState.posts) { post ->
+                    PostCard(post = post, onClick = { onPostClick(post.id) })
+                }
                     }
                 }
             }
@@ -91,7 +91,7 @@ fun SocialFeedScreen(
                     Spacer(modifier = Modifier.height(8.dp))
                     NeoTextField(value = postContent, onValueChange = { postContent = it }, placeholder = "What's on your mind?", modifier = Modifier.fillMaxWidth(), singleLine = false)
                     Spacer(modifier = Modifier.height(12.dp))
-                    NeoButton(text = "Post", onClick = { viewModel.createPost(postContent); showCreateDialog = false; postContent = "" }, backgroundColor = Primary, modifier = Modifier.fillMaxWidth())
+                    NeoButton(text = "Post", onClick = { viewModel.createPost(postContent, null); showCreateDialog = false; postContent = "" }, backgroundColor = Primary, modifier = Modifier.fillMaxWidth())
                 }
             }
         }
@@ -99,15 +99,15 @@ fun SocialFeedScreen(
 }
 
 @Composable
-private fun PostCard(post: SocialPost, onLike: () -> Unit, onClick: () -> Unit) {
+private fun PostCard(post: SocialPost, onClick: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).background(Color.White, RoundedCornerShape(8.dp)).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp)).clickable { onClick() }.padding(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(model = post.user?.avatar ?: "", contentDescription = "", modifier = Modifier.size(36.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
+            AsyncImage(model = post.userAvatar, contentDescription = "", modifier = Modifier.size(36.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
             Spacer(modifier = Modifier.width(8.dp))
             Column {
-                Text(post.user?.username ?: "Unknown", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                Text(post.username, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                 Text(post.createdAt.take(10), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
             }
         }
@@ -119,7 +119,7 @@ private fun PostCard(post: SocialPost, onLike: () -> Unit, onClick: () -> Unit) 
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row {
-            Text(text = if (post.isLiked) "❤️ $post.likeCount" else "🤍 $post.likeCount", modifier = Modifier.clickable { onLike() }, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+            Text(text = if (post.isLiked) "❤️ $post.likeCount" else "🤍 $post.likeCount", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.width(16.dp))
             Text("💬 ${post.commentCount}", style = MaterialTheme.typography.bodySmall)
         }

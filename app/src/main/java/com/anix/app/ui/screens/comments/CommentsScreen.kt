@@ -86,9 +86,9 @@ fun CommentsScreen(
                             modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(8.dp)).border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(8.dp)).padding(12.dp)
                         ) {
                             Row(verticalAlignment = Alignment.CenterVertically) {
-                                AsyncImage(model = comment.user?.avatar ?: "", contentDescription = "", modifier = Modifier.size(28.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
+                                AsyncImage(model = comment.userAvatar, contentDescription = "", modifier = Modifier.size(28.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
                                 Spacer(modifier = Modifier.width(8.dp))
-                                Text(comment.user?.username ?: "Unknown", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                Text(comment.username, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
                                 Spacer(modifier = Modifier.weight(1f))
                                 Text(comment.createdAt.take(10), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                             }

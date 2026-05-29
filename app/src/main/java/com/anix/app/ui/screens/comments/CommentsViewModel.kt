@@ -25,7 +25,7 @@ class CommentsViewModel : ViewModel() {
     fun loadComments(episodeId: String) {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
-            repo.getEpisodeComments(episodeId).onSuccess { comments ->
+            repo.getComments(episodeId).onSuccess { comments ->
                 _uiState.value = _uiState.value.copy(comments = comments, isLoading = false)
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
@@ -36,7 +36,7 @@ class CommentsViewModel : ViewModel() {
     fun sendComment(episodeId: String, content: String) {
         _uiState.value = _uiState.value.copy(sendingComment = true)
         viewModelScope.launch {
-            repo.addComment(episodeId, content).onSuccess { comment ->
+            repo.createComment(episodeId, content).onSuccess { comment ->
                 val updated = _uiState.value.comments + comment
                 _uiState.value = _uiState.value.copy(comments = updated, sendingComment = false)
             }.onFailure {

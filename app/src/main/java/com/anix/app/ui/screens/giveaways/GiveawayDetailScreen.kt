@@ -60,7 +60,7 @@ fun GiveawayDetailScreen(
         val g = uiState.giveaway!!
         Column(modifier = Modifier.fillMaxSize().background(Background).verticalScroll(rememberScrollState())) {
             Box(modifier = Modifier.fillMaxWidth()) {
-                AsyncImage(model = g.image, contentDescription = "", modifier = Modifier.fillMaxWidth().height(200.dp), contentScale = ContentScale.Crop)
+                AsyncImage(model = g.prizeImage, contentDescription = "", modifier = Modifier.fillMaxWidth().height(200.dp), contentScale = ContentScale.Crop)
                 Text("← Back", modifier = Modifier.align(Alignment.TopStart).padding(12.dp).background(Color.White, RoundedCornerShape(6.dp)).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(6.dp)).padding(horizontal = 12.dp, vertical = 6.dp).clickable { onBack() }, color = Color.Black, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
             }
             Column(modifier = Modifier.padding(16.dp)) {

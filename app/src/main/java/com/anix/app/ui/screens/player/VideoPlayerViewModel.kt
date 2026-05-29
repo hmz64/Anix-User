@@ -21,7 +21,6 @@ data class VideoPlayerUiState(
 
 class VideoPlayerViewModel : ViewModel() {
     private val animeRepo = ServiceLocator.getAnimeRepository()
-    private val userRepo = ServiceLocator.getUserRepository()
 
     private val _uiState = MutableStateFlow(VideoPlayerUiState())
     val uiState: StateFlow<VideoPlayerUiState> = _uiState.asStateFlow()
@@ -29,7 +28,8 @@ class VideoPlayerViewModel : ViewModel() {
     fun loadEpisode(episodeId: String) {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
-            animeRepo.resolveStream(episodeId).onSuccess { url ->
+            animeRepo.getEpisodeStreams(episodeId).onSuccess { streams ->
+                val url = streams.firstOrNull()?.url ?: ""
                 _uiState.value = _uiState.value.copy(videoUrl = url, isLoading = false)
             }.onFailure { e ->
                 _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)

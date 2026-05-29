@@ -115,13 +115,13 @@ fun AppNavigation() {
         composable(Routes.LOGIN) {
             LoginScreen(
                 onLoginSuccess = { navController.navigate(Routes.HOME) { popUpTo(Routes.LOGIN) { inclusive = true } } },
-                onNavigateToRegister = { navController.navigate(Routes.REGISTER) }
+                onRegisterClick = { navController.navigate(Routes.REGISTER) }
             )
         }
         composable(Routes.REGISTER) {
             RegisterScreen(
                 onRegisterSuccess = { navController.navigate(Routes.HOME) { popUpTo(Routes.REGISTER) { inclusive = true } } },
-                onNavigateToLogin = { navController.popBackStack() }
+                onLoginClick = { navController.popBackStack() }
             )
         }
         composable(Routes.ANIME_DETAIL, arguments = listOf(navArgument("animeId") { type = NavType.StringType })) {
@@ -144,6 +144,7 @@ fun AppNavigation() {
             val animeId = it.arguments?.getString("animeId") ?: return@composable
             CommentsScreen(
                 animeId = animeId,
+                episodeId = animeId,
                 onBack = { navController.popBackStack() }
             )
         }
@@ -184,11 +185,11 @@ fun AppNavigation() {
         }
 
         composable(Routes.CHAT_LIST) {
-            ChatListScreen(onConversationClick = { navController.navigate(Routes.chatDetail(it)) })
+            ChatListScreen(onChatClick = { navController.navigate(Routes.chatDetail(it)) })
         }
 
         composable(Routes.SOCIAL_FEED) {
-            SocialFeedScreen()
+            SocialFeedScreen(onPostClick = { })
         }
 
         composable(Routes.HOME) {
@@ -276,10 +277,10 @@ fun MainScreen(navController: NavHostController) {
                 SearchScreen(onAnimeClick = { navController.navigate(Routes.animeDetail(it)) })
             }
             composable(Routes.CHAT_LIST) {
-                ChatListScreen(onConversationClick = { navController.navigate(Routes.chatDetail(it)) })
+                ChatListScreen(onChatClick = { navController.navigate(Routes.chatDetail(it)) })
             }
             composable(Routes.SOCIAL_FEED) {
-                SocialFeedScreen()
+                SocialFeedScreen(onPostClick = { })
             }
             composable(Routes.PROFILE) {
                 ProfileScreen(

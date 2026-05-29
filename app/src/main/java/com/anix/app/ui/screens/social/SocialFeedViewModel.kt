@@ -37,16 +37,10 @@ class SocialFeedViewModel : ViewModel() {
         }
     }
 
-    fun likePost(postId: String) {
-        viewModelScope.launch {
-            repo.toggleLike(postId)
-        }
-    }
-
-    fun createPost(content: String) {
+    fun createPost(content: String, image: String? = null) {
         _uiState.value = _uiState.value.copy(isCreatingPost = true)
         viewModelScope.launch {
-            repo.createPost(content).onSuccess {
+            repo.createPost(content, image).onSuccess {
                 loadFeed()
             }.onFailure {
                 _uiState.value = _uiState.value.copy(isCreatingPost = false)

@@ -67,10 +67,11 @@ fun ChatListScreen(
                                 modifier = Modifier.fillMaxWidth().clickable { onChatClick(conv.id) }.padding(horizontal = 12.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
                             ) {
-                                AsyncImage(model = conv.otherUser?.avatar ?: "", contentDescription = "", modifier = Modifier.size(48.dp).clip(CircleShape).border(BorderStroke(2.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
+                                val other = conv.participants.firstOrNull()
+                                AsyncImage(model = other?.avatar ?: "", contentDescription = "", modifier = Modifier.size(48.dp).clip(CircleShape).border(BorderStroke(2.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
                                 Spacer(modifier = Modifier.width(12.dp))
                                 Column(modifier = Modifier.weight(1f)) {
-                                    Text(conv.otherUser?.username ?: "Unknown", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
+                                    Text(other?.username ?: "Unknown", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                                     if (conv.lastMessage != null) {
                                         Text(conv.lastMessage!!.content, style = MaterialTheme.typography.bodySmall, color = Color.Gray, maxLines = 1)
                                     }

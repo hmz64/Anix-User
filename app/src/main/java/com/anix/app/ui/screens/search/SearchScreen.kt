@@ -45,6 +45,7 @@ import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
+import com.anix.app.data.models.AnimeSeries
 import com.anix.app.ui.components.EmptyState
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator

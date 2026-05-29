@@ -23,7 +23,7 @@ class SettingsViewModel : ViewModel() {
     fun updateUsername(username: String) {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null, successMessage = null)
         viewModelScope.launch {
-            userRepo.updateUsername(username)
+            userRepo.updateName(username)
                 .onSuccess { _uiState.value = _uiState.value.copy(isLoading = false, successMessage = "Username updated") }
                 .onFailure { _uiState.value = _uiState.value.copy(isLoading = false, error = it.message) }
         }

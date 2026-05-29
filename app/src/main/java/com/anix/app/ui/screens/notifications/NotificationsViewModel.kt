@@ -38,7 +38,7 @@ class NotificationsViewModel : ViewModel() {
 
     fun markAllRead() {
         viewModelScope.launch {
-            repo.markAllNotificationsRead()
+            repo.markAllRead()
         }
     }
 }

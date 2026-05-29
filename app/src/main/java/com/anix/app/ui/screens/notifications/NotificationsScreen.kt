@@ -74,7 +74,7 @@ fun NotificationsScreen(
                                     Text(notif.title, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
                                     Text(notif.body, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
                                 }
-                                if (!notif.isRead) {
+                                if (!notif.read) {
                                     Text("●", color = Primary, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
