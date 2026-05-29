@@ -97,8 +97,8 @@ fun ReportDialog(
             TextButton(
                 onClick = {
                     onSubmit(
-                        type = if (useCustom) "custom" else selectedType,
-                        message = if (useCustom) customText else ""
+                        if (useCustom) "custom" else selectedType,
+                        if (useCustom) customText else ""
                     )
                     onDismiss()
                 }
