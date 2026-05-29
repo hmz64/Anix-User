@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.AccentOrange
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
@@ -65,13 +66,13 @@ fun ClanDetailScreen(
             // Banner
             Box(modifier = Modifier.fillMaxWidth().height(140.dp).background(Primary)) {
                 if (c.banner.isNotEmpty()) {
-                    AsyncImage(model = c.banner, contentDescription = "", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
+                    AsyncImage(model = ApiClient.resolveUrl(c.banner), contentDescription = "", modifier = Modifier.fillMaxSize(), contentScale = ContentScale.Crop)
                 }
                 Text("← Back", modifier = Modifier.align(Alignment.TopStart).padding(12.dp).background(Color.White, RoundedCornerShape(6.dp)).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(6.dp)).padding(horizontal = 12.dp, vertical = 6.dp).clickable { onBack() }, color = Color.Black, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.labelLarge)
             }
 
             Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                AsyncImage(model = c.logo, contentDescription = "", modifier = Modifier.size(80.dp).clip(RoundedCornerShape(12.dp)).border(BorderStroke(3.dp, BorderBlack), RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
+                AsyncImage(model = ApiClient.resolveUrl(c.logo), contentDescription = "", modifier = Modifier.size(80.dp).clip(RoundedCornerShape(12.dp)).border(BorderStroke(3.dp, BorderBlack), RoundedCornerShape(12.dp)), contentScale = ContentScale.Crop)
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(c.name, style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Bold)
                 Row(verticalAlignment = Alignment.CenterVertically) {

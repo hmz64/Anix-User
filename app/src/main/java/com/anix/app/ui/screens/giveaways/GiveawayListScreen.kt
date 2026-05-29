@@ -35,6 +35,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -139,7 +140,7 @@ private fun TopGiverItem(giver: TopGiver, rank: Int) {
     ) {
         Text("#$rank", fontWeight = FontWeight.Bold, color = Primary, style = MaterialTheme.typography.titleMedium, modifier = Modifier.width(36.dp))
         AsyncImage(
-            model = giver.avatar,
+            model = ApiClient.resolveUrl(giver.avatar),
             contentDescription = "",
             modifier = Modifier.size(40.dp).clip(CircleShape).border(BorderStroke(2.dp, BorderBlack), CircleShape),
             contentScale = ContentScale.Crop

@@ -48,6 +48,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -203,7 +204,7 @@ private fun ConversationItem(conv: Conversation, onClick: () -> Unit) {
     ) {
         val other = conv.participants.firstOrNull()
         AsyncImage(
-            model = other?.avatar ?: "",
+            model = ApiClient.resolveUrl(other?.avatar ?: ""),
             contentDescription = "",
             modifier = Modifier
                 .size(48.dp)
@@ -244,7 +245,7 @@ private fun FriendRequestItem(request: FriendRequest, onAccept: () -> Unit, onRe
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = request.senderAvatar,
+            model = ApiClient.resolveUrl(request.senderAvatar),
             contentDescription = "",
             modifier = Modifier
                 .size(48.dp)
@@ -275,7 +276,7 @@ private fun SearchUserItem(user: SearchUsersResponse, onAddFriend: () -> Unit, o
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = user.avatar,
+            model = ApiClient.resolveUrl(user.avatar),
             contentDescription = "",
             modifier = Modifier
                 .size(40.dp)

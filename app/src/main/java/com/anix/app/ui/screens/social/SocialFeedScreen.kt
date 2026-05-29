@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -136,7 +137,7 @@ private fun PostCard(post: SocialPost, onClick: () -> Unit, onLikeClick: () -> U
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).background(Color.White, RoundedCornerShape(8.dp)).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp)).clickable { onClick() }.padding(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(model = post.userAvatar, contentDescription = "", modifier = Modifier.size(36.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
+            AsyncImage(model = ApiClient.resolveUrl(post.userAvatar), contentDescription = "", modifier = Modifier.size(36.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
             Spacer(modifier = Modifier.width(8.dp))
             Column {
                 Text(post.username, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)

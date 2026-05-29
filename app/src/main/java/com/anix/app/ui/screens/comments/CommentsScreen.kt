@@ -45,6 +45,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.anix.app.core.theme.Background
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
@@ -179,7 +180,7 @@ private fun CommentItem(
             .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(8.dp)).padding(12.dp)
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
-            AsyncImage(model = comment.userAvatar, contentDescription = "", modifier = Modifier.size(28.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
+            AsyncImage(model = ApiClient.resolveUrl(comment.userAvatar), contentDescription = "", modifier = Modifier.size(28.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
             Spacer(modifier = Modifier.width(8.dp))
             Text(comment.username, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
             Spacer(modifier = Modifier.weight(1f))

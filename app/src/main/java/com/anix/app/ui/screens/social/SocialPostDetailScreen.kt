@@ -43,6 +43,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -203,7 +204,7 @@ private fun PostDetailCard(post: SocialPost) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
-                model = post.userAvatar,
+                model = ApiClient.resolveUrl(post.userAvatar),
                 contentDescription = "",
                 modifier = Modifier.size(40.dp).clip(CircleShape).border(BorderStroke(1.5.dp, BorderBlack), CircleShape),
                 contentScale = ContentScale.Crop

@@ -26,6 +26,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.AccentOrange
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -48,7 +49,7 @@ fun CommentItem(
     ) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             AsyncImage(
-                model = comment.userAvatar,
+                model = ApiClient.resolveUrl(comment.userAvatar),
                 contentDescription = comment.username,
                 modifier = Modifier
                     .size(32.dp)
@@ -114,7 +115,7 @@ fun CommentItem(
                         .padding(8.dp)
                 ) {
                     AsyncImage(
-                        model = reply.userAvatar,
+                        model = ApiClient.resolveUrl(reply.userAvatar),
                         contentDescription = reply.username,
                         modifier = Modifier
                             .size(24.dp)
