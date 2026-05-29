@@ -3,9 +3,15 @@ package com.anix.app.ui.screens.player
 import android.app.Activity
 import android.content.pm.ActivityInfo
 import android.view.ViewGroup
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -31,19 +37,16 @@ import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.FastForward
 import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Fullscreen
-import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material.icons.outlined.Visibility
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
@@ -59,13 +62,13 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
@@ -103,6 +106,8 @@ private val Bg = Color(0xFFF5EEE8)
 private val Blue = Color(0xFF2B2BFF)
 private val Dark = Color(0xFF0D0D0D)
 
+private val speedOptions = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 3.0f, 4.0f)
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VideoPlayerScreen(
@@ -116,6 +121,8 @@ fun VideoPlayerScreen(
     val context = LocalContext.current
     var showControls by remember { mutableStateOf(true) }
     var showReportDialog by remember { mutableStateOf(false) }
+    var showSpeedSheet by remember { mutableStateOf(false) }
+    var showQualitySheet by remember { mutableStateOf(false) }
 
     LaunchedEffect(episodeId) {
         viewModel.loadEpisode(episodeId, animeId)
@@ -142,7 +149,8 @@ fun VideoPlayerScreen(
                     (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
                     window?.let { resetSystemBars(it) }
                     viewModel.setFullscreen(false)
-                }
+                },
+                onChangeSpeed = { showSpeedSheet = true }
             )
         }
         return
@@ -234,8 +242,8 @@ fun VideoPlayerScreen(
                                 }
                                 viewModel.setFullscreen(true)
                             },
-                            onChangeSpeed = { /* bottom sheet handles it */ },
-                            onChangeQuality = { /* bottom sheet handles it */ }
+                            onChangeSpeed = { showSpeedSheet = true },
+                            onChangeQuality = { showQualitySheet = true }
                         )
                     }
                 }
@@ -309,6 +317,80 @@ fun VideoPlayerScreen(
             onSubmit = { type, message -> viewModel.submitReport(type, message, episodeId) }
         )
     }
+
+    if (showSpeedSheet) {
+        SpeedBottomSheet(
+            current = state.playbackSpeed,
+            onSelect = { viewModel.setPlaybackSpeed(it); showSpeedSheet = false },
+            onDismiss = { showSpeedSheet = false }
+        )
+    }
+
+    if (showQualitySheet) {
+        QualityBottomSheet(
+            current = state.currentQuality,
+            onSelect = { viewModel.setCurrentQuality(it); showQualitySheet = false },
+            onDismiss = { showQualitySheet = false }
+        )
+    }
+}
+
+@Composable
+private fun SpeedBottomSheet(current: Float, onSelect: (Float) -> Unit, onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            Text("Playback Speed", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Dark)
+            Spacer(Modifier.height(12.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(speedOptions) { s ->
+                    Box(
+                        Modifier
+                            .border(2.dp, if (s == current) Blue else BorderBlack, RoundedCornerShape(8.dp))
+                            .background(if (s == current) Blue else Color.White, RoundedCornerShape(8.dp))
+                            .clickable { onSelect(s) }
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            "${s}x",
+                            fontWeight = FontWeight.Bold,
+                            color = if (s == current) Color.White else Dark,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
+}
+
+@Composable
+private fun QualityBottomSheet(current: String, onSelect: (String) -> Unit, onDismiss: () -> Unit) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+        Column(Modifier.fillMaxWidth().padding(16.dp)) {
+            Text("Quality", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Dark)
+            Spacer(Modifier.height(12.dp))
+            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                items(listOf("360p", "480p", "720p", "1080p")) { q ->
+                    Box(
+                        Modifier
+                            .border(2.dp, if (q == current) Blue else BorderBlack, RoundedCornerShape(8.dp))
+                            .background(if (q == current) Blue else Color.White, RoundedCornerShape(8.dp))
+                            .clickable { onSelect(q) }
+                            .padding(horizontal = 16.dp, vertical = 10.dp)
+                    ) {
+                        Text(
+                            q,
+                            fontWeight = FontWeight.Bold,
+                            color = if (q == current) Color.White else Dark,
+                            fontSize = 14.sp
+                        )
+                    }
+                }
+            }
+            Spacer(Modifier.height(24.dp))
+        }
+    }
 }
 
 private fun resetSystemBars(window: android.view.Window) {
@@ -328,6 +410,20 @@ private fun PlayerSurface(
     onChangeSpeed: () -> Unit,
     onChangeQuality: () -> Unit
 ) {
+    var indicatorText by remember { mutableStateOf("") }
+    var indicatorVisible by remember { mutableStateOf(false) }
+    var isLongPressing by remember { mutableStateOf(false) }
+    var restoreSpeed by remember { mutableFloatStateOf(1.0f) }
+    var currentSpeed by remember { mutableFloatStateOf(speed) }
+
+    LaunchedEffect(speed) { currentSpeed = speed }
+    LaunchedEffect(indicatorVisible) {
+        if (indicatorVisible) {
+            delay(1200)
+            indicatorVisible = false
+        }
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -350,18 +446,60 @@ private fun PlayerSurface(
             modifier = Modifier.fillMaxSize()
         )
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown()
+                        val longPressMs = viewConfiguration.longPressTimeoutMillis
+                        val doubleTapMs = viewConfiguration.doubleTapTimeoutMillis
+                        val firstUp = withTimeoutOrNull(longPressMs) {
+                            waitForUpOrCancellation()
+                        }
+                        if (firstUp == null) {
+                            isLongPressing = true
+                            restoreSpeed = currentSpeed
+                            exoPlayer.playbackParameters = PlaybackParameters(2.0f)
+                            indicatorText = "⏩ Kecepatan 2.0x"
+                            indicatorVisible = true
+                            try { waitForUpOrCancellation() } catch (_: Exception) {}
+                            exoPlayer.playbackParameters = PlaybackParameters(restoreSpeed)
+                            isLongPressing = false
+                        } else {
+                            val secondDown = withTimeoutOrNull(doubleTapMs) {
+                                awaitFirstDown(requireUnconsumed = false)
+                            }
+                            if (secondDown != null) {
+                                val viewWidth = size.width.toFloat()
+                                if (secondDown.position.x > viewWidth / 2) {
+                                    exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration.coerceAtLeast(0)))
+                                    indicatorText = "⏩ +10 detik"
+                                } else {
+                                    exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0))
+                                    indicatorText = "⏪ -10 detik"
+                                }
+                                indicatorVisible = true
+                                waitForUpOrCancellation()
+                            } else {
+                                onToggleControls()
+                            }
+                        }
+                    }
+                }
+        )
+
         if (showControls) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .background(Color.Black.copy(alpha = 0.4f))
-                    .clickable { onToggleControls() }
             ) {
                 Row(
                     Modifier.align(Alignment.TopStart).padding(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Pill("← Back", onClick = onBack)
+                    Pill("\u2190 Back", onClick = onBack)
                 }
 
                 Row(
@@ -403,6 +541,21 @@ private fun PlayerSurface(
                     }
                     CtlBtn(Icons.Filled.FastForward, onClick = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration.coerceAtLeast(0))) })
                 }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = indicatorVisible,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 24.dp)
+        ) {
+            Box(
+                Modifier
+                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(indicatorText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
     }
@@ -765,7 +918,8 @@ private fun FullscreenPlayer(
     showControls: Boolean,
     onToggleControls: () -> Unit,
     onBack: () -> Unit,
-    onExitFullscreen: () -> Unit
+    onExitFullscreen: () -> Unit,
+    onChangeSpeed: () -> Unit
 ) {
     val context = LocalContext.current
     val exoPlayer = remember {
@@ -787,7 +941,21 @@ private fun FullscreenPlayer(
         onDispose { exoPlayer.release() }
     }
 
-    Box(modifier = Modifier.fillMaxSize().clickable { onToggleControls() }) {
+    var indicatorText by remember { mutableStateOf("") }
+    var indicatorVisible by remember { mutableStateOf(false) }
+    var isLongPressing by remember { mutableStateOf(false) }
+    var restoreSpeed by remember { mutableFloatStateOf(1.0f) }
+    var currentSpeed by remember { mutableFloatStateOf(speed) }
+
+    LaunchedEffect(speed) { currentSpeed = speed }
+    LaunchedEffect(indicatorVisible) {
+        if (indicatorVisible) {
+            delay(1200)
+            indicatorVisible = false
+        }
+    }
+
+    Box(modifier = Modifier.fillMaxSize()) {
         AndroidView(
             factory = { ctx ->
                 PlayerView(ctx).apply {
@@ -800,16 +968,59 @@ private fun FullscreenPlayer(
             modifier = Modifier.fillMaxSize()
         )
 
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    awaitEachGesture {
+                        awaitFirstDown()
+                        val longPressMs = viewConfiguration.longPressTimeoutMillis
+                        val doubleTapMs = viewConfiguration.doubleTapTimeoutMillis
+                        val firstUp = withTimeoutOrNull(longPressMs) {
+                            waitForUpOrCancellation()
+                        }
+                        if (firstUp == null) {
+                            isLongPressing = true
+                            restoreSpeed = currentSpeed
+                            exoPlayer.playbackParameters = PlaybackParameters(2.0f)
+                            indicatorText = "⏩ Kecepatan 2.0x"
+                            indicatorVisible = true
+                            try { waitForUpOrCancellation() } catch (_: Exception) {}
+                            exoPlayer.playbackParameters = PlaybackParameters(restoreSpeed)
+                            isLongPressing = false
+                        } else {
+                            val secondDown = withTimeoutOrNull(doubleTapMs) {
+                                awaitFirstDown(requireUnconsumed = false)
+                            }
+                            if (secondDown != null) {
+                                val viewWidth = size.width.toFloat()
+                                if (secondDown.position.x > viewWidth / 2) {
+                                    exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration.coerceAtLeast(0)))
+                                    indicatorText = "⏩ +10 detik"
+                                } else {
+                                    exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0))
+                                    indicatorText = "⏪ -10 detik"
+                                }
+                                indicatorVisible = true
+                                waitForUpOrCancellation()
+                            } else {
+                                onToggleControls()
+                            }
+                        }
+                    }
+                }
+        )
+
         if (showControls) {
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f))) {
-                Pill("← Back", onClick = onBack)
+                Pill("\u2190 Back", onClick = onBack)
                     .let { Box(Modifier.align(Alignment.TopStart).padding(8.dp)) { it } }
 
                 Row(
                     Modifier.align(Alignment.TopEnd).padding(8.dp),
                     horizontalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
-                    Pill("${speed}x", onClick = {})
+                    Pill("${speed}x", onClick = onChangeSpeed)
                     Box(
                         Modifier
                             .border(2.dp, Color.Black, RoundedCornerShape(50))
@@ -839,6 +1050,21 @@ private fun FullscreenPlayer(
                     }
                     CtlBtn(Icons.Filled.FastForward, onClick = { exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration.coerceAtLeast(0))) })
                 }
+            }
+        }
+
+        AnimatedVisibility(
+            visible = indicatorVisible,
+            enter = fadeIn(),
+            exit = fadeOut(),
+            modifier = Modifier.align(Alignment.TopCenter).padding(top = 24.dp)
+        ) {
+            Box(
+                Modifier
+                    .background(Color.Black.copy(alpha = 0.6f), RoundedCornerShape(8.dp))
+                    .padding(horizontal = 16.dp, vertical = 8.dp)
+            ) {
+                Text(indicatorText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
         }
     }
