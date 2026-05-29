@@ -335,6 +335,7 @@ fun VideoPlayerScreen(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SpeedBottomSheet(current: Float, onSelect: (Float) -> Unit, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
@@ -364,6 +365,7 @@ private fun SpeedBottomSheet(current: Float, onSelect: (Float) -> Unit, onDismis
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QualityBottomSheet(current: String, onSelect: (String) -> Unit, onDismiss: () -> Unit) {
     ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
