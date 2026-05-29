@@ -5,7 +5,7 @@ import android.os.Build
 import android.util.Log
 import coil.ImageLoader
 import coil.ImageLoaderFactory
-import coil.gif.ImageDecoderDecoder
+import coil.decode.ImageDecoderDecoder
 import com.anix.app.core.di.ServiceLocator
 
 class AnixApp : Application(), ImageLoaderFactory {
