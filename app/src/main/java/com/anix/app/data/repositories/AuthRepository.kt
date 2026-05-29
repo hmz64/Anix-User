@@ -15,13 +15,14 @@ class AuthRepository(
             Log.d("AnixAuth", "Login attempt: $email")
             val response = api.login(LoginRequest(email, password))
             val body = response.body()
-            Log.d("AnixAuth", "Login response: isSuccessful=${response.isSuccessful}, body=${body?.success}")
+            val errorBodyStr = if (response.isSuccessful) null else response.errorBody()?.string()
+            Log.d("AnixAuth", "Login response: isSuccessful=${response.isSuccessful}, body=${body?.success}, error=$errorBodyStr")
             if (response.isSuccessful && body?.success == true && body.data != null) {
                 Log.d("AnixAuth", "Login success, token length: ${body.data.token.length}")
                 ServiceLocator.saveToken(body.data.token)
                 Result.success(body.data)
             } else {
-                val err = body?.error ?: "Login failed"
+                val err = errorBodyStr ?: body?.error ?: "Login failed"
                 Log.w("AnixAuth", "Login failed: $err")
                 Result.failure(Exception(err))
             }
@@ -36,13 +37,14 @@ class AuthRepository(
             Log.d("AnixAuth", "Register attempt: $username / $email")
             val response = api.register(RegisterRequest(username, email, password))
             val body = response.body()
-            Log.d("AnixAuth", "Register response: isSuccessful=${response.isSuccessful}, body=${body?.success}")
+            val errorBodyStr = if (response.isSuccessful) null else response.errorBody()?.string()
+            Log.d("AnixAuth", "Register response: isSuccessful=${response.isSuccessful}, body=${body?.success}, error=$errorBodyStr")
             if (response.isSuccessful && body?.success == true && body.data != null) {
                 Log.d("AnixAuth", "Register success, token length: ${body.data.token.length}")
                 ServiceLocator.saveToken(body.data.token)
                 Result.success(body.data)
             } else {
-                val err = body?.error ?: "Registration failed"
+                val err = errorBodyStr ?: body?.error ?: "Registration failed"
                 Log.w("AnixAuth", "Register failed: $err")
                 Result.failure(Exception(err))
             }
