@@ -21,6 +21,7 @@ data class VideoPlayerUiState(
 
 class VideoPlayerViewModel : ViewModel() {
     private val animeRepo = ServiceLocator.getAnimeRepository()
+    private val userRepo = ServiceLocator.getUserRepository()
 
     private val _uiState = MutableStateFlow(VideoPlayerUiState())
     val uiState: StateFlow<VideoPlayerUiState> = _uiState.asStateFlow()

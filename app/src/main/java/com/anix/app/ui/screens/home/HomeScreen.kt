@@ -14,14 +14,20 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,16 +41,23 @@ import coil.compose.AsyncImage
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
+import com.anix.app.core.theme.SurfaceWhite
+import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Banner
+import com.anix.app.data.models.Genre
+import com.anix.app.data.models.WatchHistory
 import com.anix.app.ui.components.AnimeCard
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoChip
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 
 @Composable
 fun HomeScreen(
     onAnimeClick: (String) -> Unit,
     onSeeAllClick: (String) -> Unit,
+    onGenreClick: (String) -> Unit,
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -60,29 +73,13 @@ fun HomeScreen(
                 .background(Background)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Banner Carousel
+            // Banner HorizontalPager with auto-scroll
             if (uiState.banners.isNotEmpty()) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(8.dp),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    uiState.banners.forEach { banner ->
-                        BannerItem(
-                            banner = banner,
-                            modifier = Modifier
-                                .width(340.dp)
-                                .height(180.dp),
-                            onClick = { if (banner.linkUrl.isNotEmpty()) onAnimeClick(banner.linkUrl) }
-                        )
-                    }
-                }
+                BannerPager(banners = uiState.banners, onClick = { onAnimeClick(it) })
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Trending Now Section
+            // Trending Now
             SectionHeader(
                 title = "Trending Now",
                 onSeeAll = { onSeeAllClick("trending") }
@@ -122,7 +119,7 @@ fun HomeScreen(
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
                 uiState.genres.forEach { genre ->
-                    NeoChip(text = genre.name, onClick = { })
+                    NeoChip(text = genre.name, onClick = { onGenreClick(genre.name) })
                 }
             }
             Spacer(modifier = Modifier.height(16.dp))
@@ -149,7 +146,208 @@ fun HomeScreen(
                     )
                 }
             }
-            Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Tayang Hari Ini (Schedule)
+            if (uiState.schedule.isNotEmpty()) {
+                SectionHeader(
+                    title = "Tayang Hari Ini",
+                    onSeeAll = { onSeeAllClick("schedule") }
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    uiState.schedule.take(5).forEach { anime ->
+                        ScheduleItem(anime = anime, onClick = { onAnimeClick(anime.id) })
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // Lanjutkan Menonton
+            if (uiState.continueWatching.isNotEmpty()) {
+                SectionHeader(
+                    title = "Lanjutkan Menonton",
+                    onSeeAll = { onSeeAllClick("continue") }
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    uiState.continueWatching.take(5).forEach { history ->
+                        ContinueWatchingItem(
+                            history = history,
+                            modifier = Modifier.width(200.dp),
+                            onClick = { onAnimeClick(history.animeId) }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(24.dp))
+            }
+        }
+    }
+}
+
+@Composable
+private fun BannerPager(banners: List<Banner>, onClick: (String) -> Unit) {
+    val pagerState = rememberPagerState(pageCount = { banners.size })
+    val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            delay(4000)
+            val next = (pagerState.currentPage + 1) % banners.size
+            pagerState.animateScrollToPage(next)
+        }
+    }
+
+    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+        HorizontalPager(
+            state = pagerState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        ) { page ->
+            val banner = banners[page]
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 12.dp)
+                    .clip(RoundedCornerShape(8.dp))
+                    .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp))
+                    .clickable {
+                        if (banner.linkUrl.isNotEmpty()) onClick(banner.linkUrl)
+                    }
+            ) {
+                AsyncImage(
+                    model = banner.image,
+                    contentDescription = banner.title,
+                    modifier = Modifier.fillMaxSize(),
+                    contentScale = ContentScale.Crop
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.Black.copy(alpha = 0.3f))
+                )
+                Column(
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(12.dp)
+                ) {
+                    Text(
+                        text = banner.title,
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold,
+                        color = Color.White
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(8.dp))
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(6.dp),
+            modifier = Modifier.padding(bottom = 4.dp)
+        ) {
+            repeat(banners.size) { index ->
+                Box(
+                    modifier = Modifier
+                        .size(if (pagerState.currentPage == index) 10.dp else 8.dp)
+                        .clip(CircleShape)
+                        .background(
+                            if (pagerState.currentPage == index) Primary else Color.Gray.copy(alpha = 0.5f)
+                        )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun ScheduleItem(anime: AnimeSeries, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(8.dp))
+            .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(8.dp))
+            .background(SurfaceWhite)
+            .clickable { onClick() }
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = anime.poster,
+            contentDescription = anime.title,
+            modifier = Modifier
+                .size(64.dp)
+                .clip(RoundedCornerShape(4.dp))
+                .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(4.dp)),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(modifier = Modifier.width(12.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(
+                text = anime.title,
+                style = MaterialTheme.typography.titleSmall,
+                fontWeight = FontWeight.Bold
+            )
+            Text(
+                text = "${anime.type} • ${anime.totalEpisodes} eps",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.Gray
+            )
+        }
+    }
+}
+
+@Composable
+private fun ContinueWatchingItem(
+    history: WatchHistory,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    val anime = history.anime
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(8.dp))
+            .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp))
+            .clickable { onClick() }
+    ) {
+        AsyncImage(
+            model = anime?.poster ?: "",
+            contentDescription = anime?.title,
+            modifier = Modifier
+                .fillMaxSize()
+                .height(120.dp),
+            contentScale = ContentScale.Crop
+        )
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.4f))
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(8.dp)
+        ) {
+            Text(
+                text = anime?.title ?: "Unknown",
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
+                color = Color.White
+            )
+            Text(
+                text = "Eps. ${history.episode?.episodeNumber ?: "?"}",
+                style = MaterialTheme.typography.bodySmall,
+                color = Color.White.copy(alpha = 0.8f)
+            )
         }
     }
 }
@@ -175,50 +373,5 @@ private fun SectionHeader(title: String, onSeeAll: () -> Unit) {
             fontWeight = FontWeight.Bold,
             modifier = Modifier.clickable { onSeeAll() }
         )
-    }
-}
-
-@Composable
-private fun BannerItem(
-    banner: Banner,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-    ) {
-        AsyncImage(
-            model = banner.image,
-            contentDescription = banner.title,
-            modifier = Modifier.fillMaxSize(),
-            contentScale = ContentScale.Crop
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.3f))
-        )
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(12.dp)
-        ) {
-            Text(
-                text = banner.title,
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            if (banner.linkUrl.isNotEmpty()) {
-                Text(
-                    text = banner.linkUrl,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = Color.White.copy(alpha = 0.8f)
-                )
-            }
-        }
     }
 }

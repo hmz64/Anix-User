@@ -1,8 +1,11 @@
 package com.anix.app.ui.screens.profile
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -24,7 +27,11 @@ import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -108,13 +115,15 @@ fun ProfileScreen(
                             .padding(16.dp),
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
+                        // Clickable avatar → Settings
                         AsyncImage(
                             model = u.avatar,
                             contentDescription = u.username,
                             modifier = Modifier
                                 .size(80.dp)
                                 .clip(CircleShape)
-                                .border(BorderStroke(3.dp, BorderBlack), CircleShape),
+                                .border(BorderStroke(3.dp, BorderBlack), CircleShape)
+                                .clickable { onSettingsClick() },
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.height(8.dp))
@@ -128,26 +137,8 @@ fun ProfileScreen(
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
-                        // XP Bar
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text("XP", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
-                            Spacer(modifier = Modifier.width(8.dp))
-                            LinearProgressIndicator(
-                                progress = if (u.xpToNextLevel > 0) u.xp.toFloat() / u.xpToNextLevel else 0f,
-                                modifier = Modifier
-                                    .weight(1f)
-                                    .height(12.dp)
-                                    .clip(RoundedCornerShape(6.dp))
-                                    .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(6.dp)),
-                                color = AccentOrange,
-                                trackColor = Surface
-                            )
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Text("${u.xp}/${u.xpToNextLevel}", style = MaterialTheme.typography.bodySmall)
-                        }
+                        // XP Bar with animation
+                        XPBar(currentXp = u.xp, maxXp = u.xpToNextLevel)
 
                         Spacer(modifier = Modifier.height(16.dp))
 
@@ -165,16 +156,6 @@ fun ProfileScreen(
                         }
 
                         Spacer(modifier = Modifier.height(8.dp))
-
-                        NeoButton(
-                            text = "Logout",
-                            onClick = {
-                                viewModel.logout()
-                                onLogout()
-                            },
-                            backgroundColor = Color.Red,
-                            modifier = Modifier.fillMaxWidth()
-                        )
                     }
 
                     Spacer(modifier = Modifier.height(8.dp))
@@ -210,7 +191,8 @@ fun ProfileScreen(
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 4.dp)
                                         .border(BorderStroke(1.dp, BorderBlack.copy(alpha = 0.3f)), RoundedCornerShape(6.dp))
-                                        .padding(8.dp),
+                                        .padding(8.dp)
+                                        .clickable { h.anime?.let { onAnimeClick(it.id) } },
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     AsyncImage(
@@ -235,7 +217,8 @@ fun ProfileScreen(
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 4.dp)
                                         .border(BorderStroke(1.dp, BorderBlack.copy(alpha = 0.3f)), RoundedCornerShape(6.dp))
-                                        .padding(8.dp),
+                                        .padding(8.dp)
+                                        .clickable { f.anime?.let { onAnimeClick(it.id) } },
                                     verticalAlignment = Alignment.CenterVertically
                                 ) {
                                     AsyncImage(
@@ -265,9 +248,42 @@ fun ProfileScreen(
                             }
                         }
                     }
+                    Spacer(modifier = Modifier.height(16.dp))
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun XPBar(currentXp: Int, maxXp: Int) {
+    val targetProgress = if (maxXp > 0) currentXp.toFloat() / maxXp.toFloat() else 0f
+    var animatedProgress by remember { mutableFloatStateOf(0f) }
+    val animProgress by animateFloatAsState(
+        targetValue = targetProgress,
+        animationSpec = tween(1000),
+        label = "xpProgress"
+    )
+    LaunchedEffect(targetProgress) { animatedProgress = targetProgress }
+
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text("XP", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+        Spacer(modifier = Modifier.width(8.dp))
+        LinearProgressIndicator(
+            progress = animProgress,
+            modifier = Modifier
+                .weight(1f)
+                .height(12.dp)
+                .clip(RoundedCornerShape(6.dp))
+                .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(6.dp)),
+            color = AccentOrange,
+            trackColor = Surface
+        )
+        Spacer(modifier = Modifier.width(8.dp))
+        Text("$currentXp/$maxXp", style = MaterialTheme.typography.bodySmall)
     }
 }
 

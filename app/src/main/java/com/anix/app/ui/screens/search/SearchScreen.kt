@@ -8,12 +8,15 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
@@ -23,8 +26,11 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.History
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -74,8 +80,17 @@ fun SearchScreen(
                 leadingIcon = {
                     Icon(Icons.Default.Search, contentDescription = "Search")
                 },
+                trailingIcon = {
+                    if (uiState.query.isNotEmpty()) {
+                        IconButton(onClick = { viewModel.setQuery("") }) {
+                            Icon(Icons.Default.Close, contentDescription = "Clear")
+                        }
+                    }
+                },
                 keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { viewModel.search() }),
+                keyboardActions = KeyboardActions(onSearch = {
+                    viewModel.search()
+                }),
                 singleLine = true
             )
 
@@ -105,11 +120,72 @@ fun SearchScreen(
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
+            // Recent Searches
+            if (uiState.query.isBlank() && uiState.recentSearches.isNotEmpty() && !uiState.hasSearched) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp, vertical = 4.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Text(
+                        text = "Recent Searches",
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Clear All",
+                        style = MaterialTheme.typography.labelSmall,
+                        color = Primary,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { viewModel.clearRecentSearches() }
+                    )
+                }
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp)
+                ) {
+                    items(uiState.recentSearches) { recent ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clickable {
+                                    viewModel.setQuery(recent)
+                                }
+                                .padding(vertical = 8.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.History,
+                                contentDescription = null,
+                                modifier = Modifier.padding(end = 12.dp),
+                                tint = Color.Gray
+                            )
+                            Text(
+                                text = recent,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f)
+                            )
+                            IconButton(onClick = { viewModel.removeRecent(recent) }) {
+                                Icon(
+                                    Icons.Default.Close,
+                                    contentDescription = "Remove",
+                                    modifier = Modifier.size(16.dp),
+                                    tint = Color.Gray
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+
             when {
                 uiState.isLoading && uiState.results.isEmpty() -> LoadingIndicator()
                 uiState.error != null && uiState.results.isEmpty() -> ErrorState(message = uiState.error!!, onRetry = { viewModel.search() })
-                !uiState.hasSearched -> EmptyState(message = "Search for your favorite anime")
-                uiState.results.isEmpty() -> EmptyState(message = "No results found")
+                !uiState.hasSearched && uiState.query.isBlank() && uiState.recentSearches.isEmpty() -> EmptyState(message = "Search for your favorite anime")
+                uiState.results.isEmpty() && uiState.hasSearched -> EmptyState(message = "No results found")
                 else -> {
                     LazyVerticalGrid(
                         columns = GridCells.Fixed(2),

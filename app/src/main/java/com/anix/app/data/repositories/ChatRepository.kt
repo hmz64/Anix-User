@@ -116,4 +116,18 @@ class ChatRepository(private val api: ApiService) {
             Result.failure(e)
         }
     }
+
+    suspend fun getOrCreateConversation(userId: String): Result<Conversation> {
+        return try {
+            val response = api.getOrCreateConversation(userId)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Result.success(body.data)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to get conversation"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

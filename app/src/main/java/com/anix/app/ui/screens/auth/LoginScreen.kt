@@ -1,20 +1,15 @@
 package com.anix.app.ui.screens.auth
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -33,9 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anix.app.core.theme.Background
-import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
-import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.NeoButton
 import com.anix.app.ui.components.NeoTextField
 
@@ -49,7 +42,8 @@ fun LoginScreen(
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
-    var localError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
 
     if (uiState.loginSuccess != null) {
         onLoginSuccess()
@@ -65,11 +59,17 @@ fun LoginScreen(
             Text("Login", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(24.dp))
 
-            NeoTextField(value = email, onValueChange = { email = it; localError = null }, placeholder = "Email", modifier = Modifier.fillMaxWidth())
+            NeoTextField(
+                value = email, onValueChange = { email = it; emailError = null },
+                placeholder = "Email", modifier = Modifier.fillMaxWidth()
+            )
+            if (emailError != null) {
+                Text(emailError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
+            }
             Spacer(modifier = Modifier.height(12.dp))
 
             NeoTextField(
-                value = password, onValueChange = { password = it; localError = null },
+                value = password, onValueChange = { password = it; passwordError = null },
                 placeholder = "Password", modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -80,19 +80,24 @@ fun LoginScreen(
                     )
                 }
             )
+            if (passwordError != null) {
+                Text(passwordError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
-            val errorMsg = localError ?: uiState.error
-            if (errorMsg != null) {
-                Text(errorMsg, color = Color.Red, style = MaterialTheme.typography.bodySmall)
+            if (uiState.error != null) {
+                Text(uiState.error!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             NeoButton(
                 text = if (uiState.isLoading) "Loading..." else "Login",
                 onClick = {
-                    if (email.isBlank() || password.isBlank()) localError = "Please fill all fields"
-                    else viewModel.login(email, password)
+                    var valid = true
+                    if (email.isBlank()) { emailError = "Email is required"; valid = false }
+                    else if (!email.contains("@")) { emailError = "Invalid email format"; valid = false }
+                    if (password.isBlank()) { passwordError = "Password is required"; valid = false }
+                    if (valid) viewModel.login(email, password)
                 },
                 backgroundColor = Primary, modifier = Modifier.fillMaxWidth(), enabled = !uiState.isLoading
             )

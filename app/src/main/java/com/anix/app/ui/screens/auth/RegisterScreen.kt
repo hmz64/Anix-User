@@ -1,8 +1,5 @@
 package com.anix.app.ui.screens.auth
 
-import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -13,7 +10,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -32,7 +28,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.anix.app.core.theme.Background
-import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.ui.components.NeoButton
 import com.anix.app.ui.components.NeoTextField
@@ -49,7 +44,10 @@ fun RegisterScreen(
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
     var showPassword by remember { mutableStateOf(false) }
-    var localError by remember { mutableStateOf<String?>(null) }
+    var usernameError by remember { mutableStateOf<String?>(null) }
+    var emailError by remember { mutableStateOf<String?>(null) }
+    var passwordError by remember { mutableStateOf<String?>(null) }
+    var confirmError by remember { mutableStateOf<String?>(null) }
 
     if (uiState.registerSuccess != null) {
         onRegisterSuccess()
@@ -65,12 +63,20 @@ fun RegisterScreen(
             Text("Register", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(24.dp))
 
-            NeoTextField(value = username, onValueChange = { username = it; localError = null }, placeholder = "Username", modifier = Modifier.fillMaxWidth())
+            NeoTextField(value = username, onValueChange = { username = it; usernameError = null }, placeholder = "Username", modifier = Modifier.fillMaxWidth())
+            if (usernameError != null) {
+                Text(usernameError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
+            }
             Spacer(modifier = Modifier.height(12.dp))
-            NeoTextField(value = email, onValueChange = { email = it; localError = null }, placeholder = "Email", modifier = Modifier.fillMaxWidth())
+
+            NeoTextField(value = email, onValueChange = { email = it; emailError = null }, placeholder = "Email", modifier = Modifier.fillMaxWidth())
+            if (emailError != null) {
+                Text(emailError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
+            }
             Spacer(modifier = Modifier.height(12.dp))
+
             NeoTextField(
-                value = password, onValueChange = { password = it; localError = null },
+                value = password, onValueChange = { password = it; passwordError = null },
                 placeholder = "Password", modifier = Modifier.fillMaxWidth(),
                 visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 trailingIcon = {
@@ -81,30 +87,58 @@ fun RegisterScreen(
                     )
                 }
             )
+            if (passwordError != null) {
+                Text(passwordError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
+            }
             Spacer(modifier = Modifier.height(12.dp))
-            NeoTextField(
-                value = confirmPassword, onValueChange = { confirmPassword = it; localError = null },
-                placeholder = "Confirm Password", modifier = Modifier.fillMaxWidth(),
-                visualTransformation = PasswordVisualTransformation()
-            )
+
+            NeoTextField(value = confirmPassword, onValueChange = { confirmPassword = it; confirmError = null }, placeholder = "Confirm Password", modifier = Modifier.fillMaxWidth(), visualTransformation = PasswordVisualTransformation())
+            if (confirmError != null) {
+                Text(confirmError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
+            }
             Spacer(modifier = Modifier.height(8.dp))
 
-            val errorMsg = localError ?: uiState.error
-            if (errorMsg != null) {
-                Text(errorMsg, color = Color.Red, style = MaterialTheme.typography.bodySmall)
+            // Password strength indicator
+            if (password.isNotEmpty()) {
+                val strength = when {
+                    password.length < 4 -> 0.25f
+                    password.length < 6 -> 0.5f
+                    password.length < 8 -> 0.75f
+                    else -> 1.0f
+                }
+                val color = when {
+                    strength <= 0.25f -> Color.Red
+                    strength <= 0.5f -> Color(0xFFFFA500)
+                    strength < 1.0f -> Color(0xFFFFD700)
+                    else -> Color(0xFF4CAF50)
+                }
+                Text(
+                    text = when {
+                        strength <= 0.25f -> "Weak"
+                        strength <= 0.5f -> "Fair"
+                        strength < 1.0f -> "Good"
+                        else -> "Strong"
+                    },
+                    color = color, style = MaterialTheme.typography.labelSmall,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            if (uiState.error != null) {
+                Text(uiState.error!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
             NeoButton(
                 text = if (uiState.isLoading) "Loading..." else "Register",
                 onClick = {
-                    when {
-                        username.length < 3 -> localError = "Username must be at least 3 characters"
-                        !email.contains("@") -> localError = "Invalid email"
-                        password.length < 8 -> localError = "Password must be at least 8 characters"
-                        password != confirmPassword -> localError = "Passwords do not match"
-                        else -> viewModel.register(username, email, password)
-                    }
+                    var valid = true
+                    if (username.length < 3) { usernameError = "Username must be at least 3 characters"; valid = false }
+                    if (email.isBlank()) { emailError = "Email is required"; valid = false }
+                    else if (!email.contains("@")) { emailError = "Invalid email"; valid = false }
+                    if (password.length < 8) { passwordError = "Password must be at least 8 characters"; valid = false }
+                    if (password != confirmPassword) { confirmError = "Passwords do not match"; valid = false }
+                    if (valid) viewModel.register(username, email, password)
                 },
                 backgroundColor = Primary, modifier = Modifier.fillMaxWidth(), enabled = !uiState.isLoading
             )

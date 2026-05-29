@@ -6,6 +6,7 @@ import com.anix.app.core.di.ServiceLocator
 import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Banner
 import com.anix.app.data.models.Genre
+import com.anix.app.data.models.WatchHistory
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -17,11 +18,14 @@ data class HomeUiState(
     val trendingAnime: List<AnimeSeries> = emptyList(),
     val newReleases: List<AnimeSeries> = emptyList(),
     val genres: List<Genre> = emptyList(),
-    val banners: List<Banner> = emptyList()
+    val banners: List<Banner> = emptyList(),
+    val schedule: List<AnimeSeries> = emptyList(),
+    val continueWatching: List<WatchHistory> = emptyList()
 )
 
 class HomeViewModel : ViewModel() {
-    private val repo = ServiceLocator.getAnimeRepository()
+    private val animeRepo = ServiceLocator.getAnimeRepository()
+    private val userRepo = ServiceLocator.getUserRepository()
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -34,16 +38,20 @@ class HomeViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
             try {
-                val trending = repo.getAnimeList(sort = "rating").getOrNull().orEmpty()
-                val newReleases = repo.getAnimeList(sort = "newest").getOrNull().orEmpty()
-                val genres = repo.getGenres().getOrNull().orEmpty()
-                val banners = repo.getBanners().getOrNull().orEmpty()
+                val trending = animeRepo.getAnimeList(sort = "rating").getOrNull().orEmpty()
+                val newReleases = animeRepo.getAnimeList(sort = "newest").getOrNull().orEmpty()
+                val genres = animeRepo.getGenres().getOrNull().orEmpty()
+                val banners = animeRepo.getBanners().getOrNull().orEmpty()
+                val schedule = animeRepo.getSchedule().getOrNull().orEmpty()
+                val continueWatching = userRepo.getWatchHistory(limit = 5).getOrNull().orEmpty()
                 _uiState.value = HomeUiState(
                     isLoading = false,
                     trendingAnime = trending,
                     newReleases = newReleases,
                     genres = genres,
-                    banners = banners
+                    banners = banners,
+                    schedule = schedule,
+                    continueWatching = continueWatching
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)

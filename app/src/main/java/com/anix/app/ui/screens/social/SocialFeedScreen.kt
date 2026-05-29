@@ -17,11 +17,14 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,7 +39,6 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
-import com.anix.app.core.theme.AccentLime
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -55,12 +57,24 @@ fun SocialFeedScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     var showCreateDialog by remember { mutableStateOf(false) }
     var postContent by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
+
+    // Pagination trigger
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val lastVisibleItem = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            lastVisibleItem >= uiState.posts.size - 3 && uiState.hasMore && !uiState.isLoadingMore
+        }
+    }
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore) viewModel.loadMore()
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
             Row(
-                modifier = Modifier.fillMaxWidth().background(Surface).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(0.dp)).padding(12.dp),
+                modifier = Modifier.fillMaxWidth().background(Surface).border(BorderStroke(2.dp, BorderBlack)).padding(12.dp),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
@@ -72,10 +86,28 @@ fun SocialFeedScreen(
                 uiState.isLoading -> LoadingIndicator()
                 uiState.error != null -> ErrorState(message = uiState.error!!, onRetry = { viewModel.loadFeed() })
                 else -> {
-            LazyColumn(modifier = Modifier.fillMaxSize(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(uiState.posts) { post ->
-                    PostCard(post = post, onClick = { onPostClick(post.id) })
-                }
+                    LazyColumn(
+                        state = listState,
+                        modifier = Modifier.fillMaxSize(),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                        items(uiState.posts, key = { it.id }) { post ->
+                            PostCard(
+                                post = post,
+                                onClick = { onPostClick(post.id) },
+                                onLikeClick = { viewModel.toggleLike(post.id) }
+                            )
+                        }
+                        if (uiState.isLoadingMore) {
+                            item {
+                                Box(modifier = Modifier.fillMaxWidth().padding(16.dp), contentAlignment = Alignment.Center) {
+                                    Text("Loading more...", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                }
+                            }
+                        }
                     }
                 }
             }
@@ -99,7 +131,7 @@ fun SocialFeedScreen(
 }
 
 @Composable
-private fun PostCard(post: SocialPost, onClick: () -> Unit) {
+private fun PostCard(post: SocialPost, onClick: () -> Unit, onLikeClick: () -> Unit) {
     Column(
         modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp).background(Color.White, RoundedCornerShape(8.dp)).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp)).clickable { onClick() }.padding(12.dp)
     ) {
@@ -119,7 +151,12 @@ private fun PostCard(post: SocialPost, onClick: () -> Unit) {
         }
         Spacer(modifier = Modifier.height(8.dp))
         Row {
-            Text(text = if (post.isLiked) "❤️ $post.likeCount" else "🤍 $post.likeCount", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+            Text(
+                text = if (post.isLiked) "❤️ ${post.likeCount}" else "🤍 ${post.likeCount}",
+                style = MaterialTheme.typography.bodySmall,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier.clickable { onLikeClick() }
+            )
             Spacer(modifier = Modifier.width(16.dp))
             Text("💬 ${post.commentCount}", style = MaterialTheme.typography.bodySmall)
         }

@@ -46,13 +46,17 @@ import com.anix.app.ui.screens.comments.CommentsScreen
 import com.anix.app.ui.screens.detail.AnimeDetailScreen
 import com.anix.app.ui.screens.giveaways.GiveawayDetailScreen
 import com.anix.app.ui.screens.giveaways.GiveawayListScreen
+import com.anix.app.ui.screens.home.AnimeListScreen
 import com.anix.app.ui.screens.home.HomeScreen
 import com.anix.app.ui.screens.notifications.NotificationsScreen
+import com.anix.app.ui.screens.onboarding.OnboardingScreen
 import com.anix.app.ui.screens.player.VideoPlayerScreen
 import com.anix.app.ui.screens.profile.ProfileScreen
+import com.anix.app.ui.screens.profile.UserProfileScreen
 import com.anix.app.ui.screens.search.SearchScreen
 import com.anix.app.ui.screens.settings.SettingsScreen
 import com.anix.app.ui.screens.social.SocialFeedScreen
+import com.anix.app.ui.screens.social.SocialPostDetailScreen
 import com.anix.app.ui.screens.splash.SplashScreen
 
 object Routes {
@@ -74,6 +78,10 @@ object Routes {
     const val NOTIFICATIONS = "notifications"
     const val SOCIAL_FEED = "social"
     const val SETTINGS = "settings"
+    const val ONBOARDING = "onboarding"
+    const val ANIME_LIST = "anime_list/{category}"
+    const val USER_PROFILE = "user/{userId}"
+    const val SOCIAL_POST_DETAIL = "post/{postId}"
 
     fun animeDetail(id: String) = "anime/$id"
     fun videoPlayer(episodeId: String) = "player/$episodeId"
@@ -81,6 +89,9 @@ object Routes {
     fun chatDetail(id: String) = "chat/$id"
     fun clanDetail(id: String) = "clan/$id"
     fun giveawayDetail(id: String) = "giveaway/$id"
+    fun animeList(category: String) = "anime_list/$category"
+    fun userProfile(userId: String) = "user/$userId"
+    fun socialPostDetail(postId: String) = "post/$postId"
 }
 
 data class BottomNavItem(
@@ -109,7 +120,8 @@ fun AppNavigation() {
         composable(Routes.SPLASH) {
             SplashScreen(
                 onNavigateToLogin = { navController.navigate(Routes.LOGIN) { popUpTo(Routes.SPLASH) { inclusive = true } } },
-                onNavigateToHome = { navController.navigate(Routes.HOME) { popUpTo(Routes.SPLASH) { inclusive = true } } }
+                onNavigateToHome = { navController.navigate(Routes.HOME) { popUpTo(Routes.SPLASH) { inclusive = true } } },
+                onNavigateToOnboarding = { navController.navigate(Routes.ONBOARDING) { popUpTo(Routes.SPLASH) { inclusive = true } } }
             )
         }
         composable(Routes.LOGIN) {
@@ -174,6 +186,25 @@ fun AppNavigation() {
         }
         composable(Routes.NOTIFICATIONS) {
             NotificationsScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.ANIME_LIST, arguments = listOf(navArgument("category") { type = NavType.StringType })) {
+            val category = it.arguments?.getString("category") ?: return@composable
+            AnimeListScreen(category = category, onAnimeClick = { navController.navigate(Routes.animeDetail(it)) }, onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.USER_PROFILE, arguments = listOf(navArgument("userId") { type = NavType.StringType })) {
+            val userId = it.arguments?.getString("userId") ?: return@composable
+            UserProfileScreen(userId = userId, onBack = { navController.popBackStack() }, onChatClick = { navController.navigate(Routes.chatDetail(it)) })
+        }
+
+        composable(Routes.SOCIAL_POST_DETAIL, arguments = listOf(navArgument("postId") { type = NavType.StringType })) {
+            val postId = it.arguments?.getString("postId") ?: return@composable
+            SocialPostDetailScreen(postId = postId, onBack = { navController.popBackStack() })
+        }
+
+        composable(Routes.ONBOARDING) {
+            OnboardingScreen(onComplete = { navController.navigate(Routes.LOGIN) { popUpTo(Routes.ONBOARDING) { inclusive = true } } })
         }
 
         composable(Routes.GIVEAWAY_LIST) {
@@ -270,7 +301,8 @@ fun MainScreen(navController: NavHostController) {
             composable(Routes.HOME) {
                 HomeScreen(
                     onAnimeClick = { navController.navigate(Routes.animeDetail(it)) },
-                    onSeeAllClick = { }
+                    onSeeAllClick = { category -> navController.navigate(Routes.animeList(category)) },
+                    onGenreClick = { genre -> navController.navigate(Routes.animeList("genre/$genre")) }
                 )
             }
             composable(Routes.SEARCH) {
@@ -280,7 +312,7 @@ fun MainScreen(navController: NavHostController) {
                 ChatListScreen(onChatClick = { navController.navigate(Routes.chatDetail(it)) })
             }
             composable(Routes.SOCIAL_FEED) {
-                SocialFeedScreen(onPostClick = { })
+                SocialFeedScreen(onPostClick = { postId -> navController.navigate(Routes.socialPostDetail(postId)) })
             }
             composable(Routes.PROFILE) {
                 ProfileScreen(

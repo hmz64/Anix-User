@@ -1,5 +1,6 @@
 package com.anix.app.ui.screens.detail
 
+import android.content.Intent
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,12 +15,15 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,6 +32,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -39,6 +44,7 @@ import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
+import com.anix.app.core.theme.SurfaceWhite
 import com.anix.app.ui.components.EpisodeItem
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
@@ -54,6 +60,7 @@ fun AnimeDetailScreen(
     viewModel: AnimeDetailViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val context = LocalContext.current
 
     LaunchedEffect(animeId) {
         viewModel.loadAnime(animeId)
@@ -87,7 +94,6 @@ fun AnimeDetailScreen(
                         .aspectRatio(2f / 1f)
                         .background(Color.Black.copy(alpha = 0.3f))
                 )
-                // Back button
                 Text(
                     text = "← Back",
                     modifier = Modifier
@@ -98,6 +104,26 @@ fun AnimeDetailScreen(
                         .padding(horizontal = 12.dp, vertical = 6.dp)
                         .clickable { onBack() },
                     color = Color.Black,
+                    fontWeight = FontWeight.Bold,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                Text(
+                    text = "Share",
+                    modifier = Modifier
+                        .align(Alignment.TopEnd)
+                        .padding(12.dp)
+                        .background(Primary, RoundedCornerShape(6.dp))
+                        .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(6.dp))
+                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .clickable {
+                            val share = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_SUBJECT, a.title)
+                                putExtra(Intent.EXTRA_TEXT, "Watch ${a.title} on Anix!\n${a.description.take(100)}...")
+                            }
+                            context.startActivity(Intent.createChooser(share, "Share via"))
+                        },
+                    color = Color.White,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.labelLarge
                 )
@@ -134,28 +160,78 @@ fun AnimeDetailScreen(
                     horizontalArrangement = Arrangement.spacedBy(16.dp),
                     verticalAlignment = Alignment.CenterVertically
                 ) {
-                    NeoBadge(
-                        text = String.format("%.1f", a.rating),
-                        backgroundColor = AccentOrange
-                    )
+                    NeoBadge(text = String.format("%.1f", a.rating), backgroundColor = AccentOrange)
                     NeoBadge(text = a.status, backgroundColor = Primary)
                     NeoBadge(text = a.type, backgroundColor = Color.DarkGray)
-                    Text(
-                        text = "${a.totalEpisodes} eps",
-                        style = MaterialTheme.typography.bodySmall,
-                        fontWeight = FontWeight.Bold
-                    )
+                    Text(text = "${a.totalEpisodes} eps", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    if (a.duration.isNotEmpty()) {
+                        Text(text = a.duration, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                // Synopsis
-                Text(
-                    text = a.description,
-                    style = MaterialTheme.typography.bodyMedium,
-                    maxLines = 5,
-                    overflow = TextOverflow.Ellipsis
-                )
+                // Tabs
+                val tabs = listOf("Episodes", "Synopsis", "Details")
+                TabRow(
+                    selectedTabIndex = uiState.selectedTab,
+                    containerColor = Surface,
+                    contentColor = Primary
+                ) {
+                    tabs.forEachIndexed { index, title ->
+                        Tab(
+                            selected = uiState.selectedTab == index,
+                            onClick = { viewModel.setSelectedTab(index) },
+                            text = {
+                                Text(
+                                    text = title,
+                                    fontWeight = if (uiState.selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                                )
+                            }
+                        )
+                    }
+                }
+
+                Spacer(modifier = Modifier.height(12.dp))
+
+                when (uiState.selectedTab) {
+                    0 -> {
+                        // Episodes Tab
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = "Episodes (${uiState.episodes.size})",
+                                style = MaterialTheme.typography.titleLarge,
+                                fontWeight = FontWeight.Bold
+                            )
+                            NeoButton(text = "Comments", onClick = onCommentsClick, backgroundColor = Surface, textColor = Color.Black)
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        uiState.episodes.forEach { episode ->
+                            EpisodeItem(episode = episode, onClick = { onEpisodeClick(episode.id) })
+                        }
+                    }
+                    1 -> {
+                        // Synopsis Tab
+                        Text(
+                            text = a.description,
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                    2 -> {
+                        // Details Tab
+                        DetailRow("Type", a.type)
+                        DetailRow("Status", a.status)
+                        DetailRow("Rating", String.format("%.1f", a.rating))
+                        DetailRow("Episodes", a.totalEpisodes.toString())
+                        DetailRow("Duration", a.duration.ifEmpty { "-" })
+                        DetailRow("Release Year", a.releaseYear.toString())
+                        if (a.titleJapanese.isNotEmpty()) DetailRow("Japanese Title", a.titleJapanese)
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(16.dp))
 
@@ -167,34 +243,23 @@ fun AnimeDetailScreen(
                         backgroundColor = if (uiState.isFavorited) Color.Red else Primary,
                         modifier = Modifier.weight(1f)
                     )
-                    NeoButton(
-                        text = "Comments",
-                        onClick = onCommentsClick,
-                        backgroundColor = Surface,
-                        textColor = Color.Black,
-                        modifier = Modifier.weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(24.dp))
-
-                // Episodes Section
-                Text(
-                    text = "Episodes (${uiState.episodes.size})",
-                    style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Bold
-                )
-                Spacer(modifier = Modifier.height(8.dp))
-
-                uiState.episodes.forEach { episode ->
-                    EpisodeItem(
-                        episode = episode,
-                        onClick = { onEpisodeClick(episode.id) }
-                    )
                 }
 
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun DetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = Color.Gray, modifier = Modifier.weight(0.4f))
+        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.6f))
     }
 }

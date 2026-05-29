@@ -16,11 +16,15 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -43,6 +47,17 @@ fun NotificationsScreen(
     viewModel: NotificationsViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+    val listState = rememberLazyListState()
+
+    val shouldLoadMore by remember {
+        derivedStateOf {
+            val last = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            last >= uiState.notifications.size - 3 && uiState.hasMore && !uiState.isLoadingMore
+        }
+    }
+    LaunchedEffect(shouldLoadMore) {
+        if (shouldLoadMore) viewModel.loadMore()
+    }
 
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         Column(modifier = Modifier.fillMaxSize()) {
@@ -64,8 +79,8 @@ fun NotificationsScreen(
                 uiState.error != null -> ErrorState(message = uiState.error!!, onRetry = { viewModel.loadNotifications() })
                 uiState.notifications.isEmpty() -> EmptyState(message = "No notifications")
                 else -> {
-                    LazyColumn(modifier = Modifier.fillMaxSize()) {
-                        items(uiState.notifications) { notif ->
+                    LazyColumn(modifier = Modifier.fillMaxSize(), state = listState) {
+                        items(uiState.notifications, key = { it.id }) { notif ->
                             Row(
                                 modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
                                 verticalAlignment = Alignment.CenterVertically
@@ -78,6 +93,9 @@ fun NotificationsScreen(
                                     Text("●", color = Primary, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
+                        }
+                        if (uiState.isLoadingMore) {
+                            item { LoadingIndicator() }
                         }
                     }
                 }

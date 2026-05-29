@@ -30,4 +30,17 @@ class SocialRepository(private val api: ApiService) {
             Result.failure(e)
         }
     }
+
+    suspend fun likePost(postId: String): Result<Unit> {
+        return try {
+            val response = api.likePost(postId)
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(response.body()?.error ?: "Failed to toggle like"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.data.models.Giveaway
+import com.anix.app.data.models.TopGiver
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -12,7 +13,9 @@ import kotlinx.coroutines.launch
 data class GiveawayListUiState(
     val isLoading: Boolean = true,
     val error: String? = null,
-    val giveaways: List<Giveaway> = emptyList()
+    val giveaways: List<Giveaway> = emptyList(),
+    val topGivers: List<TopGiver> = emptyList(),
+    val selectedTab: Int = 0
 )
 
 class GiveawayListViewModel : ViewModel() {
@@ -23,16 +26,32 @@ class GiveawayListViewModel : ViewModel() {
 
     init {
         loadGiveaways()
+        loadTopGivers()
     }
 
     fun loadGiveaways() {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
-            repo.getGiveaways().onSuccess { giveaways ->
-                _uiState.value = _uiState.value.copy(giveaways = giveaways, isLoading = false)
-            }.onFailure { e ->
-                _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
-            }
+            repo.getGiveaways()
+                .onSuccess { giveaways ->
+                    _uiState.value = _uiState.value.copy(giveaways = giveaways, isLoading = false)
+                }
+                .onFailure { e ->
+                    _uiState.value = _uiState.value.copy(error = e.message, isLoading = false)
+                }
         }
+    }
+
+    fun loadTopGivers() {
+        viewModelScope.launch {
+            repo.getTopGivers()
+                .onSuccess { list ->
+                    _uiState.value = _uiState.value.copy(topGivers = list)
+                }
+        }
+    }
+
+    fun setSelectedTab(tab: Int) {
+        _uiState.value = _uiState.value.copy(selectedTab = tab)
     }
 }

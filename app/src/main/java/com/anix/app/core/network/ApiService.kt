@@ -140,6 +140,23 @@ interface ApiService {
     @PUT("api/user/update/privacy")
     suspend fun updatePrivacy(@Body request: PrivacyRequest): Response<ApiResponse<User>>
 
+    @Multipart
+    @PUT("api/user/update/avatar")
+    suspend fun updateAvatar(@Part file: okhttp3.MultipartBody.Part): Response<ApiResponse<User>>
+
+    @Multipart
+    @PUT("api/user/update/banner-image")
+    suspend fun updateBannerImage(@Part file: okhttp3.MultipartBody.Part): Response<ApiResponse<User>>
+
+    @PUT("api/user/update/bio")
+    suspend fun updateBio(@Body request: Map<String, String>): Response<ApiResponse<User>>
+
+    @PUT("api/user/update/password")
+    suspend fun updatePassword(@Body request: Map<String, String>): Response<ApiResponse<User>>
+
+    @DELETE("api/user/delete")
+    suspend fun deleteAccount(): Response<ApiResponse<Unit>>
+
     @POST("api/user/favorites/{animeId}")
     suspend fun toggleFavorite(@Path("animeId") animeId: String): Response<ApiResponse<UserFavorite>>
 
@@ -168,6 +185,9 @@ interface ApiService {
 
     @GET("api/chat/friends")
     suspend fun getFriends(): Response<ApiResponse<List<User>>>
+
+    @GET("api/chat/friend/requests")
+    suspend fun getFriendRequests(): Response<ApiResponse<List<FriendRequest>>>
 
     @POST("api/chat/friend/request")
     suspend fun sendFriendRequest(@Body request: Map<String, String>): Response<ApiResponse<FriendRequest>>
@@ -276,6 +296,15 @@ interface ApiService {
 
     @POST("api/social/line/post")
     suspend fun createPost(@Body request: CreatePostRequest): Response<ApiResponse<SocialPost>>
+
+    @POST("api/social/line/post/{postId}/like")
+    suspend fun likePost(@Path("postId") postId: String): Response<ApiResponse<Unit>>
+
+    @GET("api/social/line/post/{postId}/comments")
+    suspend fun getPostComments(@Path("postId") postId: String): Response<ApiResponse<List<Comment>>>
+
+    @POST("api/social/line/post/{postId}/comment")
+    suspend fun createPostComment(@Path("postId") postId: String, @Body request: CreateCommentRequest): Response<ApiResponse<Comment>>
 
     // Notifications
     @GET("api/notification/list")

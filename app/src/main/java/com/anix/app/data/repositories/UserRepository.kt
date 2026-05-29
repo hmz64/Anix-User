@@ -75,6 +75,48 @@ class UserRepository(private val api: ApiService) {
         }
     }
 
+    suspend fun updateBio(bio: String): Result<User> {
+        return try {
+            val response = api.updateBio(mapOf("bio" to bio))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Result.success(body.data)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to update bio"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun updatePassword(oldPassword: String, newPassword: String): Result<Unit> {
+        return try {
+            val response = api.updatePassword(mapOf("old_password" to oldPassword, "new_password" to newPassword))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to update password"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun deleteAccount(): Result<Unit> {
+        return try {
+            val response = api.deleteAccount()
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to delete account"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun updatePrivacy(privacySetting: String): Result<Unit> {
         return try {
             val response = api.updatePrivacy(PrivacyRequest(privacySetting))
@@ -195,6 +237,62 @@ class UserRepository(private val api: ApiService) {
                 Result.success(body.data ?: emptyList())
             } else {
                 Result.failure(Exception(body?.error ?: "Failed to fetch notifications"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun searchUsers(query: String): Result<List<SearchUsersResponse>> {
+        return try {
+            val response = api.searchUsers(query)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to search users"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getFriendRequests(): Result<List<FriendRequest>> {
+        return try {
+            val response = api.getFriendRequests()
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to fetch friend requests"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun sendFriendRequest(userId: String): Result<Unit> {
+        return try {
+            val response = api.sendFriendRequest(mapOf("user_id" to userId))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to send request"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun respondFriendRequest(accept: Boolean): Result<Unit> {
+        return try {
+            val response = api.respondFriendRequest(FriendRequestAction(accept))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to respond to request"))
             }
         } catch (e: Exception) {
             Result.failure(e)

@@ -26,16 +26,19 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.anix.app.core.di.ServiceLocator
+import com.anix.app.core.di.PreferencesKeys
 import com.anix.app.core.theme.AccentLime
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.first
 
 @Composable
 fun SplashScreen(
     onNavigateToLogin: () -> Unit,
-    onNavigateToHome: () -> Unit
+    onNavigateToHome: () -> Unit,
+    onNavigateToOnboarding: () -> Unit
 ) {
     var startAnimation by remember { mutableStateOf(false) }
     val scaleAnim by animateFloatAsState(
@@ -52,9 +55,23 @@ fun SplashScreen(
     LaunchedEffect(Unit) {
         startAnimation = true
         delay(1500)
+        val ds = ServiceLocator.getDataStore()
+        val onboardingDone = if (ds != null) {
+            ds.data.first()[PreferencesKeys.ONBOARDING_DONE] ?: false
+        } else false
+        if (!onboardingDone) {
+            onNavigateToOnboarding()
+            return@LaunchedEffect
+        }
         val isLoggedIn = ServiceLocator.getAuthRepository().isLoggedIn()
         if (isLoggedIn) {
-            onNavigateToHome()
+            val meResult = ServiceLocator.getAuthRepository().me()
+            if (meResult.isSuccess) {
+                onNavigateToHome()
+            } else {
+                ServiceLocator.getAuthRepository().logout()
+                onNavigateToLogin()
+            }
         } else {
             onNavigateToLogin()
         }
