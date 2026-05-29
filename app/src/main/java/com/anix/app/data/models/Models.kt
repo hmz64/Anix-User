@@ -406,6 +406,9 @@ data class GiftPremiumRequest(
     val duration: Int
 )
 
+// Player
+data class HeatwavePoint(val fraction: Float, val score: Float)
+
 // Banner
 data class Banner(
     val id: String = "",

@@ -48,8 +48,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -76,9 +74,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.view.WindowCompat
-import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.WindowInsetsControllerCompat
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.media3.common.MediaItem
@@ -91,6 +86,8 @@ import coil.compose.AsyncImage
 import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.util.downloadVideoMp4
+import com.anix.app.ui.components.AdvancedPlayerTimeline
+import com.anix.app.ui.components.HandlePlayerSystemUi
 import com.anix.app.ui.components.ReportDialog
 import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Comment
@@ -124,6 +121,8 @@ fun VideoPlayerScreen(
     var showSpeedSheet by remember { mutableStateOf(false) }
     var showQualitySheet by remember { mutableStateOf(false) }
 
+    HandlePlayerSystemUi(isFullScreen = state.isFullscreen)
+
     LaunchedEffect(episodeId) {
         viewModel.loadEpisode(episodeId, animeId)
     }
@@ -133,27 +132,6 @@ fun VideoPlayerScreen(
             delay(3000)
             showControls = false
         }
-    }
-
-    val window = (context as? Activity)?.window
-
-    if (state.isFullscreen) {
-        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
-            FullscreenPlayer(
-                videoUrl = state.videoUrl,
-                speed = state.playbackSpeed,
-                showControls = showControls,
-                onToggleControls = { showControls = !showControls },
-                onBack = { window?.let { resetSystemBars(it) }; viewModel.setFullscreen(false); onBack() },
-                onExitFullscreen = {
-                    (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-                    window?.let { resetSystemBars(it) }
-                    viewModel.setFullscreen(false)
-                },
-                onChangeSpeed = { showSpeedSheet = true }
-            )
-        }
-        return
     }
 
     val exoPlayer = remember {
@@ -189,6 +167,31 @@ fun VideoPlayerScreen(
             if (d == Long.MIN_VALUE || d < 0) 0L else d
         }
     }
+    val buffered by remember { derivedStateOf { exoPlayer.bufferedPosition } }
+
+    if (state.isFullscreen) {
+        Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
+            FullscreenPlayer(
+                exoPlayer = exoPlayer,
+                videoUrl = state.videoUrl,
+                speed = state.playbackSpeed,
+                showControls = showControls,
+                onToggleControls = { showControls = !showControls },
+                onBack = { viewModel.setFullscreen(false); onBack() },
+                onExitFullscreen = {
+                    (context as? Activity)?.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                    viewModel.setFullscreen(false)
+                },
+                onChangeSpeed = { showSpeedSheet = true },
+                position = position,
+                duration = duration,
+                buffered = buffered,
+                onSeek = { exoPlayer.seekTo(it) }
+            )
+        }
+        return
+    }
+
     val progress by remember {
         derivedStateOf {
             if (duration > 0) (position.toFloat() / duration.toFloat()).coerceIn(0f, 1f) else 0f
@@ -232,13 +235,6 @@ fun VideoPlayerScreen(
                             onFullscreen = {
                                 (context as? Activity)?.let { act ->
                                     act.requestedOrientation = ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
-                                    window?.let { w ->
-                                        WindowCompat.setDecorFitsSystemWindows(w, false)
-                                        WindowInsetsControllerCompat(w, w.decorView).apply {
-                                            hide(WindowInsetsCompat.Type.systemBars())
-                                            systemBarsBehavior = WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
-                                        }
-                                    }
                                 }
                                 viewModel.setFullscreen(true)
                             },
@@ -252,8 +248,14 @@ fun VideoPlayerScreen(
 
         if (state.videoUrl.isNotEmpty()) {
             item(key = "seekbar") {
-                ProgressBar(progress = progress, position = position, duration = duration) { frac ->
-                    exoPlayer.seekTo((frac * duration).toLong())
+                Box(modifier = Modifier.background(Color.Black).padding(vertical = 4.dp)) {
+                    AdvancedPlayerTimeline(
+                        totalDurationMs = duration,
+                        currentPositionMs = position,
+                        bufferedPositionMs = buffered,
+                        heatwaveData = emptyList(),
+                        onSeekPerformed = { exoPlayer.seekTo(it) }
+                    )
                 }
             }
         }
@@ -395,11 +397,6 @@ private fun QualityBottomSheet(current: String, onSelect: (String) -> Unit, onDi
     }
 }
 
-private fun resetSystemBars(window: android.view.Window) {
-    WindowCompat.setDecorFitsSystemWindows(window, true)
-    WindowInsetsControllerCompat(window, window.decorView).show(WindowInsetsCompat.Type.systemBars())
-}
-
 @Composable
 private fun PlayerSurface(
     exoPlayer: ExoPlayer,
@@ -463,7 +460,7 @@ private fun PlayerSurface(
                             isLongPressing = true
                             restoreSpeed = currentSpeed
                             exoPlayer.playbackParameters = PlaybackParameters(2.0f)
-                            indicatorText = "⏩ Kecepatan 2.0x"
+                            indicatorText = "\u23E9 Kecepatan 2.0x"
                             indicatorVisible = true
                             try { waitForUpOrCancellation() } catch (_: Exception) {}
                             exoPlayer.playbackParameters = PlaybackParameters(restoreSpeed)
@@ -476,10 +473,10 @@ private fun PlayerSurface(
                                 val viewWidth = size.width.toFloat()
                                 if (secondDown.position.x > viewWidth / 2) {
                                     exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration.coerceAtLeast(0)))
-                                    indicatorText = "⏩ +10 detik"
+                                    indicatorText = "\u23E9 +10 detik"
                                 } else {
                                     exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0))
-                                    indicatorText = "⏪ -10 detik"
+                                    indicatorText = "\u23EA -10 detik"
                                 }
                                 indicatorVisible = true
                                 waitForUpOrCancellation()
@@ -586,34 +583,6 @@ private fun CtlBtn(icon: ImageVector, onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         Icon(icon, contentDescription = null, tint = Color.White, modifier = Modifier.size(28.dp))
-    }
-}
-
-@Composable
-private fun ProgressBar(progress: Float, position: Long, duration: Long, onSeek: (Float) -> Unit) {
-    Column(
-        Modifier
-            .fillMaxWidth()
-            .background(Color.Black)
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-    ) {
-        Slider(
-            value = progress,
-            onValueChange = onSeek,
-            modifier = Modifier.fillMaxWidth().height(4.dp),
-            colors = SliderDefaults.colors(
-                thumbColor = Blue,
-                activeTrackColor = Blue,
-                inactiveTrackColor = Color.Gray.copy(alpha = 0.5f)
-            )
-        )
-        Row(
-            Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text(formatTime(position), color = Color.White, fontSize = 11.sp)
-            Text(formatTime(duration), color = Color.White, fontSize = 11.sp)
-        }
     }
 }
 
@@ -934,20 +903,20 @@ private fun CommentRow(comment: Comment, isOwn: Boolean, onDelete: () -> Unit) {
 
 @Composable
 private fun FullscreenPlayer(
+    exoPlayer: ExoPlayer,
     videoUrl: String,
     speed: Float,
     showControls: Boolean,
     onToggleControls: () -> Unit,
     onBack: () -> Unit,
     onExitFullscreen: () -> Unit,
-    onChangeSpeed: () -> Unit
+    onChangeSpeed: () -> Unit,
+    position: Long,
+    duration: Long,
+    buffered: Long,
+    onSeek: (Long) -> Unit
 ) {
     val context = LocalContext.current
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            playWhenReady = true
-        }
-    }
 
     LaunchedEffect(videoUrl) {
         exoPlayer.setMediaItem(MediaItem.fromUri(videoUrl))
@@ -956,10 +925,6 @@ private fun FullscreenPlayer(
 
     LaunchedEffect(speed) {
         exoPlayer.playbackParameters = PlaybackParameters(speed)
-    }
-
-    DisposableEffect(Unit) {
-        onDispose { exoPlayer.release() }
     }
 
     var indicatorText by remember { mutableStateOf("") }
@@ -1004,7 +969,7 @@ private fun FullscreenPlayer(
                             isLongPressing = true
                             restoreSpeed = currentSpeed
                             exoPlayer.playbackParameters = PlaybackParameters(2.0f)
-                            indicatorText = "⏩ Kecepatan 2.0x"
+                            indicatorText = "\u23E9 Kecepatan 2.0x"
                             indicatorVisible = true
                             try { waitForUpOrCancellation() } catch (_: Exception) {}
                             exoPlayer.playbackParameters = PlaybackParameters(restoreSpeed)
@@ -1017,10 +982,10 @@ private fun FullscreenPlayer(
                                 val viewWidth = size.width.toFloat()
                                 if (secondDown.position.x > viewWidth / 2) {
                                     exoPlayer.seekTo((exoPlayer.currentPosition + 10000).coerceAtMost(exoPlayer.duration.coerceAtLeast(0)))
-                                    indicatorText = "⏩ +10 detik"
+                                    indicatorText = "\u23E9 +10 detik"
                                 } else {
                                     exoPlayer.seekTo((exoPlayer.currentPosition - 10000).coerceAtLeast(0))
-                                    indicatorText = "⏪ -10 detik"
+                                    indicatorText = "\u23EA -10 detik"
                                 }
                                 indicatorVisible = true
                                 waitForUpOrCancellation()
@@ -1034,8 +999,12 @@ private fun FullscreenPlayer(
 
         if (showControls) {
             Box(Modifier.fillMaxSize().background(Color.Black.copy(alpha = 0.4f))) {
-                Pill("\u2190 Back", onClick = onBack)
-                    .let { Box(Modifier.align(Alignment.TopStart).padding(8.dp)) { it } }
+                Row(
+                    Modifier.align(Alignment.TopStart).padding(8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                ) {
+                    Pill("\u2190 Back", onClick = onBack)
+                }
 
                 Row(
                     Modifier.align(Alignment.TopEnd).padding(8.dp),
@@ -1087,6 +1056,21 @@ private fun FullscreenPlayer(
             ) {
                 Text(indicatorText, color = Color.White, fontWeight = FontWeight.Bold, fontSize = 14.sp)
             }
+        }
+
+        Box(
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .fillMaxWidth()
+                .background(Color.Black.copy(alpha = 0.6f))
+        ) {
+            AdvancedPlayerTimeline(
+                totalDurationMs = duration,
+                currentPositionMs = position,
+                bufferedPositionMs = buffered,
+                heatwaveData = emptyList(),
+                onSeekPerformed = onSeek
+            )
         }
     }
 }
