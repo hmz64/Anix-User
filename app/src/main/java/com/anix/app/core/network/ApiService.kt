@@ -97,6 +97,9 @@ interface ApiService {
         @Body request: ReportCommentRequest
     ): Response<ApiResponse<Unit>>
 
+    @POST("api/report")
+    suspend fun submitReport(@Body request: ReportRequest): Response<ApiResponse<Unit>>
+
     // User
     @GET("api/user/profile")
     suspend fun getMyProfile(): Response<ApiResponse<User>>

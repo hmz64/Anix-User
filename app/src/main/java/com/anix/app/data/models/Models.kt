@@ -179,6 +179,13 @@ data class ReportCommentRequest(
     val reason: String
 )
 
+// Report (video/subtitle/etc)
+data class ReportRequest(
+    val type: String,
+    val message: String = "",
+    val episodeId: String = ""
+)
+
 // Watch History
 data class WatchHistory(
     val id: String = "",

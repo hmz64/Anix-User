@@ -229,6 +229,20 @@ class UserRepository(private val api: ApiService) {
         }
     }
 
+    suspend fun submitReport(type: String, message: String, episodeId: String = ""): Result<Unit> {
+        return try {
+            val response = api.submitReport(ReportRequest(type, message, episodeId))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to submit report"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
     suspend fun reportComment(episodeId: String, commentId: String, reason: String): Result<Unit> {
         return try {
             val response = api.reportComment(episodeId, commentId, ReportCommentRequest(reason))
