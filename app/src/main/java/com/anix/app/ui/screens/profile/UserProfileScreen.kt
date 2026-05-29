@@ -36,6 +36,7 @@ import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.theme.AccentOrange
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -197,7 +198,7 @@ private fun BannerSection(bannerUrl: String?) {
     ) {
         if (!bannerUrl.isNullOrBlank()) {
             AsyncImage(
-                model = bannerUrl,
+                model = ApiClient.resolveUrl(bannerUrl),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier.fillMaxSize()
@@ -222,7 +223,7 @@ private fun ProfileInfoSection(user: User, isLimited: Boolean) {
         ) {
             if (!user.avatar.isNullOrBlank()) {
                 AsyncImage(
-                    model = user.avatar,
+                    model = ApiClient.resolveUrl(user.avatar),
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier.fillMaxSize()

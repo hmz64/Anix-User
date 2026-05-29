@@ -42,6 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.AccentOrange
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
@@ -88,7 +89,7 @@ fun ProfileScreen(
                     ) {
                         if (u.banner.isNotEmpty()) {
                             AsyncImage(
-                                model = u.banner,
+                                model = ApiClient.resolveUrl(u.banner),
                                 contentDescription = "Banner",
                                 modifier = Modifier.fillMaxSize(),
                                 contentScale = ContentScale.Crop
@@ -117,7 +118,7 @@ fun ProfileScreen(
                     ) {
                         // Clickable avatar → Settings
                         AsyncImage(
-                            model = u.avatar,
+                            model = ApiClient.resolveUrl(u.avatar),
                             contentDescription = u.username,
                             modifier = Modifier
                                 .size(80.dp)
