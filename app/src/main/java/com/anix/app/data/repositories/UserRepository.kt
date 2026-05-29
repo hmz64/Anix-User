@@ -5,26 +5,28 @@ import com.anix.app.data.models.*
 
 class UserRepository(private val api: ApiService) {
 
-    suspend fun getUserProfile(userId: String): Result<User> {
+    suspend fun getProfile(userId: String? = null): Result<User> {
         return try {
-            val response = api.getUserProfile(userId)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
+            val response = if (userId != null) api.getUserProfile(userId) else api.getMyProfile()
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Result.success(body.data)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch profile"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch profile"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun getUserStats(): Result<UserStats> {
+    suspend fun updatePrivacy(privacySetting: String): Result<Unit> {
         return try {
-            val response = api.getUserStats()
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
+            val response = api.updatePrivacy(PrivacyRequest(privacySetting))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch stats"))
+                Result.failure(Exception(body?.error ?: "Failed to update privacy"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -34,10 +36,11 @@ class UserRepository(private val api: ApiService) {
     suspend fun getWatchHistory(page: Int = 1, limit: Int = 20): Result<List<WatchHistory>> {
         return try {
             val response = api.getWatchHistory(page, limit)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: emptyList())
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch history"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch history"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -47,141 +50,95 @@ class UserRepository(private val api: ApiService) {
     suspend fun getFavorites(page: Int = 1, limit: Int = 20): Result<List<UserFavorite>> {
         return try {
             val response = api.getFavorites(page, limit)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: emptyList())
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch favorites"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch favorites"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun getUserComments(page: Int = 1, limit: Int = 20): Result<List<Comment>> {
+    suspend fun toggleFavorite(animeId: String): Result<Unit> {
         return try {
-            val response = api.getUserComments(page, limit)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: emptyList())
+            val response = api.toggleFavorite(animeId)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch comments"))
+                Result.failure(Exception(body?.error ?: "Failed to toggle favorite"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun updateName(username: String): Result<User> {
+    suspend fun getComments(episodeId: String): Result<List<Comment>> {
         return try {
-            val response = api.updateName(UpdateNameRequest(username))
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
+            val response = api.getComments(episodeId)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to update name"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch comments"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun updateBanner(banner: String): Result<User> {
+    suspend fun createComment(episodeId: String, content: String, parentId: String? = null): Result<Comment> {
         return try {
-            val response = api.updateBanner(UpdateBannerRequest(banner))
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
-            } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to update banner"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun updatePrivacy(privacySetting: String): Result<User> {
-        return try {
-            val response = api.updatePrivacy(PrivacyRequest(privacySetting))
+            val response = api.createComment(episodeId, CreateCommentRequest(content, parentId))
             val body = response.body()
             if (response.isSuccessful && body?.success == true && body.data != null) {
                 Result.success(body.data)
             } else {
-                Result.failure(Exception(body?.error ?: "Failed to update privacy"))
+                Result.failure(Exception(body?.error ?: "Failed to create comment"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun toggleFavorite(animeId: String): Result<UserFavorite> {
+    suspend fun deleteComment(episodeId: String, commentId: String): Result<Unit> {
         return try {
-            val response = api.toggleFavorite(ToggleFavoriteRequest(animeId))
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
-            } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to toggle favorite"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun updateProgress(episodeId: String, position: Int, completed: Boolean = false): Result<Unit> {
-        return try {
-            val response = api.updateProgress(UpdateProgressRequest(episodeId, position, completed))
-            if (response.isSuccessful && response.body()?.success == true) {
+            val response = api.deleteComment(episodeId, commentId)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to update progress"))
+                Result.failure(Exception(body?.error ?: "Failed to delete comment"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun getComments(animeId: String, episodeId: String? = null, page: Int = 1, limit: Int = 20): Result<List<Comment>> {
+    suspend fun reportComment(episodeId: String, commentId: String, reason: String): Result<Unit> {
         return try {
-            val response = api.getComments(animeId, episodeId, page, limit)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: emptyList())
-            } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch comments"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun createComment(animeId: String, content: String, episodeId: String? = null, parentId: String? = null): Result<Comment> {
-        return try {
-            val response = api.createComment(CreateCommentRequest(animeId, episodeId, parentId, content))
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
-            } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to create comment"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
-
-    suspend fun deleteComment(id: String): Result<Unit> {
-        return try {
-            val response = api.deleteComment(id)
-            if (response.isSuccessful && response.body()?.success == true) {
+            val response = api.reportComment(episodeId, commentId, ReportCommentRequest(reason))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to delete comment"))
+                Result.failure(Exception(body?.error ?: "Failed to report comment"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun reportComment(id: String, reason: String): Result<Unit> {
+    suspend fun getNotifications(page: Int = 1, limit: Int = 20): Result<List<Notification>> {
         return try {
-            val response = api.reportComment(id, ReportCommentRequest(reason))
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(Unit)
+            val response = api.getNotifications(page, limit)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to report comment"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch notifications"))
             }
         } catch (e: Exception) {
             Result.failure(e)

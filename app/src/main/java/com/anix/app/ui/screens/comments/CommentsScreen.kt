@@ -75,7 +75,7 @@ fun CommentsScreen(
         if (newComment.isBlank()) return
         scope.launch {
             ServiceLocator.getUserRepository().createComment(
-                animeId = animeId,
+                episodeId = animeId,
                 content = newComment,
                 parentId = replyTo?.id
             ).onSuccess {
@@ -207,7 +207,7 @@ fun CommentsScreen(
                     text = "Report",
                     onClick = {
                         scope.launch {
-                            ServiceLocator.getUserRepository().reportComment(showReportDialog!!.id, reportReason)
+                            ServiceLocator.getUserRepository().reportComment(animeId, showReportDialog!!.id, reportReason)
                             showReportDialog = null
                         }
                     },

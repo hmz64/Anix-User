@@ -8,10 +8,11 @@ class ChatRepository(private val api: ApiService) {
     suspend fun getConversations(): Result<List<Conversation>> {
         return try {
             val response = api.getConversations()
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: emptyList())
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch conversations"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch conversations"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -21,10 +22,11 @@ class ChatRepository(private val api: ApiService) {
     suspend fun getConversationMessages(id: String, page: Int = 1, limit: Int = 50): Result<List<Message>> {
         return try {
             val response = api.getConversationMessages(id, page, limit)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: emptyList())
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch messages"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch messages"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -33,11 +35,12 @@ class ChatRepository(private val api: ApiService) {
 
     suspend fun sendMessage(conversationId: String, content: String): Result<Message> {
         return try {
-            val response = api.sendMessage(SendMessageRequest(conversationId, content))
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
+            val response = api.sendMessage(conversationId, SendMessageRequest(conversationId, content))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Result.success(body.data)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to send message"))
+                Result.failure(Exception(body?.error ?: "Failed to send message"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -47,10 +50,11 @@ class ChatRepository(private val api: ApiService) {
     suspend fun markConversationRead(id: String): Result<Unit> {
         return try {
             val response = api.markConversationRead(id)
-            if (response.isSuccessful && response.body()?.success == true) {
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to mark read"))
+                Result.failure(Exception(body?.error ?: "Failed to mark read"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -60,10 +64,11 @@ class ChatRepository(private val api: ApiService) {
     suspend fun getFriends(): Result<List<User>> {
         return try {
             val response = api.getFriends()
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: emptyList())
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch friends"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch friends"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -72,24 +77,26 @@ class ChatRepository(private val api: ApiService) {
 
     suspend fun sendFriendRequest(userId: String): Result<FriendRequest> {
         return try {
-            val response = api.sendFriendRequest(mapOf("userId" to userId))
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
+            val response = api.sendFriendRequest(mapOf("user_id" to userId))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Result.success(body.data)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to send request"))
+                Result.failure(Exception(body?.error ?: "Failed to send request"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun respondFriendRequest(id: String, accept: Boolean): Result<FriendRequest> {
+    suspend fun respondFriendRequest(accept: Boolean): Result<FriendRequest> {
         return try {
-            val response = api.respondFriendRequest(id, FriendRequestAction(accept))
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data!!)
+            val response = api.respondFriendRequest(FriendRequestAction(accept))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Result.success(body.data)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to respond"))
+                Result.failure(Exception(body?.error ?: "Failed to respond"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -99,10 +106,11 @@ class ChatRepository(private val api: ApiService) {
     suspend fun searchUsers(query: String): Result<List<SearchUsersResponse>> {
         return try {
             val response = api.searchUsers(query)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: emptyList())
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Search failed"))
+                Result.failure(Exception(body?.error ?: "Search failed"))
             }
         } catch (e: Exception) {
             Result.failure(e)

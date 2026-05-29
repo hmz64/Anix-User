@@ -168,10 +168,8 @@ data class CommentReport(
 )
 
 data class CreateCommentRequest(
-    val animeId: String,
-    val episodeId: String? = null,
-    val parentId: String? = null,
-    val content: String
+    val content: String,
+    @SerializedName("parent_id") val parentId: String? = null
 )
 
 data class ReportCommentRequest(

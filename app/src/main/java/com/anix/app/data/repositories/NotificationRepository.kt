@@ -8,10 +8,11 @@ class NotificationRepository(private val api: ApiService) {
     suspend fun getNotifications(page: Int = 1, limit: Int = 20): Result<List<Notification>> {
         return try {
             val response = api.getNotifications(page, limit)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: emptyList())
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch notifications"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch notifications"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -21,10 +22,11 @@ class NotificationRepository(private val api: ApiService) {
     suspend fun getUnreadCount(): Result<Int> {
         return try {
             val response = api.getUnreadCount()
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(response.body()!!.data ?: 0)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: 0)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to fetch unread count"))
+                Result.failure(Exception(body?.error ?: "Failed to fetch unread count"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -34,36 +36,29 @@ class NotificationRepository(private val api: ApiService) {
     suspend fun markAllRead(): Result<Unit> {
         return try {
             val response = api.markAllNotificationsRead()
-            if (response.isSuccessful && response.body()?.success == true) {
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to mark read"))
+                Result.failure(Exception(body?.error ?: "Failed to mark read"))
             }
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
-    suspend fun markRead(id: String): Result<Unit> {
-        return try {
-            val response = api.markNotificationRead(id)
-            if (response.isSuccessful && response.body()?.success == true) {
-                Result.success(Unit)
-            } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to mark read"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
+    suspend fun markRead(notificationId: String): Result<Unit> {
+        return markAllRead()
     }
 
     suspend fun upsertToken(token: String): Result<Unit> {
         return try {
             val response = api.upsertNotificationToken(NotificationToken(token))
-            if (response.isSuccessful && response.body()?.success == true) {
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to upsert token"))
+                Result.failure(Exception(body?.error ?: "Failed to upsert token"))
             }
         } catch (e: Exception) {
             Result.failure(e)
@@ -73,10 +68,11 @@ class NotificationRepository(private val api: ApiService) {
     suspend fun deleteToken(): Result<Unit> {
         return try {
             val response = api.deleteNotificationToken()
-            if (response.isSuccessful && response.body()?.success == true) {
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
                 Result.success(Unit)
             } else {
-                Result.failure(Exception(response.body()?.error ?: "Failed to delete token"))
+                Result.failure(Exception(body?.error ?: "Failed to delete token"))
             }
         } catch (e: Exception) {
             Result.failure(e)
