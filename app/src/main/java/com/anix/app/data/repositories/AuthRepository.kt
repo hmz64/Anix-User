@@ -1,6 +1,7 @@
 package com.anix.app.data.repositories
 
 import android.content.Context
+import android.util.Log
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.network.ApiService
 import com.anix.app.data.models.*
@@ -11,30 +12,42 @@ class AuthRepository(
 ) {
     suspend fun login(email: String, password: String): Result<AuthResponse> {
         return try {
+            Log.d("AnixAuth", "Login attempt: $email")
             val response = api.login(LoginRequest(email, password))
             val body = response.body()
+            Log.d("AnixAuth", "Login response: isSuccessful=${response.isSuccessful}, body=${body?.success}")
             if (response.isSuccessful && body?.success == true && body.data != null) {
+                Log.d("AnixAuth", "Login success, token length: ${body.data.token.length}")
                 ServiceLocator.saveToken(body.data.token)
                 Result.success(body.data)
             } else {
-                Result.failure(Exception(body?.error ?: "Login failed"))
+                val err = body?.error ?: "Login failed"
+                Log.w("AnixAuth", "Login failed: $err")
+                Result.failure(Exception(err))
             }
         } catch (e: Exception) {
+            Log.e("AnixAuth", "Login exception: ${e.javaClass.simpleName}: ${e.message}", e)
             Result.failure(e)
         }
     }
 
     suspend fun register(username: String, email: String, password: String): Result<AuthResponse> {
         return try {
+            Log.d("AnixAuth", "Register attempt: $username / $email")
             val response = api.register(RegisterRequest(username, email, password))
             val body = response.body()
+            Log.d("AnixAuth", "Register response: isSuccessful=${response.isSuccessful}, body=${body?.success}")
             if (response.isSuccessful && body?.success == true && body.data != null) {
+                Log.d("AnixAuth", "Register success, token length: ${body.data.token.length}")
                 ServiceLocator.saveToken(body.data.token)
                 Result.success(body.data)
             } else {
-                Result.failure(Exception(body?.error ?: "Registration failed"))
+                val err = body?.error ?: "Registration failed"
+                Log.w("AnixAuth", "Register failed: $err")
+                Result.failure(Exception(err))
             }
         } catch (e: Exception) {
+            Log.e("AnixAuth", "Register exception: ${e.javaClass.simpleName}: ${e.message}", e)
             Result.failure(e)
         }
     }

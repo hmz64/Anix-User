@@ -36,7 +36,7 @@ data class AuthResponse(
 
 // User
 data class User(
-    val id: String = "",
+    val id: Long = 0,
     val username: String = "",
     val email: String = "",
     val avatar: String = "",
@@ -47,7 +47,7 @@ data class User(
     val bio: String = "",
     @SerializedName("is_premium") val premium: Boolean = false,
     @SerializedName("privacy_setting") val privacySetting: String = "public",
-    val role: String = "user",
+    val role: String = "",
     val createdAt: String = "",
     val lastActiveAt: String? = null
 )
