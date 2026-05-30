@@ -82,7 +82,6 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -98,7 +97,6 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
-import coil.request.ImageRequest
 import com.anix.app.core.di.PreferencesKeys
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.network.ApiClient
@@ -963,10 +961,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(avatarUrl)
-                            .crossfade(true)
-                            .build(),
+                        model = avatarUrl,
                         contentDescription = "Avatar",
                         modifier = Modifier.size(40.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
                         contentScale = ContentScale.Crop,
@@ -1009,10 +1004,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
                 if (!bannerUrl.isNullOrEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     AsyncImage(
-                        model = ImageRequest.Builder(LocalContext.current)
-                            .data(bannerUrl)
-                            .crossfade(true)
-                            .build(),
+                        model = bannerUrl,
                         contentDescription = "Banner",
                         modifier = Modifier
                             .fillMaxWidth()
