@@ -36,6 +36,7 @@ import com.anix.app.core.theme.AccentOrange
 import com.anix.app.core.theme.GlassBorder
 import com.anix.app.core.theme.TextMuted
 import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.theme.TextSecondary
 import com.anix.app.core.util.liquidGlass
 
 @Composable

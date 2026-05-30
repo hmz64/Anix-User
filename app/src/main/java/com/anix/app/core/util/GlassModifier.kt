@@ -14,6 +14,7 @@ import androidx.compose.ui.unit.dp
 
 fun Modifier.liquidGlass(
     shape:       Shape   = RoundedCornerShape(16.dp),
+    blurRadius:  Float   = 24f,
     alpha:       Float   = 0.10f,
     borderAlpha: Float   = 0.25f,
     showGlow:    Boolean = false,

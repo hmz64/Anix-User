@@ -45,6 +45,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -167,18 +168,17 @@ fun SearchScreen(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Icon(
-                                Icons.Default.History,
-                                contentDescription = null,
-                modifier = Modifier.padding(end = 12.dp),
+                            Icons.Default.History,
+                            contentDescription = null,
+                            modifier = Modifier.padding(end = 12.dp),
                             tint = TextMuted
                         )
                         Text(
                             text = recent,
                             style = MaterialTheme.typography.bodyMedium,
                             color = TextPrimary,
-                                color = TextPrimary,
-                                modifier = Modifier.weight(1f)
-                            )
+                            modifier = Modifier.weight(1f)
+                        )
                             IconButton(onClick = { viewModel.removeRecent(recent) }) {
                                     Icon(
                                         Icons.Default.Close,
