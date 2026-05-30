@@ -170,7 +170,7 @@ fun VideoPlayerScreen(
     }
 
     LaunchedEffect(Unit) {
-        viewModel.xpGainedEvent.collect { result ->
+        viewModel.xpGainedEvent.collect { result: XpGrantResponse ->
             snackbarHostState.showSnackbar("+${result.xpGained} XP (Level ${result.level})")
         }
     }

@@ -8,6 +8,7 @@ import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Comment
 import com.anix.app.data.models.Episode
 import com.anix.app.data.models.User
+import com.anix.app.data.models.XpGrantResponse
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
