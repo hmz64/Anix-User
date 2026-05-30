@@ -98,6 +98,7 @@ import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
 import coil.compose.LocalImageLoader
+import coil.request.ImageRequest
 import com.anix.app.core.di.PreferencesKeys
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.network.ApiClient
@@ -938,28 +939,59 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
     val avatarUrl = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null }
     val imageLoader = LocalImageLoader.current
     val avatarPlaceholder = rememberVectorPainter(Icons.Filled.Person)
-    val bannerPlaceholder = rememberVectorPainter(Icons.Outlined.Image)
     val cardRadius = RoundedCornerShape(16.dp)
+    val hasBanner = !bannerUrl.isNullOrEmpty()
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
     ) {
-        Box(
-            modifier = Modifier
-                .matchParentSize()
-                .offset(x = 4.dp, y = 4.dp)
-                .background(Color.Black, cardRadius)
-        )
+        if (!hasBanner) {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .offset(x = 4.dp, y = 4.dp)
+                    .background(Color.Black, cardRadius)
+            )
+        }
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(Color(0xFFFFF9EC), cardRadius)
+                .then(
+                    if (hasBanner) Modifier.heightIn(min = 100.dp, max = 160.dp)
+                    else Modifier.wrapContentHeight()
+                )
+                .clip(cardRadius)
                 .border(2.dp, Color.Black, cardRadius)
         ) {
+            if (hasBanner) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(bannerUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = null,
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize(),
+                    imageLoader = imageLoader
+                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color.White.copy(alpha = 0.45f))
+                )
+            } else {
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFFFFF9EC))
+                )
+            }
             Column(
-                Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 14.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 14.dp, vertical = 14.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AsyncImage(
@@ -1004,23 +1036,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
                 }
                 Spacer(Modifier.height(6.dp))
                 Text(comment.content, fontSize = 13.sp, color = Dark)
-                if (!bannerUrl.isNullOrEmpty()) {
-                    Spacer(Modifier.height(8.dp))
-                    AsyncImage(
-                        model = bannerUrl,
-                        imageLoader = imageLoader,
-                        contentDescription = "Banner",
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 160.dp)
-                            .clip(RoundedCornerShape(12.dp))
-                            .border(1.5.dp, Color.Black, RoundedCornerShape(12.dp)),
-                        contentScale = ContentScale.Crop,
-                        placeholder = bannerPlaceholder,
-                        error = bannerPlaceholder
-                    )
-                }
-                Spacer(Modifier.height(8.dp))
+                Spacer(Modifier.weight(1f))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     NeoActionButton("Balas")
                         if (isOwn) NeoActionButton("Hapus", bgColor = Color(0xFFFF3B30), textColor = Color.White, onClick = onDelete)
