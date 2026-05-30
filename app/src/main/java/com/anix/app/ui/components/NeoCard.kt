@@ -1,6 +1,7 @@
 package com.anix.app.ui.components
 
-import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -13,14 +14,17 @@ import com.anix.app.core.util.liquidGlass
 
 @Composable
 fun NeoCard(
-    modifier:     Modifier  = Modifier,
-    cornerRadius: Dp        = 16.dp,
-    showGlow:     Boolean   = false,
+    modifier:     Modifier   = Modifier,
+    onClick:      (() -> Unit)? = null,
+    cornerRadius: Dp         = 16.dp,
+    showGlow:     Boolean    = false,
     content:      @Composable ColumnScope.() -> Unit
 ) {
+    val clickMod = if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier
     Column(
         modifier = modifier
             .fillMaxWidth()
+            .then(clickMod)
             .liquidGlass(
                 shape      = RoundedCornerShape(cornerRadius),
                 blurRadius = 24f,
