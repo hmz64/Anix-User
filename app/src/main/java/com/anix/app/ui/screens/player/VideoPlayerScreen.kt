@@ -82,6 +82,7 @@ import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
@@ -97,6 +98,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.anix.app.core.di.PreferencesKeys
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.network.ApiClient
@@ -935,7 +937,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
     val isOwn = currentUserId != null && comment.userId == currentUserId
     val bannerUrl = if (showBanner) ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null } else null
     val avatarUrl = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null }
-    val avatarPlaceholder = rememberVectorPainter(Icons.Filled.Person)
+    val avatarPlaceholder = painterResource(R.drawable.ic_default_avatar)
     val bannerPlaceholder = rememberVectorPainter(Icons.Outlined.Image)
     val cardRadius = RoundedCornerShape(16.dp)
 
@@ -961,9 +963,12 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AsyncImage(
-                        model = avatarUrl,
-                        contentDescription = null,
-                        modifier = Modifier.size(36.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(avatarUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Avatar",
+                        modifier = Modifier.size(40.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
                         contentScale = ContentScale.Crop,
                         placeholder = avatarPlaceholder,
                         error = avatarPlaceholder
@@ -1001,15 +1006,19 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
                 }
                 Spacer(Modifier.height(6.dp))
                 Text(comment.content, fontSize = 13.sp, color = Dark)
-                if (bannerUrl != null) {
+                if (!bannerUrl.isNullOrEmpty()) {
                     Spacer(Modifier.height(8.dp))
                     AsyncImage(
-                        model = bannerUrl,
-                        contentDescription = null,
+                        model = ImageRequest.Builder(LocalContext.current)
+                            .data(bannerUrl)
+                            .crossfade(true)
+                            .build(),
+                        contentDescription = "Banner",
                         modifier = Modifier
                             .fillMaxWidth()
                             .heightIn(max = 160.dp)
-                            .clip(RoundedCornerShape(16.dp)),
+                            .clip(RoundedCornerShape(12.dp))
+                            .border(1.5.dp, Color.Black, RoundedCornerShape(12.dp)),
                         contentScale = ContentScale.Crop,
                         placeholder = bannerPlaceholder,
                         error = bannerPlaceholder
