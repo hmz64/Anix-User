@@ -1,46 +1,40 @@
 package com.anix.app.ui.navigation
 
 import android.util.Log
+import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.core.EaseInCubic
+import androidx.compose.animation.core.EaseOutCubic
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Chat
 import androidx.compose.material.icons.filled.Home
-import androidx.compose.material.icons.filled.Notifications
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Chat
 import androidx.compose.material.icons.outlined.Home
-import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Search
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.NavigationBarItemDefaults
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
-import com.anix.app.core.theme.BorderBlack
-import com.anix.app.core.theme.Primary
-import com.anix.app.core.theme.Surface
 import com.anix.app.ui.components.FloatingMiniPlayer
+import com.anix.app.ui.components.GlassNavBar
+import com.anix.app.ui.components.NavItem
 import com.anix.app.ui.screens.auth.LoginScreen
 import com.anix.app.ui.screens.auth.RegisterScreen
 import com.anix.app.ui.screens.chat.ChatDetailScreen
@@ -95,19 +89,14 @@ object Routes {
     fun userProfile(userId: String) = "user/$userId"
 }
 
-data class BottomNavItem(
-    val label: String,
-    val selectedIcon: ImageVector,
-    val unselectedIcon: ImageVector,
-    val route: String
+private val navItems = listOf(
+    NavItem(route = Routes.HOME, icon = Icons.Outlined.Home, iconSelected = Icons.Filled.Home, label = "Home"),
+    NavItem(route = Routes.SEARCH, icon = Icons.Outlined.Search, iconSelected = Icons.Filled.Search, label = "Search"),
+    NavItem(route = Routes.CHAT_LIST, icon = Icons.Outlined.Chat, iconSelected = Icons.Filled.Chat, label = "Chat"),
+    NavItem(route = Routes.PROFILE, icon = Icons.Outlined.Person, iconSelected = Icons.Filled.Person, label = "Profile"),
 )
 
-val bottomNavItems = listOf(
-    BottomNavItem("Home", Icons.Filled.Home, Icons.Outlined.Home, Routes.HOME),
-    BottomNavItem("Search", Icons.Filled.Search, Icons.Outlined.Search, Routes.SEARCH),
-    BottomNavItem("Chat", Icons.Filled.Chat, Icons.Outlined.Chat, Routes.CHAT_LIST),
-    BottomNavItem("Profile", Icons.Filled.Person, Icons.Outlined.Person, Routes.PROFILE),
-)
+private val topLevelRoutes = navItems.map { it.route }
 
 @Composable
 fun AppNavigation() {
@@ -120,10 +109,39 @@ fun AppNavigation() {
         && currentRoute != Routes.SETTINGS
         && currentRoute?.startsWith("player/") != true
 
+    val showNavBar = currentRoute in topLevelRoutes
+
     Box(modifier = Modifier.fillMaxSize()) {
         NavHost(
             navController = navController,
-            startDestination = Routes.SPLASH
+            startDestination = Routes.SPLASH,
+            enterTransition = {
+                fadeIn(animationSpec = tween(300, easing = EaseOutCubic)) +
+                    slideIntoContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Up,
+                        animationSpec = spring(
+                            dampingRatio = androidx.compose.animation.core.Spring.DampingRatioMediumBouncy,
+                            stiffness = androidx.compose.animation.core.Spring.StiffnessLow
+                        ),
+                        initialOffset = { it / 10 }
+                    )
+            },
+            exitTransition = {
+                fadeOut(animationSpec = tween(200, easing = EaseInCubic)) +
+                    scaleOut(targetScale = 0.97f, animationSpec = tween(200))
+            },
+            popEnterTransition = {
+                fadeIn(animationSpec = tween(300)) +
+                    scaleIn(initialScale = 0.97f, animationSpec = tween(300, easing = EaseOutCubic))
+            },
+            popExitTransition = {
+                fadeOut(animationSpec = tween(200)) +
+                    slideOutOfContainer(
+                        towards = AnimatedContentTransitionScope.SlideDirection.Down,
+                        animationSpec = tween(200, easing = EaseInCubic),
+                        targetOffset = { it / 10 }
+                    )
+            }
         ) {
             composable(Routes.SPLASH) {
                 SplashScreen(
@@ -213,45 +231,56 @@ fun AppNavigation() {
             composable(Routes.NOTIFICATIONS) {
                 NotificationsScreen(onBack = { Log.d("AnixNav", "onBack: Notifications"); navController.popBackStack() })
             }
-
             composable(Routes.ANIME_LIST, arguments = listOf(navArgument("category") { type = NavType.StringType })) {
                 val category = it.arguments?.getString("category") ?: return@composable
-                AnimeListScreen(category = category,
+                AnimeListScreen(
+                    category = category,
                     onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) },
-                    onBack = { Log.d("AnixNav", "onBack: AnimeList"); navController.popBackStack() })
+                    onBack = { Log.d("AnixNav", "onBack: AnimeList"); navController.popBackStack() }
+                )
             }
-
             composable(Routes.USER_PROFILE, arguments = listOf(navArgument("userId") { type = NavType.StringType })) {
                 val userId = it.arguments?.getString("userId") ?: return@composable
-                UserProfileScreen(userId = userId,
+                UserProfileScreen(
+                    userId = userId,
                     onBack = { Log.d("AnixNav", "onBack: UserProfile($userId)"); navController.popBackStack() },
-                    onChatClick = { convId -> Log.d("AnixNav", "onChatClick: $convId"); navController.navigate(Routes.chatDetail(convId)) })
+                    onChatClick = { convId -> Log.d("AnixNav", "onChatClick: $convId"); navController.navigate(Routes.chatDetail(convId)) }
+                )
             }
-
             composable(Routes.ONBOARDING) {
-                OnboardingScreen(onComplete = { Log.d("AnixNav", "onComplete: Onboarding"); navController.navigate(Routes.LOGIN) { popUpTo(Routes.ONBOARDING) { inclusive = true } } })
+                OnboardingScreen(
+                    onComplete = { Log.d("AnixNav", "onComplete: Onboarding"); navController.navigate(Routes.LOGIN) { popUpTo(Routes.ONBOARDING) { inclusive = true } } }
+                )
             }
-
             composable(Routes.GIVEAWAY_LIST) {
-                GiveawayListScreen(onGiveawayClick = { id -> Log.d("AnixNav", "onGiveawayClick: $id"); navController.navigate(Routes.giveawayDetail(id)) })
+                GiveawayListScreen(
+                    onGiveawayClick = { id -> Log.d("AnixNav", "onGiveawayClick: $id"); navController.navigate(Routes.giveawayDetail(id)) }
+                )
             }
-
             composable(Routes.CLAN_LIST) {
-                ClanListScreen(onClanClick = { id -> Log.d("AnixNav", "onClanClick: $id"); navController.navigate(Routes.clanDetail(id)) })
+                ClanListScreen(
+                    onClanClick = { id -> Log.d("AnixNav", "onClanClick: $id"); navController.navigate(Routes.clanDetail(id)) }
+                )
             }
 
-            composable(Routes.CHAT_LIST) {
-                ChatListScreen(onChatClick = { id -> Log.d("AnixNav", "onChatClick: $id"); navController.navigate(Routes.chatDetail(id)) })
-            }
-
+            // ── Tab screens ────────────────────────────────────────────
             composable(Routes.HOME) {
-                MainScreen(navController = navController)
+                HomeScreen(
+                    onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) },
+                    onSeeAllClick = { category -> Log.d("AnixNav", "onSeeAllClick: $category"); navController.navigate(Routes.animeList(category)) },
+                    onGenreClick = { genre -> Log.d("AnixNav", "onGenreClick: $genre"); navController.navigate(Routes.animeList(genre)) }
+                )
             }
-
             composable(Routes.SEARCH) {
-                SearchScreen(onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) })
+                SearchScreen(
+                    onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) }
+                )
             }
-
+            composable(Routes.CHAT_LIST) {
+                ChatListScreen(
+                    onChatClick = { id -> Log.d("AnixNav", "onChatClick: $id"); navController.navigate(Routes.chatDetail(id)) }
+                )
+            }
             composable(Routes.PROFILE) {
                 ProfileScreen(
                     onSettingsClick = { Log.d("AnixNav", "onSettingsClick"); navController.navigate(Routes.SETTINGS) },
@@ -264,6 +293,21 @@ fun AppNavigation() {
                     }
                 )
             }
+        }
+
+        if (showNavBar) {
+            GlassNavBar(
+                items = navItems,
+                currentRoute = currentRoute,
+                onItemClick = { route ->
+                    navController.navigate(route) {
+                        popUpTo(navController.graph.startDestinationId) { saveState = true }
+                        launchSingleTop = true
+                        restoreState = true
+                    }
+                },
+                modifier = Modifier.align(Alignment.BottomCenter)
+            )
         }
 
         if (showMiniPlayer) {
@@ -278,88 +322,6 @@ fun AppNavigation() {
                     }
                 }
             )
-        }
-    }
-}
-
-@Composable
-fun MainScreen(navController: NavHostController) {
-    val tabNavController = rememberNavController()
-    val navBackStackEntry by tabNavController.currentBackStackEntryAsState()
-    val currentDestination = navBackStackEntry?.destination
-
-    Scaffold(
-        bottomBar = {
-            NavigationBar(
-                containerColor = Surface
-            ) {
-                bottomNavItems.forEach { item ->
-                    val selected = currentDestination?.hierarchy?.any { it.route == item.route } == true
-                    NavigationBarItem(
-                        icon = {
-                            Icon(
-                                imageVector = if (selected) item.selectedIcon else item.unselectedIcon,
-                                contentDescription = item.label
-                            )
-                        },
-                        label = {
-                            Text(
-                                text = item.label,
-                                fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal
-                            )
-                        },
-                        selected = selected,
-                        onClick = {
-                            tabNavController.navigate(item.route) {
-                                popUpTo(tabNavController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        colors = NavigationBarItemDefaults.colors(
-                            selectedIconColor = Primary,
-                            selectedTextColor = Primary,
-                            unselectedIconColor = BorderBlack,
-                            unselectedTextColor = BorderBlack,
-                            indicatorColor = Surface
-                        )
-                    )
-                }
-            }
-        }
-    ) { innerPadding ->
-        NavHost(
-            navController = tabNavController,
-            startDestination = Routes.HOME,
-            modifier = Modifier.padding(innerPadding)
-        ) {
-            composable(Routes.HOME) {
-                HomeScreen(
-                    onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); try { navController.navigate(Routes.animeDetail(id)) } catch (e: Exception) { Log.e("AnixNav", "nav failed", e) } },
-                    onSeeAllClick = { category -> Log.d("AnixNav", "onSeeAllClick: $category"); try { navController.navigate(Routes.animeList(category)) } catch (e: Exception) { Log.e("AnixNav", "nav failed", e) } },
-                    onGenreClick = { genre -> Log.d("AnixNav", "onGenreClick: $genre"); try { navController.navigate(Routes.animeList(genre)) } catch (e: Exception) { Log.e("AnixNav", "nav failed", e) } }
-                )
-            }
-            composable(Routes.SEARCH) {
-                SearchScreen(onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) })
-            }
-            composable(Routes.CHAT_LIST) {
-                ChatListScreen(onChatClick = { id -> Log.d("AnixNav", "onChatClick: $id"); navController.navigate(Routes.chatDetail(id)) })
-            }
-            composable(Routes.PROFILE) {
-                ProfileScreen(
-                    onSettingsClick = { Log.d("AnixNav", "onSettingsClick"); navController.navigate(Routes.SETTINGS) },
-                    onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) },
-                    onLogout = {
-                        Log.d("AnixNav", "onLogout");
-                        navController.navigate(Routes.LOGIN) {
-                            popUpTo(0) { inclusive = true }
-                        }
-                    }
-                )
-            }
         }
     }
 }
