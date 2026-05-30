@@ -50,6 +50,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import androidx.datastore.preferences.core.edit
+import kotlinx.coroutines.launch
 import com.anix.app.BuildConfig
 import com.anix.app.core.di.PreferencesKeys
 import com.anix.app.core.di.ServiceLocator
