@@ -97,6 +97,7 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import coil.compose.LocalImageLoader
 import com.anix.app.core.di.PreferencesKeys
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.network.ApiClient
@@ -935,6 +936,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
     val isOwn = currentUserId != null && comment.userId == currentUserId
     val bannerUrl = if (showBanner) ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null } else null
     val avatarUrl = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null }
+    val imageLoader = LocalImageLoader.current
     val avatarPlaceholder = rememberVectorPainter(Icons.Filled.Person)
     val bannerPlaceholder = rememberVectorPainter(Icons.Outlined.Image)
     val cardRadius = RoundedCornerShape(16.dp)
@@ -962,6 +964,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     AsyncImage(
                         model = avatarUrl,
+                        imageLoader = imageLoader,
                         contentDescription = "Avatar",
                         modifier = Modifier.size(40.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
                         contentScale = ContentScale.Crop,
@@ -1005,6 +1008,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
                     Spacer(Modifier.height(8.dp))
                     AsyncImage(
                         model = bannerUrl,
+                        imageLoader = imageLoader,
                         contentDescription = "Banner",
                         modifier = Modifier
                             .fillMaxWidth()

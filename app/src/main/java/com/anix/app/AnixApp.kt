@@ -5,6 +5,7 @@ import android.os.Build
 import android.util.Log
 import coil.ImageLoader
 import coil.ImageLoaderFactory
+import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import com.anix.app.core.di.ServiceLocator
 import okhttp3.Interceptor
@@ -40,6 +41,8 @@ class AnixApp : Application(), ImageLoaderFactory {
             .components {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     add(ImageDecoderDecoder.Factory())
+                } else {
+                    add(GifDecoder.Factory())
                 }
             }
             .build()
