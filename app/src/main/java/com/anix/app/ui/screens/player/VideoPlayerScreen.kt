@@ -339,7 +339,7 @@ fun VideoPlayerScreen(
                 submitting = state.submittingComment,
                 sort = state.sortMode,
                 episodeId = episodeId,
-                currentUserId = currentUserId,
+                currentUserId = state.currentUserId,
                 currentUserAvatar = state.currentUserAvatar,
                 onTextChange = { viewModel.setCommentText(it) },
                 onSubmit = { viewModel.submitComment(episodeId) },
