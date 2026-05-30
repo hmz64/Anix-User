@@ -6,7 +6,6 @@ import android.util.Log
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.ImageDecoderDecoder
-import coil.network.okhttp.OkHttpNetworkFetcherFactory
 import com.anix.app.core.di.ServiceLocator
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
@@ -37,11 +36,11 @@ class AnixApp : Application(), ImageLoaderFactory {
             .addInterceptor(authInterceptor)
             .build()
         return ImageLoader.Builder(this)
+            .okHttpClient(okHttpClient)
             .components {
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
                     add(ImageDecoderDecoder.Factory())
                 }
-                add(OkHttpNetworkFetcherFactory { okHttpClient })
             }
             .build()
     }
