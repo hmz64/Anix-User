@@ -3,6 +3,7 @@ package com.anix.app.ui.screens.player
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.anix.app.core.di.ServiceLocator
+import com.anix.app.core.network.ApiClient
 import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Comment
 import com.anix.app.data.models.Episode
@@ -68,7 +69,7 @@ class VideoPlayerViewModel : ViewModel() {
         viewModelScope.launch {
             animeRepo.getEpisodeStreams(episodeId).onSuccess { streams ->
                 val stream = streams.firstOrNull()
-                val url = stream?.url ?: ""
+                val url = ApiClient.resolveUrl(stream?.url) ?: ""
                 val quality = stream?.quality ?: "720p"
                 _uiState.value = _uiState.value.copy(
                     videoUrl = url,
@@ -109,7 +110,7 @@ class VideoPlayerViewModel : ViewModel() {
             animeRepo.getEpisodeStreams(episode.id).onSuccess { streams ->
                 val stream = streams.firstOrNull()
                 _uiState.value = _uiState.value.copy(
-                    videoUrl = stream?.url ?: "",
+                    videoUrl = ApiClient.resolveUrl(stream?.url) ?: "",
                     currentQuality = stream?.quality ?: "720p",
                     isLoading = false
                 )
