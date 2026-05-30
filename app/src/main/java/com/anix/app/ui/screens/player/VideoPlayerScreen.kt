@@ -974,14 +974,22 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
                         horizontalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         Text(comment.username, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Dark)
-                        Box(
-                            Modifier
-                                .clip(RoundedCornerShape(16.dp))
-                                .background(Color(0xFFFF6B35))
-                                .border(1.5.dp, Color.Black, RoundedCornerShape(16.dp))
-                                .padding(horizontal = 6.dp, vertical = 2.dp)
-                        ) {
-                            Text("Lvl. ${comment.userLevel}", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                        Box(Modifier.padding(end = 2.dp, bottom = 2.dp)) {
+                            Box(
+                                Modifier
+                                    .matchParentSize()
+                                    .offset(x = 2.dp, y = 2.dp)
+                                    .background(Color.Black, RoundedCornerShape(50))
+                            )
+                            Box(
+                                Modifier
+                                    .clip(RoundedCornerShape(50))
+                                    .background(Color(0xFFFF6B35))
+                                    .border(1.5.dp, Color.Black, RoundedCornerShape(50))
+                                    .padding(horizontal = 10.dp, vertical = 4.dp)
+                            ) {
+                                Text("Lvl. ${comment.userLevel}", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
+                            }
                         }
                         Text(
                             comment.createdAt,
@@ -1010,7 +1018,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
                 Spacer(Modifier.height(8.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     NeoActionButton("Balas")
-                    if (isOwn) NeoActionButton("Hapus", textColor = Color.Red, onClick = onDelete)
+                        if (isOwn) NeoActionButton("Hapus", bgColor = Color(0xFFFF3B30), textColor = Color.White, onClick = onDelete)
                 }
             }
         }
@@ -1018,15 +1026,24 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
 }
 
 @Composable
-private fun NeoActionButton(text: String, textColor: Color = Color.Black, onClick: () -> Unit = {}) {
-    Box(
-        modifier = Modifier
-            .clickable(onClick = onClick)
-            .border(1.5.dp, Color.Black, RoundedCornerShape(16.dp))
-            .background(Color.White, RoundedCornerShape(16.dp))
-            .padding(horizontal = 8.dp, vertical = 3.dp)
-    ) {
-        Text(text, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = textColor)
+private fun NeoActionButton(text: String, bgColor: Color = Color.White, textColor: Color = Color.Black, onClick: () -> Unit = {}) {
+    Box(Modifier.padding(end = 2.dp, bottom = 2.dp)) {
+        Box(
+            Modifier
+                .matchParentSize()
+                .offset(x = 2.dp, y = 2.dp)
+                .background(Color.Black, RoundedCornerShape(50))
+        )
+        Box(
+            modifier = Modifier
+                .clickable(onClick = onClick)
+                .clip(RoundedCornerShape(50))
+                .background(bgColor)
+                .border(1.5.dp, Color.Black, RoundedCornerShape(50))
+                .padding(horizontal = 12.dp, vertical = 4.dp)
+        ) {
+            Text(text, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = textColor)
+        }
     }
 }
 
