@@ -52,8 +52,7 @@ import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Tune
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
+
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
@@ -262,7 +261,7 @@ fun VideoPlayerScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color.Transparent)
+                .background(Bg)
         ) {
         item(key = "player") {
             Box(
@@ -362,10 +361,6 @@ fun VideoPlayerScreen(
                     )
                 }
             }
-        }
-
-        item(key = "tips") {
-            TipsCard()
         }
 
         item(key = "comments") {
@@ -704,13 +699,17 @@ private fun AnimeInfo(anime: AnimeSeries, episode: Episode, quality: String) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
-            model = anime.poster,
-            contentDescription = null,
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(anime.cover)
+                .crossfade(true)
+                .build(),
+            contentDescription = anime.title,
+            contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(60.dp, 80.dp)
-                .border(2.dp, BorderBlack, RoundedCornerShape(4.dp))
-                .clip(RoundedCornerShape(4.dp)),
-            contentScale = ContentScale.Crop
+                .size(72.dp)
+                .clip(RoundedCornerShape(10.dp))
+                .border(1.dp, GlassBorder, RoundedCornerShape(10.dp))
+                .background(GlassSurface, RoundedCornerShape(10.dp))
         )
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
@@ -759,11 +758,11 @@ private fun ActionChips(
     onReport: () -> Unit = {}
 ) {
     Row(
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = Modifier
             .fillMaxWidth()
             .background(Bg)
-            .padding(vertical = 12.dp)
+            .padding(horizontal = 16.dp, vertical = 10.dp)
     ) {
         data class ActionBtn(val icon: ImageVector, val label: String, val onClick: () -> Unit)
 
@@ -779,24 +778,24 @@ private fun ActionChips(
                 horizontalArrangement = Arrangement.Center,
                 modifier = Modifier
                     .weight(1f)
-                    .height(44.dp)
+                    .height(40.dp)
                     .clip(RoundedCornerShape(50.dp))
                     .background(Color.White.copy(alpha = 0.08f))
                     .border(1.dp, GlassBorder, RoundedCornerShape(50.dp))
                     .clickable { action.onClick() }
-                    .padding(horizontal = 12.dp)
+                    .padding(horizontal = 8.dp)
             ) {
                 Icon(
                     imageVector        = action.icon,
                     contentDescription = action.label,
                     tint               = TextSecondary,
-                    modifier           = Modifier.size(16.dp)
+                    modifier           = Modifier.size(15.dp)
                 )
-                Spacer(Modifier.width(6.dp))
+                Spacer(Modifier.width(5.dp))
                 Text(
                     text     = action.label,
                     color    = TextSecondary,
-                    fontSize = 12.sp,
+                    fontSize = 11.sp,
                     fontWeight = FontWeight.Medium
                 )
             }
@@ -880,27 +879,6 @@ private fun EpisodeGrid(
                         )
                     }
                 }
-            }
-        }
-    }
-}
-
-@Composable
-private fun TipsCard() {
-    Card(
-        Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 12.dp, vertical = 6.dp)
-            .border(1.5.dp, BorderBlack, RoundedCornerShape(8.dp)),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFFEEF0FF)),
-        shape = RoundedCornerShape(8.dp)
-    ) {
-        Row(Modifier.padding(12.dp), verticalAlignment = Alignment.CenterVertically) {
-            Icon(Icons.Outlined.Info, tint = Blue, contentDescription = null, modifier = Modifier.size(20.dp))
-            Spacer(Modifier.width(8.dp))
-            Column {
-                Text("Tips Mini Player", fontWeight = FontWeight.Bold, fontSize = 13.sp, color = Dark)
-                Text("Geser video ke bawah untuk minimize dan tetap nonton sambil browsing.", fontSize = 12.sp, color = Color.Gray)
             }
         }
     }

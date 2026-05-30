@@ -78,7 +78,7 @@ fun NeoTextField(
                 .border(1.dp, borderColor.copy(alpha = if (isError) 1f else if (isFocused) 0.8f else 0.5f), RoundedCornerShape(50.dp))
                 .padding(horizontal = 16.dp, vertical = 12.dp),
             decorationBox = { innerTextField ->
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                     if (leadingIcon != null) {
                         leadingIcon()
                         Spacer(modifier = Modifier.width(8.dp))
