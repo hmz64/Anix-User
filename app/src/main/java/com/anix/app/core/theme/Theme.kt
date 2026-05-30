@@ -39,6 +39,7 @@ val Secondary     = Color(0xFFFF3399)
 val TextBlack     = TextPrimary
 val AccentLime    = GlassSuccess
 val AccentOrange  = Color(0xFFFF6633)
+val Error         = GlassError
 
 val LiquidGlassBackground = Brush.verticalGradient(
     colorStops = arrayOf(
