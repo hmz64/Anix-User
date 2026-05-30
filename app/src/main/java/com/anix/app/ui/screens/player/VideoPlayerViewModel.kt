@@ -44,7 +44,11 @@ class VideoPlayerViewModel : ViewModel() {
 
     private var progressJob: Job? = null
 
+    private var currentEpisodeId: String? = null
+
     fun loadEpisode(episodeId: String, animeId: String?) {
+        if (currentEpisodeId == episodeId && _uiState.value.videoUrl.isNotEmpty()) return
+        currentEpisodeId = episodeId
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)
         viewModelScope.launch {
             animeRepo.getEpisodeStreams(episodeId).onSuccess { streams ->

@@ -11,6 +11,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.awaitEachGesture
 import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -39,6 +40,7 @@ import androidx.compose.material.icons.filled.FastRewind
 import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.outlined.Download
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Tune
@@ -48,6 +50,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -58,6 +62,7 @@ import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -151,6 +156,10 @@ fun VideoPlayerScreen(
         if (state.videoUrl.isNotEmpty()) {
             exoPlayer.setMediaItem(MediaItem.fromUri(state.videoUrl))
             exoPlayer.prepare()
+            if (playerViewModel != null && playerViewModel!!.savedPosition > 0) {
+                exoPlayer.seekTo(playerViewModel!!.savedPosition)
+                playerViewModel!!.savePositionMs(0L)
+            }
         }
     }
 
@@ -162,14 +171,19 @@ fun VideoPlayerScreen(
         onDispose { exoPlayer.release() }
     }
 
-    val position by remember { derivedStateOf { exoPlayer.currentPosition } }
-    val duration by remember {
-        derivedStateOf {
+    var position by remember { mutableLongStateOf(0L) }
+    var duration by remember { mutableLongStateOf(0L) }
+    var buffered by remember { mutableLongStateOf(0L) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            position = exoPlayer.currentPosition
             val d = exoPlayer.duration
-            if (d == Long.MIN_VALUE || d < 0) 0L else d
+            duration = if (d == Long.MIN_VALUE || d < 0) 0L else d
+            buffered = exoPlayer.bufferedPosition
+            delay(200)
         }
     }
-    val buffered by remember { derivedStateOf { exoPlayer.bufferedPosition } }
 
     if (state.isFullscreen) {
         Box(modifier = Modifier.fillMaxSize().background(Color.Black)) {
@@ -233,9 +247,13 @@ fun VideoPlayerScreen(
                             onToggleControls = { showControls = !showControls },
                             onBack = {
                                 if (exoPlayer.isPlaying && playerViewModel != null) {
+                                    playerViewModel.savePositionMs(exoPlayer.currentPosition)
                                     playerViewModel.playMedia(
                                         MediaItem.fromUri(state.videoUrl),
-                                        state.anime?.title ?: "Now Playing"
+                                        state.anime?.title ?: "Now Playing",
+                                        positionMs = exoPlayer.currentPosition,
+                                        episodeId = episodeId,
+                                        animeId = animeId
                                     )
                                 } else {
                                     exoPlayer.stop()
@@ -417,14 +435,14 @@ private fun PlayerSurface(
     onBack: () -> Unit,
     onFullscreen: () -> Unit,
     onChangeSpeed: () -> Unit,
-    onChangeQuality: () -> Unit
+    onChangeQuality: () -> Unit,
+    onSwipeDown: () -> Unit = onBack
 ) {
     var indicatorText by remember { mutableStateOf("") }
     var indicatorVisible by remember { mutableStateOf(false) }
     var isLongPressing by remember { mutableStateOf(false) }
     var restoreSpeed by remember { mutableFloatStateOf(1.0f) }
     var currentSpeed by remember { mutableFloatStateOf(speed) }
-
     LaunchedEffect(speed) { currentSpeed = speed }
     LaunchedEffect(indicatorVisible) {
         if (indicatorVisible) {
@@ -445,7 +463,7 @@ private fun PlayerSurface(
                     useController = false
                     setShowNextButton(false)
                     setShowPreviousButton(false)
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                     layoutParams = ViewGroup.LayoutParams(
                         ViewGroup.LayoutParams.MATCH_PARENT,
                         ViewGroup.LayoutParams.MATCH_PARENT
@@ -495,6 +513,21 @@ private fun PlayerSurface(
                             }
                         }
                     }
+                }
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onVerticalDrag = { change, dragAmount ->
+                            if (dragAmount > 200f) {
+                                change.consume()
+                                onSwipeDown()
+                            }
+                        }
+                    )
                 }
         )
 
@@ -792,6 +825,10 @@ private fun Comments(
     onDelete: (String) -> Unit,
     onSortChange: (String) -> Unit
 ) {
+    var showBanners by remember { mutableStateOf(true) }
+    var showOwnBanner by remember { mutableStateOf(true) }
+    var showSettings by remember { mutableStateOf(false) }
+
     Column(Modifier.background(Bg)) {
         Row(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
@@ -802,6 +839,22 @@ private fun Comments(
             Row(Modifier.border(2.dp, BorderBlack, RoundedCornerShape(8.dp))) {
                 SortChip("Top", selected = sort == "top") { onSortChange("top") }
                 SortChip("Terbaru", selected = sort == "new") { onSortChange("new") }
+            }
+            Spacer(Modifier.width(4.dp))
+            Box {
+                IconButton(onClick = { showSettings = true }) {
+                    Icon(Icons.Filled.Settings, contentDescription = "Comment settings", tint = Dark, modifier = Modifier.size(20.dp))
+                }
+                DropdownMenu(expanded = showSettings, onDismissRequest = { showSettings = false }) {
+                    DropdownMenuItem(
+                        text = { Text(if (showBanners) "Sembunyikan Banner" else "Tampilkan Banner") },
+                        onClick = { showBanners = !showBanners; showSettings = false }
+                    )
+                    DropdownMenuItem(
+                        text = { Text(if (showOwnBanner) "Sembunyikan Banner Saya" else "Tampilkan Banner Saya") },
+                        onClick = { showOwnBanner = !showOwnBanner; showSettings = false }
+                    )
+                }
             }
         }
 
@@ -841,7 +894,10 @@ private fun Comments(
             comments.isEmpty() -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
                 Text("Belum ada komentar.", color = Color.Gray, fontSize = 13.sp)
             }
-            else -> comments.forEach { c -> CommentRow(c, c.userId == "", onDelete = { onDelete(c.id) }) }
+            else -> comments.forEach { c ->
+                val isOwn = c.userId == ""
+                CommentRow(c, isOwn, onDelete = { onDelete(c.id) }, showBanner = showBanners && (isOwn || showOwnBanner))
+            }
         }
     }
 }
@@ -859,8 +915,8 @@ private fun SortChip(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CommentRow(comment: Comment, isOwn: Boolean, onDelete: () -> Unit) {
-    val bannerUrl = ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null }
+private fun CommentRow(comment: Comment, isOwn: Boolean, onDelete: () -> Unit, showBanner: Boolean = true) {
+    val bannerUrl = if (showBanner) ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null } else null
     Row(
         Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)
     ) {
@@ -929,8 +985,11 @@ private fun FullscreenPlayer(
     val context = LocalContext.current
 
     LaunchedEffect(videoUrl) {
-        exoPlayer.setMediaItem(MediaItem.fromUri(videoUrl))
-        exoPlayer.prepare()
+        val current = exoPlayer.currentMediaItem?.mediaId
+        if (current != videoUrl && videoUrl.isNotEmpty()) {
+            exoPlayer.setMediaItem(MediaItem.fromUri(videoUrl))
+            exoPlayer.prepare()
+        }
     }
 
     LaunchedEffect(speed) {
@@ -957,7 +1016,7 @@ private fun FullscreenPlayer(
                 PlayerView(ctx).apply {
                     player = exoPlayer
                     useController = false
-                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_FIT
+                    resizeMode = AspectRatioFrameLayout.RESIZE_MODE_ZOOM
                     layoutParams = ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT)
                 }
             },

@@ -267,7 +267,17 @@ fun AppNavigation() {
         }
 
         if (showMiniPlayer) {
-            FloatingMiniPlayer(viewModel = playerViewModel)
+            FloatingMiniPlayer(
+                viewModel = playerViewModel,
+                onTap = {
+                    val epId = playerViewModel.resumeEpisodeId
+                    val anId = playerViewModel.resumeAnimeId
+                    if (epId != null && anId != null) {
+                        playerViewModel.closeMiniPlayer()
+                        navController.navigate(Routes.videoPlayer(epId, anId))
+                    }
+                }
+            )
         }
     }
 }
