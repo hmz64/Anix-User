@@ -937,7 +937,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
     val isOwn = currentUserId != null && comment.userId == currentUserId
     val bannerUrl = if (showBanner) ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null } else null
     val avatarUrl = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null }
-    val avatarPlaceholder = painterResource(R.drawable.ic_default_avatar)
+    val avatarPlaceholder = rememberVectorPainter(Icons.Filled.Person)
     val bannerPlaceholder = rememberVectorPainter(Icons.Outlined.Image)
     val cardRadius = RoundedCornerShape(16.dp)
 
