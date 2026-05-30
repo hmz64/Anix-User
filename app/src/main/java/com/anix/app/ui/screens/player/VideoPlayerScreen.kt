@@ -388,6 +388,19 @@ fun VideoPlayerScreen(
         item { Spacer(Modifier.height(80.dp)) }
     }
 
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp),
+            snackbar = { data ->
+                Snackbar(
+                    snackbarData = data,
+                    containerColor = AccentBlue.copy(alpha = 0.9f),
+                    contentColor = TextPrimary
+                )
+            }
+        )
+    }
+
     if (showReportDialog) {
         ReportDialog(
             onDismiss = { showReportDialog = false },
@@ -410,18 +423,6 @@ fun VideoPlayerScreen(
             onDismiss = { showQualitySheet = false }
         )
     }
-
-    SnackbarHost(
-        hostState = snackbarHostState,
-        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp),
-        snackbar = { data ->
-            Snackbar(
-                snackbarData = data,
-                containerColor = AccentBlue.copy(alpha = 0.9f),
-                contentColor = TextPrimary
-            )
-        }
-    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
