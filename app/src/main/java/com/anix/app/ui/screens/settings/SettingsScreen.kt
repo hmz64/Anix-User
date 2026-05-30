@@ -59,6 +59,12 @@ import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.theme.TextMuted
+import com.anix.app.core.theme.GlassError
+import com.anix.app.core.theme.AccentBlue
+import com.anix.app.core.theme.GlassBorder
+import com.anix.app.core.util.liquidGlass
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoButton
 import com.anix.app.ui.components.NeoCard
@@ -190,12 +196,12 @@ fun SettingsScreen(
 
     Column(modifier = Modifier.fillMaxSize().background(Background)) {
         Row(
-            modifier = Modifier.fillMaxWidth().background(Surface).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(0.dp)).padding(12.dp),
+            modifier = Modifier.fillMaxWidth().background(Color(0xFF0A1628).copy(alpha = 0.95f)).padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text("← Back", modifier = Modifier.clickable { onBack() }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = Primary)
+            Text("← Back", modifier = Modifier.clickable { onBack() }, style = MaterialTheme.typography.labelLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
             Spacer(modifier = Modifier.width(12.dp))
-            Text("Settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+            Text("Settings", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TextPrimary)
         }
 
         if (uiState.isLoading && user == null) {
@@ -244,8 +250,8 @@ fun SettingsScreen(
                         Column(modifier = Modifier.padding(12.dp)) {
                             NeoTextField(value = username, onValueChange = { if (it.length <= 20) username = it.replace(Regex("[^a-zA-Z0-9_]"), "") }, placeholder = "New username", modifier = Modifier.fillMaxWidth(), singleLine = true)
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                                if (username.isNotEmpty() && (username.length < 3 || username.length > 20)) Text("3-20 chars, alphanumeric", color = Color.Red, style = MaterialTheme.typography.bodySmall)
-                                Text("${username.length}/20", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                if (username.isNotEmpty() && (username.length < 3 || username.length > 20)) Text("3-20 chars, alphanumeric", color = GlassError, style = MaterialTheme.typography.bodySmall)
+                                Text("${username.length}/20", style = MaterialTheme.typography.bodySmall, color = TextMuted)
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                             NeoButton(text = "Save", onClick = { viewModel.updateUsername(username) }, backgroundColor = Primary, enabled = username.length in 3..20)
@@ -258,7 +264,7 @@ fun SettingsScreen(
                     NeoCard {
                         Column(modifier = Modifier.padding(12.dp)) {
                             NeoTextField(value = bio, onValueChange = { if (it.length <= 150) bio = it }, placeholder = "Tell us about yourself...", modifier = Modifier.fillMaxWidth(), singleLine = false)
-                            Text("${bio.length}/150", modifier = Modifier.align(Alignment.End), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                            Text("${bio.length}/150", modifier = Modifier.align(Alignment.End), style = MaterialTheme.typography.bodySmall, color = TextMuted)
                             Spacer(modifier = Modifier.height(8.dp))
                             NeoButton(text = "Save Bio", onClick = { viewModel.updateBio(bio) }, backgroundColor = Primary, modifier = Modifier.fillMaxWidth())
                         }
@@ -276,8 +282,8 @@ fun SettingsScreen(
                                 trailingIcon = { Text(if (showNewPassword) "Hide" else "Show", modifier = Modifier.clickable { showNewPassword = !showNewPassword }.padding(8.dp), style = MaterialTheme.typography.labelSmall, color = Primary, fontWeight = FontWeight.Bold) })
                             Spacer(modifier = Modifier.height(8.dp))
                             NeoTextField(value = confirmPassword, onValueChange = { confirmPassword = it }, placeholder = "Confirm New Password", modifier = Modifier.fillMaxWidth(), visualTransformation = PasswordVisualTransformation())
-                            if (newPassword.isNotEmpty() && newPassword.length < 8) Text("Min 8 characters", color = Color.Red, style = MaterialTheme.typography.bodySmall)
-                            if (confirmPassword.isNotEmpty() && newPassword != confirmPassword) Text("Passwords do not match", color = Color.Red, style = MaterialTheme.typography.bodySmall)
+                            if (newPassword.isNotEmpty() && newPassword.length < 8) Text("Min 8 characters", color = GlassError, style = MaterialTheme.typography.bodySmall)
+                            if (confirmPassword.isNotEmpty() && newPassword != confirmPassword) Text("Passwords do not match", color = GlassError, style = MaterialTheme.typography.bodySmall)
                             Spacer(modifier = Modifier.height(8.dp))
                             NeoButton(text = "Change Password", onClick = { viewModel.updatePassword(oldPassword, newPassword) }, backgroundColor = Primary, modifier = Modifier.fillMaxWidth(), enabled = newPassword.length >= 8 && newPassword == confirmPassword)
                         }
@@ -318,11 +324,11 @@ fun SettingsScreen(
                 item {
                     NeoCard {
                         Column(modifier = Modifier.padding(12.dp)) {
-                            Text("Version: ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium)
+                            Text("Version: ${BuildConfig.VERSION_NAME}", style = MaterialTheme.typography.bodyMedium, color = TextMuted)
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text("Privacy Policy", color = Primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://anix.app/privacy"))) })
+                            Text("Privacy Policy", color = AccentBlue, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://anix.app/privacy"))) })
                             Spacer(modifier = Modifier.height(4.dp))
-                            Text("Terms of Service", color = Primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://anix.app/terms"))) })
+                            Text("Terms of Service", color = AccentBlue, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://anix.app/terms"))) })
                             Spacer(modifier = Modifier.height(8.dp))
                             NeoButton(text = "Clear Cache", onClick = { viewModel.clearCache(context.applicationContext as Application) }, backgroundColor = Surface, textColor = Color.Black, modifier = Modifier.fillMaxWidth())
                             Spacer(modifier = Modifier.height(8.dp))
@@ -338,8 +344,15 @@ fun SettingsScreen(
 
                 item { SectionHeader("Danger Zone") }
                 item {
-                    NeoCard(modifier = Modifier.border(BorderStroke(2.dp, Color.Red), RoundedCornerShape(8.dp))) {
-                        Column(modifier = Modifier.padding(12.dp)) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(16.dp))
+                            .background(GlassError.copy(alpha = 0.08f))
+                            .border(1.dp, GlassError.copy(alpha = 0.40f), RoundedCornerShape(16.dp))
+                            .padding(16.dp)
+                    ) {
+                        Column {
                             NeoButton(text = "Logout", onClick = { showLogoutConfirm = true }, backgroundColor = Color.Red, modifier = Modifier.fillMaxWidth())
                             Spacer(modifier = Modifier.height(8.dp))
                             NeoButton(text = "Delete Account", onClick = { showDeleteConfirm = true }, backgroundColor = Color.Red, modifier = Modifier.fillMaxWidth())
@@ -367,13 +380,13 @@ fun SettingsScreen(
 
 @Composable
 private fun SectionHeader(title: String) {
-    Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Color.Black)
+    Text(title, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TextPrimary)
 }
 
 @Composable
 private fun ToggleRow(label: String, checked: Boolean, onCheckedChange: (Boolean) -> Unit) {
     Row(modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-        Text(label, style = MaterialTheme.typography.bodyMedium)
+        Text(label, style = MaterialTheme.typography.bodyMedium, color = TextPrimary)
         androidx.compose.material3.Switch(checked = checked, onCheckedChange = onCheckedChange, colors = androidx.compose.material3.SwitchDefaults.colors(checkedTrackColor = Primary))
     }
 }

@@ -1,6 +1,7 @@
 package com.anix.app.ui.components
 
 import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -29,15 +30,18 @@ fun NeoChip(
     unselectedColor: Color = Surface
 ) {
     val bgColor by animateColorAsState(
-        targetValue = if (selected) selectedColor else Color.Transparent,
+        targetValue = if (selected) selectedColor else Color.White.copy(alpha = 0.08f),
+        animationSpec = tween(250),
         label = "chip_bg"
     )
     val borderColor by animateColorAsState(
         targetValue = if (selected) selectedColor else GlassBorder,
+        animationSpec = tween(250),
         label = "chip_border"
     )
     val txtColor by animateColorAsState(
-        targetValue = if (selected) Color.White else TextSecondary,
+        targetValue = if (selected) Color.White else Color(0xB3FFFFFF),
+        animationSpec = tween(250),
         label = "chip_text"
     )
 

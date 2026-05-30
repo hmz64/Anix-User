@@ -39,11 +39,16 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.anix.app.core.theme.AccentBlue
 import com.anix.app.core.theme.AccentOrange
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.theme.TextSecondary
+import com.anix.app.core.theme.TextMuted
+import com.anix.app.core.theme.GlassBorder
 import com.anix.app.ui.components.EpisodeItem
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
@@ -97,11 +102,11 @@ fun AnimeDetailScreen(
                     modifier = Modifier
                         .align(Alignment.TopStart)
                         .padding(12.dp)
-                        .background(Color.White, RoundedCornerShape(6.dp))
-                        .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .background(Color(0xFF0A1628).copy(alpha = 0.85f), RoundedCornerShape(50.dp))
+                        .border(1.dp, GlassBorder, RoundedCornerShape(50.dp))
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
                         .clickable { onBack() },
-                    color = Color.Black,
+                    color = TextPrimary,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.labelLarge
                 )
@@ -110,9 +115,9 @@ fun AnimeDetailScreen(
                     modifier = Modifier
                         .align(Alignment.TopEnd)
                         .padding(12.dp)
-                        .background(Primary, RoundedCornerShape(6.dp))
-                        .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(6.dp))
-                        .padding(horizontal = 12.dp, vertical = 6.dp)
+                        .background(AccentBlue.copy(alpha = 0.85f), RoundedCornerShape(50.dp))
+                        .border(1.dp, AccentBlue.copy(alpha = 0.5f), RoundedCornerShape(50.dp))
+                        .padding(horizontal = 14.dp, vertical = 6.dp)
                         .clickable {
                             val share = Intent(Intent.ACTION_SEND).apply {
                                 type = "text/plain"
@@ -121,7 +126,7 @@ fun AnimeDetailScreen(
                             }
                             context.startActivity(Intent.createChooser(share, "Share via"))
                         },
-                    color = Color.White,
+                    color = TextPrimary,
                     fontWeight = FontWeight.Bold,
                     style = MaterialTheme.typography.labelLarge
                 )
@@ -131,14 +136,15 @@ fun AnimeDetailScreen(
             Column(modifier = Modifier.padding(16.dp)) {
                 Text(
                     text = a.title,
+                    color = TextPrimary,
                     style = MaterialTheme.typography.headlineMedium,
                     fontWeight = FontWeight.Bold
                 )
                 if (a.titleJapanese.isNotEmpty()) {
                     Text(
                         text = a.titleJapanese,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = Color.Gray
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodyMedium
                     )
                 }
 
@@ -161,9 +167,9 @@ fun AnimeDetailScreen(
                     NeoBadge(text = String.format("%.1f", a.rating), backgroundColor = AccentOrange)
                     NeoBadge(text = a.status, backgroundColor = Primary)
                     NeoBadge(text = a.type, backgroundColor = Color.DarkGray)
-                    Text(text = "${a.totalEpisodes} eps", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                    Text(text = "${a.totalEpisodes} eps", color = TextSecondary, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
                     if (a.duration.isNotEmpty()) {
-                        Text(text = a.duration, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+                        Text(text = a.duration, color = TextSecondary, style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -173,8 +179,18 @@ fun AnimeDetailScreen(
                 val tabs = listOf("Episodes", "Synopsis", "Details")
                 TabRow(
                     selectedTabIndex = uiState.selectedTab,
-                    containerColor = Surface,
-                    contentColor = Primary
+                    containerColor = Color.Transparent,
+                    contentColor = TextPrimary,
+                    indicator = { tabPositions ->
+                        if (uiState.selectedTab < tabPositions.size) {
+                            Box(
+                                Modifier
+                                    .tabIndicatorOffset(tabPositions[uiState.selectedTab])
+                                    .height(2.dp)
+                                    .background(AccentBlue)
+                            )
+                        }
+                    }
                 ) {
                     tabs.forEachIndexed { index, title ->
                         Tab(
@@ -183,7 +199,8 @@ fun AnimeDetailScreen(
                             text = {
                                 Text(
                                     text = title,
-                                    fontWeight = if (uiState.selectedTab == index) FontWeight.Bold else FontWeight.Normal
+                                    fontWeight = if (uiState.selectedTab == index) FontWeight.Bold else FontWeight.Normal,
+                                    color = if (uiState.selectedTab == index) AccentBlue else TextSecondary
                                 )
                             }
                         )
@@ -200,11 +217,12 @@ fun AnimeDetailScreen(
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = "Episodes (${uiState.episodes.size})",
-                                style = MaterialTheme.typography.titleLarge,
-                                fontWeight = FontWeight.Bold
-                            )
+                        Text(
+                            text = "Episodes (${uiState.episodes.size})",
+                            color = TextPrimary,
+                            style = MaterialTheme.typography.titleLarge,
+                            fontWeight = FontWeight.Bold
+                        )
                         }
                         Spacer(modifier = Modifier.height(8.dp))
                         uiState.episodes.forEach { episode ->
@@ -213,10 +231,11 @@ fun AnimeDetailScreen(
                     }
                     1 -> {
                         // Synopsis Tab
-                        Text(
-                            text = a.description,
-                            style = MaterialTheme.typography.bodyMedium
-                        )
+                    Text(
+                        text = a.description,
+                        color = TextSecondary,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                     }
                     2 -> {
                         // Details Tab
@@ -256,7 +275,7 @@ private fun DetailRow(label: String, value: String) {
             .padding(vertical = 4.dp),
         horizontalArrangement = Arrangement.SpaceBetween
     ) {
-        Text(text = label, style = MaterialTheme.typography.bodyMedium, color = Color.Gray, modifier = Modifier.weight(0.4f))
-        Text(text = value, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.6f))
+        Text(text = label, color = TextMuted, style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(0.4f))
+        Text(text = value, color = TextPrimary, style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold, modifier = Modifier.weight(0.6f))
     }
 }

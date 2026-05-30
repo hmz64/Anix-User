@@ -104,6 +104,13 @@ import com.anix.app.core.di.PreferencesKeys
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.BorderBlack
+import com.anix.app.core.theme.AccentBlue
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.theme.TextSecondary
+import com.anix.app.core.theme.TextMuted
+import com.anix.app.core.theme.GlassBorder
+import com.anix.app.core.theme.GlassSurface
+import com.anix.app.core.theme.GlassBgMid
 import com.anix.app.core.util.downloadVideoMp4
 import com.anix.app.ui.components.AdvancedPlayerTimeline
 import com.anix.app.ui.components.HandlePlayerSystemUi
@@ -112,6 +119,7 @@ import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Comment
 import com.anix.app.data.models.Episode
 import com.anix.app.ui.components.LoadingIndicator
+import com.anix.app.core.util.liquidGlass
 import com.anix.app.ui.components.NeoBadge
 import com.anix.app.ui.components.NeoChip
 import com.anix.app.ui.components.NeoTextField
@@ -119,9 +127,9 @@ import com.anix.app.ui.screens.player.PlayerViewModel
 import kotlinx.coroutines.delay
 import kotlin.math.min
 
-private val Bg = Color(0xFFF5EEE8)
-private val Blue = Color(0xFF2B2BFF)
-private val Dark = Color(0xFF0D0D0D)
+private val Bg = Color(0xFF050A18)
+private val Blue = AccentBlue
+private val Dark = TextPrimary
 
 private val speedOptions = listOf(0.25f, 0.5f, 0.75f, 1.0f, 1.25f, 1.5f, 1.75f, 2.0f, 3.0f, 4.0f)
 
@@ -231,7 +239,7 @@ fun VideoPlayerScreen(
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(Bg)
+            .background(Color.Transparent)
     ) {
         item(key = "player") {
             Box(
@@ -384,23 +392,23 @@ fun VideoPlayerScreen(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun SpeedBottomSheet(current: Float, onSelect: (Float) -> Unit, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = GlassBgMid) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text("Playback Speed", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Dark)
+            Text("Playback Speed", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
             Spacer(Modifier.height(12.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(speedOptions) { s ->
                     Box(
                         Modifier
-                            .border(2.dp, if (s == current) Blue else BorderBlack, RoundedCornerShape(8.dp))
-                            .background(if (s == current) Blue else Color.White, RoundedCornerShape(8.dp))
+                            .border(1.dp, if (s == current) Blue else GlassBorder, RoundedCornerShape(50.dp))
+                            .background(if (s == current) Blue else Color.White.copy(alpha = 0.10f), RoundedCornerShape(50.dp))
                             .clickable { onSelect(s) }
                             .padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
                         Text(
                             "${s}x",
                             fontWeight = FontWeight.Bold,
-                            color = if (s == current) Color.White else Dark,
+                            color = if (s == current) TextPrimary else TextSecondary,
                             fontSize = 14.sp
                         )
                     }
@@ -414,23 +422,23 @@ private fun SpeedBottomSheet(current: Float, onSelect: (Float) -> Unit, onDismis
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun QualityBottomSheet(current: String, onSelect: (String) -> Unit, onDismiss: () -> Unit) {
-    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)) {
+    ModalBottomSheet(onDismissRequest = onDismiss, sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true), containerColor = GlassBgMid) {
         Column(Modifier.fillMaxWidth().padding(16.dp)) {
-            Text("Quality", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = Dark)
+            Text("Quality", fontWeight = FontWeight.Bold, fontSize = 18.sp, color = TextPrimary)
             Spacer(Modifier.height(12.dp))
             LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(listOf("360p", "480p", "720p", "1080p")) { q ->
                     Box(
                         Modifier
-                            .border(2.dp, if (q == current) Blue else BorderBlack, RoundedCornerShape(8.dp))
-                            .background(if (q == current) Blue else Color.White, RoundedCornerShape(8.dp))
+                            .border(1.dp, if (q == current) Blue else GlassBorder, RoundedCornerShape(50.dp))
+                            .background(if (q == current) Blue else Color.White.copy(alpha = 0.10f), RoundedCornerShape(50.dp))
                             .clickable { onSelect(q) }
                             .padding(horizontal = 16.dp, vertical = 10.dp)
                     ) {
                         Text(
                             q,
                             fontWeight = FontWeight.Bold,
-                            color = if (q == current) Color.White else Dark,
+                            color = if (q == current) TextPrimary else TextSecondary,
                             fontSize = 14.sp
                         )
                     }
@@ -568,12 +576,12 @@ private fun PlayerSurface(
                     Pill(quality, onClick = onChangeQuality)
                     Box(
                         Modifier
-                            .border(2.dp, Color.Black, RoundedCornerShape(50))
-                            .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(50))
+                            .border(1.dp, GlassBorder, RoundedCornerShape(50))
+                            .background(Color.White.copy(alpha = 0.12f), RoundedCornerShape(50))
                             .clickable { onFullscreen() }
                             .padding(4.dp)
                     ) {
-                        Icon(Icons.Filled.Fullscreen, contentDescription = null, tint = Color.Black, modifier = Modifier.size(20.dp))
+                        Icon(Icons.Filled.Fullscreen, contentDescription = null, tint = TextPrimary, modifier = Modifier.size(20.dp))
                     }
                 }
 
@@ -621,15 +629,15 @@ private fun PlayerSurface(
 
 @Composable
 private fun Pill(text: String, onClick: () -> Unit) {
-    Box(
-        Modifier
-            .border(2.dp, Color.Black, RoundedCornerShape(50))
-            .background(Color.White.copy(alpha = 0.9f), RoundedCornerShape(50))
-            .clickable { onClick() }
-            .padding(horizontal = 12.dp, vertical = 4.dp)
-    ) {
-        Text(text, color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 12.sp)
-    }
+                    Box(
+                        Modifier
+                            .border(1.dp, GlassBorder, RoundedCornerShape(50))
+                            .background(Color.White.copy(alpha = 0.12f), RoundedCornerShape(50))
+                            .clickable { onClick() }
+                            .padding(horizontal = 12.dp, vertical = 4.dp)
+                    ) {
+                        Text(text, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                    }
 }
 
 @Composable
@@ -670,7 +678,7 @@ private fun AnimeInfo(anime: AnimeSeries, episode: Episode, quality: String) {
         )
         Spacer(Modifier.width(12.dp))
         Column(Modifier.weight(1f)) {
-            Text(anime.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, color = Dark)
+            Text(anime.title, fontWeight = FontWeight.Bold, fontSize = 16.sp, maxLines = 1, overflow = TextOverflow.Ellipsis, color = TextPrimary)
             Spacer(Modifier.height(4.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 NeoBadge(text = "Episode ${episode.number}")
@@ -694,7 +702,7 @@ private fun Description(text: String) {
             maxLines = if (expanded) Int.MAX_VALUE else 3,
             overflow = TextOverflow.Ellipsis,
             fontSize = 13.sp,
-            color = Color(0xFF444444)
+            color = TextSecondary
         )
         if (!expanded && text.length > 150) {
             Text(

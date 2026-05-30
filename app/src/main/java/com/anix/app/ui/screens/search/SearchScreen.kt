@@ -52,11 +52,18 @@ import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.theme.TextSecondary
+import com.anix.app.core.theme.TextMuted
+import com.anix.app.core.theme.AccentBlue
+import com.anix.app.core.theme.GlassBorder
+import com.anix.app.core.theme.AccentOrange
 import com.anix.app.data.models.AnimeSeries
 import com.anix.app.ui.components.EmptyState
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoTextField
+import com.anix.app.core.util.liquidGlass
 
 @Composable
 fun SearchScreen(
@@ -107,14 +114,14 @@ fun SearchScreen(
                             modifier = Modifier
                                 .clickable { viewModel.selectGenre(genre.slug) }
                                 .background(
-                                    if (isSelected) Primary else Surface,
+                                    if (isSelected) AccentBlue else Color.White.copy(alpha = 0.08f),
                                     RoundedCornerShape(20.dp)
                                 )
-                                .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(20.dp))
+                                .border(1.dp, if (isSelected) AccentBlue else GlassBorder, RoundedCornerShape(20.dp))
                                 .padding(horizontal = 16.dp, vertical = 8.dp),
                             style = MaterialTheme.typography.labelMedium,
                             fontWeight = FontWeight.Bold,
-                            color = if (isSelected) Color.White else Color.Black
+                            color = if (isSelected) TextPrimary else TextSecondary
                         )
                     }
                 }
@@ -133,12 +140,13 @@ fun SearchScreen(
                     Text(
                         text = "Recent Searches",
                         style = MaterialTheme.typography.titleSmall,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = TextPrimary
                     )
                     Text(
                         text = "Clear All",
                         style = MaterialTheme.typography.labelSmall,
-                        color = Primary,
+                        color = AccentBlue,
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { viewModel.clearRecentSearches() }
                     )
@@ -161,21 +169,23 @@ fun SearchScreen(
                             Icon(
                                 Icons.Default.History,
                                 contentDescription = null,
-                                modifier = Modifier.padding(end = 12.dp),
-                                tint = Color.Gray
-                            )
-                            Text(
-                                text = recent,
-                                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.padding(end = 12.dp),
+                            tint = TextMuted
+                        )
+                        Text(
+                            text = recent,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = TextPrimary,
+                                color = TextPrimary,
                                 modifier = Modifier.weight(1f)
                             )
                             IconButton(onClick = { viewModel.removeRecent(recent) }) {
-                                Icon(
-                                    Icons.Default.Close,
-                                    contentDescription = "Remove",
-                                    modifier = Modifier.size(16.dp),
-                                    tint = Color.Gray
-                                )
+                                    Icon(
+                                        Icons.Default.Close,
+                                        contentDescription = "Remove",
+                                        modifier = Modifier.size(16.dp),
+                                        tint = TextMuted
+                                    )
                             }
                         }
                     }
@@ -214,12 +224,13 @@ private fun AnimeSearchItem(
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
-    val shape = RoundedCornerShape(8.dp)
     Column(
         modifier = modifier
-            .clip(shape)
-            .border(BorderStroke(2.dp, BorderBlack), shape)
-            .background(Color.White, shape)
+            .clickable { onClick() }
+            .liquidGlass(
+                shape = RoundedCornerShape(12.dp),
+                alpha = 0.08f
+            )
     ) {
         Box(
             modifier = Modifier
@@ -231,21 +242,22 @@ private fun AnimeSearchItem(
                 contentDescription = anime.title,
                 modifier = Modifier
                     .fillMaxSize()
-                    .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
+                    .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .background(Primary, RoundedCornerShape(4.dp))
+                    .align(Alignment.TopStart)
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(AccentBlue.copy(alpha = 0.85f))
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Text(
                     text = String.format("%.1f", anime.rating),
-                    style = MaterialTheme.typography.labelSmall,
+                    color = TextPrimary,
                     fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    fontSize = 10.sp
                 )
             }
         }
@@ -255,7 +267,8 @@ private fun AnimeSearchItem(
             style = MaterialTheme.typography.bodySmall,
             fontWeight = FontWeight.Bold,
             maxLines = 2,
-            overflow = TextOverflow.Ellipsis
+            overflow = TextOverflow.Ellipsis,
+            color = TextPrimary
         )
     }
 }

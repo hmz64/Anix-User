@@ -25,6 +25,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
+import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,6 +40,11 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.anix.app.core.theme.AccentBlue
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.theme.TextSecondary
+import com.anix.app.core.theme.TextMuted
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
@@ -48,6 +54,7 @@ import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
+import com.anix.app.core.theme.GlassBorder
 import com.anix.app.ui.components.EmptyState
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
@@ -128,7 +135,7 @@ fun ProfileScreen(
                             contentScale = ContentScale.Crop
                         )
                         Spacer(modifier = Modifier.height(8.dp))
-                        Text(u.username, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                        Text(u.username, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         Row(verticalAlignment = Alignment.CenterVertically) {
                             NeoBadge(text = "Lv.${u.level}", backgroundColor = AccentOrange)
                             if (u.premium) {
@@ -165,8 +172,18 @@ fun ProfileScreen(
                     val tabs = listOf("History", "Favorites", "Comments")
                     TabRow(
                         selectedTabIndex = uiState.selectedTab,
-                        containerColor = Surface,
-                        contentColor = Primary
+                        containerColor = Color.Transparent,
+                        contentColor = TextPrimary,
+                        indicator = { tabPositions ->
+                            if (uiState.selectedTab < tabPositions.size) {
+                                Box(
+                                    Modifier
+                                        .tabIndicatorOffset(tabPositions[uiState.selectedTab])
+                                        .height(2.dp)
+                                        .background(AccentBlue)
+                                )
+                            }
+                        }
                     ) {
                         tabs.forEachIndexed { index, title ->
                             Tab(
@@ -176,7 +193,7 @@ fun ProfileScreen(
                                     Text(
                                         title,
                                         fontWeight = if (uiState.selectedTab == index) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (uiState.selectedTab == index) Primary else Color.Black
+                                        color = if (uiState.selectedTab == index) AccentBlue else TextSecondary
                                     )
                                 }
                             )
@@ -191,7 +208,7 @@ fun ProfileScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 4.dp)
-                                        .border(BorderStroke(1.dp, BorderBlack.copy(alpha = 0.3f)), RoundedCornerShape(6.dp))
+                                        .border(1.dp, GlassBorder.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
                                         .padding(8.dp)
                                         .clickable { h.anime?.let { onAnimeClick(it.id) } },
                                     verticalAlignment = Alignment.CenterVertically
@@ -204,8 +221,8 @@ fun ProfileScreen(
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
                                     Column {
-                                        Text(h.anime?.title ?: "", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
-                                        Text("Ep ${h.episode?.number ?: ""}", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                        Text(h.anime?.title ?: "", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = TextPrimary)
+                                        Text("Ep ${h.episode?.number ?: ""}", style = MaterialTheme.typography.bodySmall, color = TextMuted)
                                     }
                                 }
                             }
@@ -217,7 +234,7 @@ fun ProfileScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 4.dp)
-                                        .border(BorderStroke(1.dp, BorderBlack.copy(alpha = 0.3f)), RoundedCornerShape(6.dp))
+                                        .border(1.dp, GlassBorder.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
                                         .padding(8.dp)
                                         .clickable { f.anime?.let { onAnimeClick(it.id) } },
                                     verticalAlignment = Alignment.CenterVertically
@@ -229,7 +246,7 @@ fun ProfileScreen(
                                         contentScale = ContentScale.Crop
                                     )
                                     Spacer(modifier = Modifier.width(8.dp))
-                                    Text(f.anime?.title ?: "", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall)
+                                    Text(f.anime?.title ?: "", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = TextPrimary)
                                 }
                             }
                         }
@@ -240,11 +257,11 @@ fun ProfileScreen(
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 4.dp)
-                                        .border(BorderStroke(1.dp, BorderBlack.copy(alpha = 0.3f)), RoundedCornerShape(6.dp))
+                                        .border(1.dp, GlassBorder.copy(alpha = 0.3f), RoundedCornerShape(6.dp))
                                         .padding(8.dp)
                                 ) {
-                                    Text(c.content, style = MaterialTheme.typography.bodyMedium)
-                                    Text(c.createdAt.take(10), style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+                                    Text(c.content, color = TextPrimary, style = MaterialTheme.typography.bodyMedium)
+                                    Text(c.createdAt.take(10), color = TextMuted, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
@@ -271,7 +288,7 @@ private fun XPBar(currentXp: Int, maxXp: Int) {
         modifier = Modifier.fillMaxWidth(),
         verticalAlignment = Alignment.CenterVertically
     ) {
-        Text("XP", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold)
+        Text("XP", style = MaterialTheme.typography.bodySmall, fontWeight = FontWeight.Bold, color = TextMuted)
         Spacer(modifier = Modifier.width(8.dp))
         LinearProgressIndicator(
             progress = animProgress,
@@ -279,19 +296,19 @@ private fun XPBar(currentXp: Int, maxXp: Int) {
                 .weight(1f)
                 .height(12.dp)
                 .clip(RoundedCornerShape(6.dp))
-                .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(6.dp)),
+                .border(1.dp, GlassBorder, RoundedCornerShape(6.dp)),
             color = AccentOrange,
-            trackColor = Surface
+            trackColor = Color.White.copy(alpha = 0.10f)
         )
         Spacer(modifier = Modifier.width(8.dp))
-        Text("$currentXp/$maxXp", style = MaterialTheme.typography.bodySmall)
+        Text("$currentXp/$maxXp", style = MaterialTheme.typography.bodySmall, color = TextMuted)
     }
 }
 
 @Composable
 private fun StatItem(label: String, value: String) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
-        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = Primary)
-        Text(label, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
+        Text(value, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = AccentBlue)
+        Text(label, style = MaterialTheme.typography.bodySmall, color = TextMuted)
     }
 }

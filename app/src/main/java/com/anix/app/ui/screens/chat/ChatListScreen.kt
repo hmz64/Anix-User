@@ -49,6 +49,9 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import com.anix.app.core.network.ApiClient
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.theme.TextSecondary
+import com.anix.app.core.theme.TextMuted
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -74,13 +77,34 @@ fun ChatListScreen(
     Box(modifier = Modifier.fillMaxSize().background(Background)) {
         Column(modifier = Modifier.fillMaxSize()) {
             // Header
-            Row(
-                modifier = Modifier.fillMaxWidth().background(Surface).border(BorderStroke(2.dp, BorderBlack)).padding(12.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Text("Chats", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, modifier = Modifier.weight(1f))
-                NeoButton(text = "Search", onClick = { showSearch = !showSearch }, backgroundColor = Surface, textColor = Color.Black)
-            }
+                Row(
+                    modifier = Modifier.fillMaxWidth().clickable { onChatClick(c.id) }.padding(horizontal = 12.dp, vertical = 8.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AsyncImage(
+                        model = c.avatar?.let { ApiClient.resolveUrl(it) },
+                        contentDescription = c.name,
+                        modifier = Modifier.size(48.dp).clip(CircleShape).border(1.dp, GlassBorder.copy(alpha = 0.4f), CircleShape),
+                        contentScale = ContentScale.Crop
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(c.name ?: "Unknown", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyLarge, color = TextPrimary)
+                        if (!c.lastMessage.isNullOrBlank()) {
+                            Text(c.lastMessage, style = MaterialTheme.typography.bodySmall, color = TextMuted, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                        }
+                    }
+                    if (c.unreadCount > 0) {
+                        Box(
+                            modifier = Modifier
+                                .size(24.dp)
+                                .background(Primary, CircleShape),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Text("${c.unreadCount}", style = MaterialTheme.typography.labelSmall, fontWeight = FontWeight.Bold, color = Color.White)
+                        }
+                    }
+                }
 
             // Search bar
             if (showSearch) {
@@ -240,24 +264,13 @@ private fun ConversationItem(conv: Conversation, onClick: () -> Unit) {
 
 @Composable
 private fun FriendRequestItem(request: FriendRequest, onAccept: () -> Unit, onReject: () -> Unit) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = ApiClient.resolveUrl(request.senderAvatar),
-            contentDescription = "",
-            modifier = Modifier
-                .size(48.dp)
-                .clip(CircleShape)
-                .border(BorderStroke(2.dp, BorderBlack), CircleShape),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Column(modifier = Modifier.weight(1f)) {
-            Text(request.senderName, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodyMedium)
-            Text("Wants to be friends", style = MaterialTheme.typography.bodySmall, color = Color.Gray)
-        }
+            Row(
+                modifier = Modifier.fillMaxWidth().background(Color(0xFF0A1628).copy(alpha = 0.95f)).padding(12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text("Chats", color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 22.sp, modifier = Modifier.weight(1f))
+                NeoButton(text = "Search", onClick = { showSearch = !showSearch }, backgroundColor = Surface, textColor = Color.Black)
+            }
         Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
             IconButton(onClick = onAccept) {
                 Icon(Icons.Default.Check, contentDescription = "Accept", tint = Color.Green)

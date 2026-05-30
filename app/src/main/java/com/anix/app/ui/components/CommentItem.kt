@@ -18,6 +18,8 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -26,6 +28,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
 import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.AccentBlue
@@ -66,7 +69,14 @@ fun CommentItem(
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(Color(0xFF050A18).copy(alpha = 0.40f))
+                        .background(
+                            Brush.verticalGradient(
+                                colorStops = arrayOf(
+                                    0.0f to Color(0xFF050A18).copy(alpha = 0.55f),
+                                    1.0f to Color(0xFF050A18).copy(alpha = 0.75f)
+                                )
+                            )
+                        )
                 )
             }
             Column(Modifier.padding(12.dp).then(if (bannerUrl != null) Modifier.fillMaxWidth() else Modifier)) {
@@ -97,15 +107,17 @@ fun CommentItem(
                     Text(
                         text = comment.createdAt.take(10),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (bannerUrl != null) Color.White.copy(alpha = 0.8f) else TextMuted
+                        color = if (bannerUrl != null) TextMuted else TextMuted,
+                        fontFamily = FontFamily.Monospace,
+                        fontSize = 11.sp
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = comment.content,
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = if (bannerUrl != null) Color.White else TextPrimary
-                )
+                    Text(
+                        text = comment.content,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = if (bannerUrl != null) TextSecondary else TextPrimary
+                    )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
                     horizontalArrangement = Arrangement.spacedBy(16.dp)
