@@ -477,6 +477,21 @@ private fun PlayerSurface(
             modifier = Modifier
                 .fillMaxSize()
                 .pointerInput(Unit) {
+                    detectVerticalDragGestures(
+                        onVerticalDrag = { change, dragAmount ->
+                            if (dragAmount > 200f) {
+                                change.consume()
+                                onSwipeDown()
+                            }
+                        }
+                    )
+                }
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .pointerInput(Unit) {
                     awaitEachGesture {
                         awaitFirstDown()
                         val longPressMs = viewConfiguration.longPressTimeoutMillis
@@ -513,21 +528,6 @@ private fun PlayerSurface(
                             }
                         }
                     }
-                }
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .pointerInput(Unit) {
-                    detectVerticalDragGestures(
-                        onVerticalDrag = { change, dragAmount ->
-                            if (dragAmount > 200f) {
-                                change.consume()
-                                onSwipeDown()
-                            }
-                        }
-                    )
                 }
         )
 
