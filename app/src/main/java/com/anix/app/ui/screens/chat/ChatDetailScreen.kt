@@ -12,13 +12,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -32,11 +35,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
@@ -89,7 +96,7 @@ fun ChatDetailScreen(
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     items(uiState.messages) { message ->
-                        MessageBubble(message = message)
+                        MessageBubble(message = message, currentUserId = viewModel.currentUserId)
                     }
                 }
             }
@@ -111,15 +118,31 @@ fun ChatDetailScreen(
 }
 
 @Composable
-private fun MessageBubble(message: com.anix.app.data.models.Message) {
-    val isMine = message.senderId == com.anix.app.core.di.ServiceLocator.getToken() ?: ""
+private fun MessageBubble(message: com.anix.app.data.models.Message, currentUserId: String?) {
+    val isMine = currentUserId != null && message.senderId == currentUserId
     val bubbleColor = if (isMine) Primary else Surface
     val textColor = if (isMine) Color.White else Color.Black
     val alignment = if (isMine) Alignment.CenterEnd else Alignment.CenterStart
+    val avatarPlaceholder = rememberVectorPainter(Icons.Filled.Person)
+    val avatarUrl = ApiClient.resolveUrl(message.senderAvatar)
 
-    Box(modifier = Modifier.fillMaxWidth(), contentAlignment = alignment) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 8.dp, vertical = 2.dp),
+        horizontalArrangement = if (isMine) Arrangement.End else Arrangement.Start,
+        verticalAlignment = Alignment.Bottom
+    ) {
+        if (!isMine) {
+            AsyncImage(
+                model = avatarUrl,
+                contentDescription = null,
+                modifier = Modifier.size(28.dp).clip(CircleShape).border(BorderStroke(1.5.dp, BorderBlack), CircleShape),
+                placeholder = avatarPlaceholder,
+                error = avatarPlaceholder
+            )
+            Spacer(Modifier.width(6.dp))
+        }
         Column(
-            modifier = Modifier.widthIn(max = 280.dp).padding(vertical = 2.dp).background(bubbleColor, RoundedCornerShape(8.dp)).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp)).padding(12.dp)
+            modifier = Modifier.widthIn(max = 280.dp).background(bubbleColor, RoundedCornerShape(8.dp)).border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp)).padding(12.dp)
         ) {
             Text(text = message.content, style = MaterialTheme.typography.bodyMedium, color = textColor)
             Text(text = message.createdAt.takeLast(8).take(5), style = MaterialTheme.typography.bodySmall, color = textColor.copy(alpha = 0.7f), modifier = Modifier.align(Alignment.End))

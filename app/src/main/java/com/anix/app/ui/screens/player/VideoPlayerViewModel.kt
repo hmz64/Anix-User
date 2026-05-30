@@ -6,6 +6,7 @@ import com.anix.app.core.di.ServiceLocator
 import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Comment
 import com.anix.app.data.models.Episode
+import com.anix.app.data.models.User
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -32,12 +33,14 @@ data class VideoPlayerUiState(
     val submittingComment: Boolean = false,
     val sortMode: String = "top",
     val currentQuality: String = "720p",
-    val playbackSpeed: Float = 1.0f
+    val playbackSpeed: Float = 1.0f,
+    val currentUserId: String? = null
 )
 
 class VideoPlayerViewModel : ViewModel() {
     private val animeRepo = ServiceLocator.getAnimeRepository()
     private val userRepo = ServiceLocator.getUserRepository()
+    private val authRepo = ServiceLocator.getAuthRepository()
 
     private val _uiState = MutableStateFlow(VideoPlayerUiState())
     val uiState: StateFlow<VideoPlayerUiState> = _uiState.asStateFlow()
@@ -45,6 +48,14 @@ class VideoPlayerViewModel : ViewModel() {
     private var progressJob: Job? = null
 
     private var currentEpisodeId: String? = null
+
+    init {
+        viewModelScope.launch {
+            authRepo.me().onSuccess { user ->
+                _uiState.value = _uiState.value.copy(currentUserId = user.id.toString())
+            }
+        }
+    }
 
     fun loadEpisode(episodeId: String, animeId: String?) {
         if (currentEpisodeId == episodeId && _uiState.value.videoUrl.isNotEmpty()) return

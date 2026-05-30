@@ -30,9 +30,11 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -47,7 +49,9 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import androidx.datastore.preferences.core.edit
 import com.anix.app.BuildConfig
+import com.anix.app.core.di.PreferencesKeys
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.Background
@@ -286,6 +290,25 @@ fun SettingsScreen(
                             ToggleRow("Privacy Mode", privacyMode, { privacyMode = it; viewModel.updatePrivacy(if (it) "private" else "public") })
                             ToggleRow("Show in Leaderboard", showLeaderboard, { showLeaderboard = it; viewModel.updateLeaderboard(it) })
                             ToggleRow("Push Notifications", pushEnabled, { pushEnabled = it; viewModel.updatePushEnabled(it) })
+                        }
+                    }
+                }
+
+                item { SectionHeader("Comments") }
+                item {
+                    val scope = rememberCoroutineScope()
+                    val ds = ServiceLocator.getDataStore()
+                    val bannerPref by ds?.data?.collectAsState(initial = null) ?: remember { mutableStateOf(null) }
+                    val showBannerPref = bannerPref?.get(PreferencesKeys.SHOW_COMMENT_BANNERS) ?: true
+                    NeoCard {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            ToggleRow("Tampilkan Banner di Komentar", showBannerPref, {
+                                scope.launch {
+                                    ds?.edit { prefs ->
+                                        prefs[PreferencesKeys.SHOW_COMMENT_BANNERS] = it
+                                    }
+                                }
+                            })
                         }
                     }
                 }

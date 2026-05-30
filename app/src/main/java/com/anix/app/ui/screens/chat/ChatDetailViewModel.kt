@@ -17,9 +17,21 @@ data class ChatDetailUiState(
 
 class ChatDetailViewModel : ViewModel() {
     private val repo = ServiceLocator.getChatRepository()
+    private val authRepo = ServiceLocator.getAuthRepository()
 
     private val _uiState = MutableStateFlow(ChatDetailUiState())
     val uiState: StateFlow<ChatDetailUiState> = _uiState.asStateFlow()
+
+    var currentUserId: String? = null
+        private set
+
+    init {
+        viewModelScope.launch {
+            authRepo.me().onSuccess { user ->
+                currentUserId = user.id.toString()
+            }
+        }
+    }
 
     fun loadMessages(conversationId: String) {
         _uiState.value = _uiState.value.copy(isLoading = true, error = null)

@@ -228,6 +228,7 @@ data class Message(
     val conversationId: String = "",
     val senderId: String = "",
     val senderName: String = "",
+    val senderAvatar: String = "",
     val content: String = "",
     val read: Boolean = false,
     val createdAt: String = ""

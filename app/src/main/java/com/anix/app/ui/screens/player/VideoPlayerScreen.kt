@@ -41,13 +41,17 @@ import androidx.compose.material.icons.filled.Fullscreen
 import androidx.compose.material.icons.filled.Pause
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.DropdownMenu
@@ -71,6 +75,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.vector.rememberVectorPainter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -88,6 +93,8 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.ui.AspectRatioFrameLayout
 import androidx.media3.ui.PlayerView
 import coil.compose.AsyncImage
+import com.anix.app.core.di.PreferencesKeys
+import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.util.downloadVideoMp4
@@ -331,6 +338,7 @@ fun VideoPlayerScreen(
                 submitting = state.submittingComment,
                 sort = state.sortMode,
                 episodeId = episodeId,
+                currentUserId = state.currentUserId,
                 onTextChange = { viewModel.setCommentText(it) },
                 onSubmit = { viewModel.submitComment(episodeId) },
                 onDelete = { viewModel.deleteComment(episodeId, it) },
@@ -820,14 +828,19 @@ private fun Comments(
     submitting: Boolean,
     sort: String,
     episodeId: String,
+    currentUserId: String?,
     onTextChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onDelete: (String) -> Unit,
     onSortChange: (String) -> Unit
 ) {
     var showBanners by remember { mutableStateOf(true) }
-    var showOwnBanner by remember { mutableStateOf(true) }
     var showSettings by remember { mutableStateOf(false) }
+    LaunchedEffect(Unit) {
+        ServiceLocator.getDataStore()?.data?.collect { prefs ->
+            showBanners = prefs[PreferencesKeys.SHOW_COMMENT_BANNERS] ?: true
+        }
+    }
 
     Column(Modifier.background(Bg)) {
         Row(
@@ -849,10 +862,6 @@ private fun Comments(
                     DropdownMenuItem(
                         text = { Text(if (showBanners) "Sembunyikan Banner" else "Tampilkan Banner") },
                         onClick = { showBanners = !showBanners; showSettings = false }
-                    )
-                    DropdownMenuItem(
-                        text = { Text(if (showOwnBanner) "Sembunyikan Banner Saya" else "Tampilkan Banner Saya") },
-                        onClick = { showOwnBanner = !showOwnBanner; showSettings = false }
                     )
                 }
             }
@@ -895,8 +904,7 @@ private fun Comments(
                 Text("Belum ada komentar.", color = Color.Gray, fontSize = 13.sp)
             }
             else -> comments.forEach { c ->
-                val isOwn = c.userId == ""
-                CommentRow(c, isOwn, onDelete = { onDelete(c.id) }, showBanner = showBanners && (isOwn || showOwnBanner))
+                CommentRow(c, currentUserId = currentUserId, onDelete = { onDelete(c.id) }, showBanner = showBanners)
             }
         }
     }
@@ -915,32 +923,41 @@ private fun SortChip(text: String, selected: Boolean, onClick: () -> Unit) {
 }
 
 @Composable
-private fun CommentRow(comment: Comment, isOwn: Boolean, onDelete: () -> Unit, showBanner: Boolean = true) {
+private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () -> Unit, showBanner: Boolean = true) {
+    val isOwn = currentUserId != null && comment.userId == currentUserId
     val bannerUrl = if (showBanner) ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null } else null
-    Row(
-        Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp)
+    val avatarUrl = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null }
+    val avatarPlaceholder = rememberVectorPainter(Icons.Filled.Person)
+    val bannerPlaceholder = rememberVectorPainter(Icons.Outlined.Image)
+    Card(
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+        shape = RoundedCornerShape(8.dp),
+        colors = CardDefaults.cardColors(containerColor = if (bannerUrl != null) Color.Transparent else Color.White),
+        border = BorderStroke(1.5.dp, BorderBlack)
     ) {
-        Box(
-            Modifier.weight(1f)
-        ) {
+        Box(Modifier.fillMaxWidth()) {
             if (bannerUrl != null) {
                 AsyncImage(
                     model = bannerUrl,
                     contentDescription = null,
                     modifier = Modifier.fillMaxSize(),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = bannerPlaceholder,
+                    error = bannerPlaceholder
                 )
                 Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.3f)))
             }
             Row(
-                Modifier.fillMaxWidth().then(if (bannerUrl != null) Modifier.padding(8.dp) else Modifier),
+                Modifier.fillMaxWidth().padding(12.dp),
                 verticalAlignment = Alignment.Top
             ) {
                 AsyncImage(
-                    model = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null },
+                    model = avatarUrl,
                     contentDescription = null,
                     modifier = Modifier.size(36.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
-                    contentScale = ContentScale.Crop
+                    contentScale = ContentScale.Crop,
+                    placeholder = avatarPlaceholder,
+                    error = avatarPlaceholder
                 )
                 Spacer(Modifier.width(8.dp))
                 Column(Modifier.weight(1f)) {
