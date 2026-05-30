@@ -937,65 +937,48 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
     val avatarUrl = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null }
     val avatarPlaceholder = rememberVectorPainter(Icons.Filled.Person)
     val bannerPlaceholder = rememberVectorPainter(Icons.Outlined.Image)
-    val textColor = if (bannerUrl != null) Color.White else Dark
+    val cardRadius = RoundedCornerShape(16.dp)
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
     ) {
-        if (bannerUrl == null) {
-            Box(
-                modifier = Modifier
-                    .matchParentSize()
-                    .offset(x = 4.dp, y = 4.dp)
-                    .background(Color.Black, RoundedCornerShape(6.dp))
-            )
-        }
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .offset(x = 4.dp, y = 4.dp)
+                .background(Color.Black, cardRadius)
+        )
         Box(
             modifier = Modifier
                 .fillMaxWidth()
-                .background(
-                    if (bannerUrl != null) Color.Transparent else Color(0xFFFFF9EC),
-                    RoundedCornerShape(6.dp)
-                )
-                .border(2.dp, Color.Black, RoundedCornerShape(6.dp))
+                .background(Color(0xFFFFF9EC), cardRadius)
+                .border(2.dp, Color.Black, cardRadius)
         ) {
-            if (bannerUrl != null) {
-                AsyncImage(
-                    model = bannerUrl,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(max = 200.dp)
-                        .clip(RoundedCornerShape(6.dp)),
-                    contentScale = ContentScale.Crop,
-                    placeholder = bannerPlaceholder,
-                    error = bannerPlaceholder
-                )
-                Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.3f)))
-            }
-            Row(
-                Modifier.fillMaxWidth().padding(12.dp),
-                verticalAlignment = Alignment.Top
+            Column(
+                Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 14.dp)
             ) {
-                AsyncImage(
-                    model = avatarUrl,
-                    contentDescription = null,
-                    modifier = Modifier.size(36.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
-                    contentScale = ContentScale.Crop,
-                    placeholder = avatarPlaceholder,
-                    error = avatarPlaceholder
-                )
-                Spacer(Modifier.width(8.dp))
-                Column(Modifier.weight(1f)) {
-                    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Text(comment.username, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = textColor)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    AsyncImage(
+                        model = avatarUrl,
+                        contentDescription = null,
+                        modifier = Modifier.size(36.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
+                        contentScale = ContentScale.Crop,
+                        placeholder = avatarPlaceholder,
+                        error = avatarPlaceholder
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    ) {
+                        Text(comment.username, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Dark)
                         Box(
                             Modifier
-                                .clip(RoundedCornerShape(4.dp))
+                                .clip(RoundedCornerShape(16.dp))
                                 .background(Color(0xFFFF6B35))
-                                .border(1.5.dp, Color.Black, RoundedCornerShape(4.dp))
+                                .border(1.5.dp, Color.Black, RoundedCornerShape(16.dp))
                                 .padding(horizontal = 6.dp, vertical = 2.dp)
                         ) {
                             Text("Lvl. ${comment.userLevel}", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
@@ -1004,14 +987,30 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
                             comment.createdAt,
                             fontSize = 11.sp,
                             fontFamily = FontFamily.Monospace,
-                            color = if (bannerUrl != null) Color.White.copy(alpha = 0.8f) else Color.Gray
+                            color = Color.Gray
                         )
                     }
-                    Text(comment.content, fontSize = 13.sp, color = textColor, modifier = Modifier.padding(top = 2.dp))
-                    Row(Modifier.padding(top = 4.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                        NeoActionButton("Balas", hasBanner = bannerUrl != null)
-                        if (isOwn) NeoActionButton("Hapus", textColor = Color.Red, hasBanner = bannerUrl != null, onClick = onDelete)
-                    }
+                }
+                Spacer(Modifier.height(6.dp))
+                Text(comment.content, fontSize = 13.sp, color = Dark)
+                if (bannerUrl != null) {
+                    Spacer(Modifier.height(8.dp))
+                    AsyncImage(
+                        model = bannerUrl,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 160.dp)
+                            .clip(RoundedCornerShape(16.dp)),
+                        contentScale = ContentScale.Crop,
+                        placeholder = bannerPlaceholder,
+                        error = bannerPlaceholder
+                    )
+                }
+                Spacer(Modifier.height(8.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    NeoActionButton("Balas")
+                    if (isOwn) NeoActionButton("Hapus", textColor = Color.Red, onClick = onDelete)
                 }
             }
         }
@@ -1019,13 +1018,12 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
 }
 
 @Composable
-private fun NeoActionButton(text: String, textColor: Color = Color.Black, hasBanner: Boolean = false, onClick: () -> Unit = {}) {
-    val bg = if (hasBanner) Color(0x33FFFFFF) else Color.White
+private fun NeoActionButton(text: String, textColor: Color = Color.Black, onClick: () -> Unit = {}) {
     Box(
         modifier = Modifier
             .clickable(onClick = onClick)
-            .border(1.5.dp, Color.Black, RoundedCornerShape(4.dp))
-            .background(bg, RoundedCornerShape(4.dp))
+            .border(1.5.dp, Color.Black, RoundedCornerShape(16.dp))
+            .background(Color.White, RoundedCornerShape(16.dp))
             .padding(horizontal = 8.dp, vertical = 3.dp)
     ) {
         Text(text, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = textColor)
