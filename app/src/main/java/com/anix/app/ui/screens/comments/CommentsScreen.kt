@@ -36,19 +36,27 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import coil.request.ImageRequest
 import com.anix.app.core.theme.Background
 import com.anix.app.core.network.ApiClient
-import com.anix.app.core.theme.BorderBlack
-import com.anix.app.core.theme.Primary
+import com.anix.app.core.theme.AccentBlue
+import com.anix.app.core.theme.GlassBorder
+import com.anix.app.core.theme.TextMuted
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.theme.TextSecondary
 import com.anix.app.core.theme.Surface
+import com.anix.app.core.util.formatTimestamp
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.ui.components.NeoButton
@@ -176,31 +184,75 @@ private fun CommentItem(
     onReport: () -> Unit
 ) {
     val bannerUrl = ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null }
-    Column(
-        modifier = Modifier.fillMaxWidth().background(Color.White, RoundedCornerShape(8.dp))
-            .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(8.dp))
+    val avatarUrl = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null }
+    val hasBanner = !bannerUrl.isNullOrEmpty()
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
     ) {
-        Box {
-            if (bannerUrl != null) {
-                AsyncImage(model = bannerUrl, contentDescription = "", modifier = Modifier.fillMaxWidth(), contentScale = ContentScale.Crop)
-                Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.3f)))
+        if (hasBanner) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(bannerUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .fillMaxWidth()
+            )
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(
+                        Brush.verticalGradient(
+                            colorStops = arrayOf(
+                                0.0f to Color(0xFF050A18).copy(alpha = 0.50f),
+                                1.0f to Color(0xFF050A18).copy(alpha = 0.80f)
+                            )
+                        )
+                    )
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color.White.copy(alpha = 0.08f))
+            )
+        }
+
+        Column(Modifier.padding(12.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                AsyncImage(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(avatarUrl)
+                        .crossfade(true)
+                        .build(),
+                    contentDescription = "",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .border(1.5.dp, GlassBorder, CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f), CircleShape)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(comment.username, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = TextPrimary)
+                Spacer(modifier = Modifier.weight(1f))
+                Text(formatTimestamp(comment.createdAt), color = TextMuted, fontSize = 11.sp)
             }
-            Column(Modifier.padding(12.dp)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AsyncImage(model = ApiClient.resolveUrl(comment.userAvatar), contentDescription = "", modifier = Modifier.size(28.dp).clip(CircleShape).border(BorderStroke(1.dp, BorderBlack), CircleShape), contentScale = ContentScale.Crop)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text(comment.username, fontWeight = FontWeight.Bold, style = MaterialTheme.typography.bodySmall, color = if (bannerUrl != null) Color.White else Color.Unspecified)
-                    Spacer(modifier = Modifier.weight(1f))
-                    Text(comment.createdAt.take(10), style = MaterialTheme.typography.bodySmall, color = if (bannerUrl != null) Color.White.copy(alpha = 0.8f) else Color.Gray)
-                }
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(comment.content, style = MaterialTheme.typography.bodyMedium, color = if (bannerUrl != null) Color.White else Color.Unspecified)
-                Spacer(modifier = Modifier.height(4.dp))
-                Row {
-                    Text("Reply", style = MaterialTheme.typography.labelSmall, color = Primary, modifier = Modifier.clickable { onReply() })
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Text("Report", style = MaterialTheme.typography.labelSmall, color = Color.Red, modifier = Modifier.clickable { onReport() })
-                }
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(comment.content, color = TextSecondary, fontSize = 14.sp)
+            Spacer(modifier = Modifier.height(4.dp))
+            Row {
+                Text("Reply", style = MaterialTheme.typography.labelSmall, color = AccentBlue, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onReply() })
+                Spacer(modifier = Modifier.width(16.dp))
+                Text("Report", style = MaterialTheme.typography.labelSmall, color = Color(0xFFFF453A), fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onReport() })
             }
         }
     }

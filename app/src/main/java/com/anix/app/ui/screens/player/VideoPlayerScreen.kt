@@ -47,6 +47,7 @@ import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.outlined.Download
+import androidx.compose.material.icons.outlined.Flag
 import androidx.compose.material.icons.outlined.Image
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Tune
@@ -112,6 +113,7 @@ import com.anix.app.core.theme.GlassBorder
 import com.anix.app.core.theme.GlassSurface
 import com.anix.app.core.theme.GlassBgMid
 import com.anix.app.core.util.downloadVideoMp4
+import com.anix.app.core.util.formatTimestamp
 import com.anix.app.ui.components.AdvancedPlayerTimeline
 import com.anix.app.ui.components.HandlePlayerSystemUi
 import com.anix.app.ui.components.ReportDialog
@@ -321,7 +323,7 @@ fun VideoPlayerScreen(
             }
             item(key = "chips") {
                 ActionChips(
-                    quality = state.currentQuality,
+                    onQualityClick = { showQualitySheet = true },
                     onDownload = {
                         val fn = "${state.anime?.title ?: "anime"}_Ep${state.episode?.number ?: 0}"
                         downloadVideoMp4(context, state.videoUrl, fn)
@@ -718,36 +720,53 @@ private fun Description(text: String) {
 
 @Composable
 private fun ActionChips(
-    quality: String,
+    onQualityClick: () -> Unit = {},
     onDownload: () -> Unit = {},
     onReport: () -> Unit = {}
 ) {
     Row(
-        Modifier
+        horizontalArrangement = Arrangement.spacedBy(10.dp),
+        modifier = Modifier
             .fillMaxWidth()
             .background(Bg)
-            .padding(horizontal = 12.dp, vertical = 6.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(vertical = 12.dp)
     ) {
-        Chip(Icons.Outlined.Tune, "$quality Quality", onClick = {})
-        Chip(Icons.Outlined.Download, "Download", onClick = onDownload)
-        Chip(Icons.Outlined.Info, "Report", onClick = onReport)
-    }
-}
+        data class ActionBtn(val icon: ImageVector, val label: String, val onClick: () -> Unit)
 
-@Composable
-private fun Chip(icon: ImageVector, label: String, onClick: () -> Unit) {
-    Row(
-        Modifier
-            .border(2.dp, BorderBlack, RoundedCornerShape(8.dp))
-            .background(Color.White)
-            .clickable(onClick = onClick)
-            .padding(horizontal = 10.dp, vertical = 6.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(4.dp)
-    ) {
-        Icon(icon, contentDescription = null, tint = Dark, modifier = Modifier.size(16.dp))
-        Text(label, fontSize = 12.sp, fontWeight = FontWeight.Medium, color = Dark)
+        val actions = listOf(
+            ActionBtn(Icons.Outlined.Tune,     "Quality",  onQualityClick),
+            ActionBtn(Icons.Outlined.Download, "Download", onDownload),
+            ActionBtn(Icons.Outlined.Flag,     "Report",   onReport),
+        )
+
+        actions.forEach { action ->
+            Row(
+                verticalAlignment   = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.Center,
+                modifier = Modifier
+                    .weight(1f)
+                    .height(44.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(1.dp, GlassBorder, RoundedCornerShape(50.dp))
+                    .clickable { action.onClick() }
+                    .padding(horizontal = 12.dp)
+            ) {
+                Icon(
+                    imageVector        = action.icon,
+                    contentDescription = action.label,
+                    tint               = TextSecondary,
+                    modifier           = Modifier.size(16.dp)
+                )
+                Spacer(Modifier.width(6.dp))
+                Text(
+                    text     = action.label,
+                    color    = TextSecondary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.Medium
+                )
+            }
+        }
     }
 }
 
@@ -793,21 +812,38 @@ private fun EpisodeGrid(
                     val isCurrent = ep.id == currentId
                     val isWatched = ep.id in watched
                     Box(
-                        Modifier
-                            .size(48.dp)
-                            .border(
-                                width = if (isCurrent) 3.dp else 1.5.dp,
-                                color = when { isCurrent -> Blue; isWatched -> Color.Gray; else -> BorderBlack },
-                                shape = RoundedCornerShape(8.dp)
-                            )
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(52.dp)
+                            .clip(RoundedCornerShape(12.dp))
                             .background(
-                                color = when { isCurrent -> Blue.copy(alpha = 0.1f); isWatched -> Color.Gray.copy(alpha = 0.1f); else -> Color.White },
-                                shape = RoundedCornerShape(8.dp)
+                                when {
+                                    isCurrent -> AccentBlue.copy(alpha = 0.90f)
+                                    isWatched -> Color.White.copy(alpha = 0.15f)
+                                    else -> Color.White.copy(alpha = 0.08f)
+                                }
                             )
-                            .clickable { onClick(ep) },
-                        contentAlignment = Alignment.Center
+                            .border(
+                                width = 1.5.dp,
+                                color = when {
+                                    isCurrent -> AccentBlue
+                                    isWatched -> GlassBorder.copy(alpha = 0.6f)
+                                    else -> GlassBorder
+                                },
+                                shape = RoundedCornerShape(12.dp)
+                            )
+                            .clickable { onClick(ep) }
                     ) {
-                        Text("${ep.number}", fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal, color = if (isCurrent) Blue else Dark, fontSize = 14.sp)
+                        Text(
+                            text = "${ep.number}",
+                            color = when {
+                                isCurrent -> TextPrimary
+                                isWatched -> TextSecondary.copy(alpha = 0.6f)
+                                else -> TextSecondary
+                            },
+                            fontWeight = if (isCurrent) FontWeight.Bold else FontWeight.Normal,
+                            fontSize = 14.sp
+                        )
                     }
                 }
             }
@@ -866,9 +902,33 @@ private fun Comments(
         ) {
             Text("${comments.size} Comments", fontWeight = FontWeight.Bold, fontSize = 16.sp, color = Dark)
             Spacer(Modifier.weight(1f))
-            Row(Modifier.border(2.dp, BorderBlack, RoundedCornerShape(8.dp))) {
-                SortChip("Top", selected = sort == "top") { onSortChange("top") }
-                SortChip("Terbaru", selected = sort == "new") { onSortChange("new") }
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(Color.White.copy(alpha = 0.08f))
+                    .border(1.dp, GlassBorder, RoundedCornerShape(50.dp))
+                    .padding(4.dp)
+            ) {
+                listOf("Top", "Terbaru").forEach { label ->
+                    val isActive = (label == "Top" && sort == "top") || (label == "Terbaru" && sort == "new")
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(50.dp))
+                            .background(
+                                if (isActive) AccentBlue else Color.Transparent
+                            )
+                            .clickable { if (label == "Top") onSortChange("top") else onSortChange("new") }
+                            .padding(horizontal = 14.dp, vertical = 6.dp)
+                    ) {
+                        Text(
+                            text = label,
+                            color = if (isActive) TextPrimary else TextMuted,
+                            fontWeight = if (isActive) FontWeight.SemiBold else FontWeight.Normal,
+                            fontSize = 13.sp
+                        )
+                    }
+                }
             }
             Spacer(Modifier.width(4.dp))
             Box {
@@ -920,7 +980,7 @@ private fun Comments(
         when {
             loading -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) { LoadingIndicator() }
             comments.isEmpty() -> Box(Modifier.fillMaxWidth().padding(24.dp), contentAlignment = Alignment.Center) {
-                Text("Belum ada komentar.", color = Color.Gray, fontSize = 13.sp)
+                Text("Belum ada komentar.", color = TextMuted, fontSize = 13.sp)
             }
             else -> comments.forEach { c ->
                 CommentRow(c, currentUserId = currentUserId, onDelete = { onDelete(c.id) }, showBanner = showBanners)
@@ -930,150 +990,105 @@ private fun Comments(
 }
 
 @Composable
-private fun SortChip(text: String, selected: Boolean, onClick: () -> Unit) {
-    Box(
-        Modifier
-            .background(if (selected) Blue else Color.White, RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-            .padding(horizontal = 10.dp, vertical = 4.dp)
-    ) {
-        Text(text, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = if (selected) Color.White else Dark)
-    }
-}
-
-@Composable
 private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () -> Unit, showBanner: Boolean = true) {
     val isOwn = currentUserId != null && comment.userId == currentUserId
     val bannerUrl = if (showBanner) ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null } else null
     val avatarUrl = ApiClient.resolveUrl(comment.userAvatar)?.ifEmpty { null }
     val imageLoader = LocalImageLoader.current
-    val avatarPlaceholder = rememberVectorPainter(Icons.Filled.Person)
-    val cardRadius = RoundedCornerShape(16.dp)
     val hasBanner = !bannerUrl.isNullOrEmpty()
 
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 6.dp)
+            .clip(RoundedCornerShape(16.dp))
+            .border(1.dp, GlassBorder, RoundedCornerShape(16.dp))
     ) {
-        if (!hasBanner) {
+        if (hasBanner) {
+            AsyncImage(
+                model = ImageRequest.Builder(LocalContext.current)
+                    .data(bannerUrl)
+                    .crossfade(true)
+                    .build(),
+                contentDescription = null,
+                contentScale = ContentScale.Crop,
+                imageLoader = imageLoader,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 120.dp, max = 160.dp)
+                    .fillMaxHeight()
+            )
             Box(
                 modifier = Modifier
                     .matchParentSize()
-                    .offset(x = 4.dp, y = 4.dp)
-                    .background(Color.Black, cardRadius)
+                    .background(
+                        Brush.verticalGradient(
+                            colorStops = arrayOf(
+                                0.0f to Color(0xFF050A18).copy(alpha = 0.50f),
+                                1.0f to Color(0xFF050A18).copy(alpha = 0.80f)
+                            )
+                        )
+                    )
+            )
+        } else {
+            Box(
+                modifier = Modifier
+                    .matchParentSize()
+                    .background(Color.White.copy(alpha = 0.08f))
             )
         }
-        Box(
+
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .then(
-                    if (hasBanner) Modifier.heightIn(min = 100.dp, max = 160.dp)
-                    else Modifier.wrapContentHeight()
-                )
-                .clip(cardRadius)
-                .border(2.dp, Color.Black, cardRadius)
+                .padding(14.dp)
         ) {
-            if (hasBanner) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
                 AsyncImage(
                     model = ImageRequest.Builder(LocalContext.current)
-                        .data(bannerUrl)
+                        .data(avatarUrl)
                         .crossfade(true)
                         .build(),
-                    contentDescription = null,
+                    contentDescription = "Avatar",
                     contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize(),
-                    imageLoader = imageLoader
-                )
-                Box(
+                    imageLoader = imageLoader,
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color.White.copy(alpha = 0.45f))
+                        .size(40.dp)
+                        .clip(CircleShape)
+                        .border(1.5.dp, GlassBorder, CircleShape)
+                        .background(Color.White.copy(alpha = 0.08f), CircleShape),
+                    placeholder = rememberVectorPainter(Icons.Filled.Person),
+                    error = rememberVectorPainter(Icons.Filled.Person)
                 )
-            } else {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .background(Color(0xFFFFF9EC))
-                )
+                Spacer(Modifier.width(8.dp))
+                Text(comment.username, fontWeight = FontWeight.SemiBold, fontSize = 14.sp, color = TextPrimary)
+                Spacer(Modifier.width(8.dp))
+                Text(formatTimestamp(comment.createdAt), color = TextMuted, fontSize = 11.sp)
             }
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 14.dp, vertical = 14.dp)
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    AsyncImage(
-                        model = avatarUrl,
-                        imageLoader = imageLoader,
-                        contentDescription = "Avatar",
-                        modifier = Modifier.size(40.dp).clip(CircleShape).border(1.5.dp, BorderBlack, CircleShape),
-                        contentScale = ContentScale.Crop,
-                        placeholder = avatarPlaceholder,
-                        error = avatarPlaceholder
-                    )
-                    Spacer(Modifier.width(8.dp))
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        Text(comment.username, fontWeight = FontWeight.Bold, fontSize = 14.sp, color = Dark)
-                        Box(Modifier.padding(end = 2.dp, bottom = 2.dp)) {
-                            Box(
-                                Modifier
-                                    .matchParentSize()
-                                    .offset(x = 2.dp, y = 2.dp)
-                                    .background(Color.Black, RoundedCornerShape(50))
-                            )
-                            Box(
-                                Modifier
-                                    .clip(RoundedCornerShape(50))
-                                    .background(Color(0xFFFF6B35))
-                                    .border(1.5.dp, Color.Black, RoundedCornerShape(50))
-                                    .padding(horizontal = 10.dp, vertical = 4.dp)
-                            ) {
-                                Text("Lvl. ${comment.userLevel}", color = Color.Black, fontWeight = FontWeight.Bold, fontSize = 10.sp)
-                            }
-                        }
-                        Text(
-                            comment.createdAt,
-                            fontSize = 11.sp,
-                            fontFamily = FontFamily.Monospace,
-                            color = Color.Gray
-                        )
-                    }
-                }
-                Spacer(Modifier.height(6.dp))
-                Text(comment.content, fontSize = 13.sp, color = Dark)
-                Spacer(Modifier.weight(1f))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    NeoActionButton("Balas")
-                        if (isOwn) NeoActionButton("Hapus", bgColor = Color(0xFFFF3B30), textColor = Color.White, onClick = onDelete)
-                }
+
+            Spacer(Modifier.height(6.dp))
+            Text(comment.content, color = TextSecondary, fontSize = 14.sp)
+            Spacer(Modifier.height(8.dp))
+
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                NeoActionButton("Balas")
+                if (isOwn) NeoActionButton("Hapus", bgColor = Color(0xFFFF3B30), textColor = Color.White, onClick = onDelete)
             }
         }
     }
 }
 
 @Composable
-private fun NeoActionButton(text: String, bgColor: Color = Color.White, textColor: Color = Color.Black, onClick: () -> Unit = {}) {
-    Box(Modifier.padding(end = 2.dp, bottom = 2.dp)) {
-        Box(
-            Modifier
-                .matchParentSize()
-                .offset(x = 2.dp, y = 2.dp)
-                .background(Color.Black, RoundedCornerShape(50))
-        )
-        Box(
-            modifier = Modifier
-                .clickable(onClick = onClick)
-                .clip(RoundedCornerShape(50))
-                .background(bgColor)
-                .border(1.5.dp, Color.Black, RoundedCornerShape(50))
-                .padding(horizontal = 12.dp, vertical = 4.dp)
-        ) {
-            Text(text, fontSize = 11.sp, fontWeight = FontWeight.Bold, color = textColor)
-        }
+private fun NeoActionButton(text: String, bgColor: Color = Color.White.copy(alpha = 0.08f), textColor: Color = TextSecondary, onClick: () -> Unit = {}) {
+    Box(
+        modifier = Modifier
+            .clip(RoundedCornerShape(50.dp))
+            .background(bgColor)
+            .border(1.dp, GlassBorder, RoundedCornerShape(50.dp))
+            .clickable(onClick = onClick)
+            .padding(horizontal = 14.dp, vertical = 6.dp)
+    ) {
+        Text(text, fontSize = 11.sp, fontWeight = FontWeight.SemiBold, color = textColor)
     }
 }
 

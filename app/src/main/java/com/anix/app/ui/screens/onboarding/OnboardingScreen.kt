@@ -2,7 +2,6 @@ package com.anix.app.ui.screens.onboarding
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,11 +13,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -35,6 +36,7 @@ import com.anix.app.core.theme.AccentLime
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.Primary
+import com.anix.app.core.theme.TextSecondary
 import com.anix.app.core.theme.Secondary
 import com.anix.app.core.theme.TextBlack
 import com.anix.app.ui.components.NeoButton
@@ -46,27 +48,7 @@ fun OnboardingScreen(onComplete: () -> Unit) {
     val pagerState = rememberPagerState(pageCount = { 3 })
     val scope = rememberCoroutineScope()
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Background)
-    ) {
-        Text(
-            text = "Skip",
-            color = Primary,
-            fontWeight = FontWeight.Bold,
-            style = MaterialTheme.typography.labelLarge,
-            modifier = Modifier
-                .align(Alignment.TopEnd)
-                .padding(16.dp)
-                .clickable {
-                    scope.launch {
-                        ServiceLocator.getDataStore()?.edit { it[PreferencesKeys.ONBOARDING_DONE] = true }
-                        onComplete()
-                    }
-                }
-        )
-
+    Box(modifier = Modifier.fillMaxSize().background(Background)) {
         HorizontalPager(
             state = pagerState,
             modifier = Modifier
@@ -74,6 +56,26 @@ fun OnboardingScreen(onComplete: () -> Unit) {
                 .padding(top = 48.dp)
         ) { page ->
             OnboardingPageContent(page = page)
+        }
+
+        TextButton(
+            onClick = {
+                scope.launch {
+                    ServiceLocator.getDataStore()?.edit { it[PreferencesKeys.ONBOARDING_DONE] = true }
+                    onComplete()
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 16.dp, end = 16.dp)
+                .statusBarsPadding()
+        ) {
+            Text(
+                text = "Skip",
+                color = TextSecondary,
+                fontSize = 14.sp,
+                fontWeight = FontWeight.Medium
+            )
         }
 
         Column(

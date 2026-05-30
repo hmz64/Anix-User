@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -23,13 +25,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.anix.app.core.theme.AccentBlue
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.Primary
+import com.anix.app.core.theme.TextPrimary
 import com.anix.app.ui.components.NeoButton
 import com.anix.app.ui.components.NeoTextField
 
@@ -51,59 +54,79 @@ fun LoginScreen(
         return
     }
 
-    Box(modifier = Modifier.fillMaxSize().background(Background).verticalScroll(rememberScrollState())) {
-        Column(
-            modifier = Modifier.fillMaxWidth().padding(24.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+    Scaffold(containerColor = Color.Transparent) { paddingValues ->
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Background)
+                .padding(paddingValues),
+            contentAlignment = Alignment.Center
         ) {
-            Text("Login", style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-            Spacer(modifier = Modifier.height(24.dp))
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 28.dp)
+                    .verticalScroll(rememberScrollState()),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(
+                    text = "Login",
+                    color = TextPrimary,
+                    fontSize = 28.sp,
+                    fontWeight = FontWeight.Bold,
+                    letterSpacing = (-0.5).sp
+                )
 
-            NeoTextField(
-                value = email, onValueChange = { email = it; emailError = null },
-                placeholder = "Email", modifier = Modifier.fillMaxWidth()
-            )
-            if (emailError != null) {
-                Text(emailError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
-            }
-            Spacer(modifier = Modifier.height(12.dp))
+                NeoTextField(
+                    value = email, onValueChange = { email = it; emailError = null },
+                    placeholder = "Email", modifier = Modifier.fillMaxWidth()
+                )
+                if (emailError != null) {
+                    Text(emailError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
+                }
 
-            NeoTextField(
-                value = password, onValueChange = { password = it; passwordError = null },
-                placeholder = "Password", modifier = Modifier.fillMaxWidth(),
-                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
-                trailingIcon = {
+                NeoTextField(
+                    value = password, onValueChange = { password = it; passwordError = null },
+                    placeholder = "Password", modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
+                    trailingIcon = {
+                        TextButton(onClick = { showPassword = !showPassword }) {
+                            Text(
+                                if (showPassword) "Hide" else "Show",
+                                color = AccentBlue
+                            )
+                        }
+                    }
+                )
+                if (passwordError != null) {
+                    Text(passwordError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
+                }
+
+                if (uiState.error != null) {
+                    Text(uiState.error!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
+                }
+
+                NeoButton(
+                    text = if (uiState.isLoading) "Loading..." else "Login",
+                    onClick = {
+                        var valid = true
+                        if (email.isBlank()) { emailError = "Email is required"; valid = false }
+                        else if (!email.contains("@")) { emailError = "Invalid email format"; valid = false }
+                        if (password.isBlank()) { passwordError = "Password is required"; valid = false }
+                        if (valid) viewModel.login(email, password)
+                    },
+                    backgroundColor = Primary, modifier = Modifier.fillMaxWidth(), enabled = !uiState.isLoading
+                )
+
+                TextButton(onClick = onRegisterClick) {
                     Text(
-                        if (showPassword) "Hide" else "Show",
-                        modifier = Modifier.clickable { showPassword = !showPassword }.padding(8.dp),
-                        style = MaterialTheme.typography.labelSmall, color = Primary, fontWeight = FontWeight.Bold
+                        "Don't have an account? Register",
+                        color = AccentBlue,
+                        fontSize = 14.sp
                     )
                 }
-            )
-            if (passwordError != null) {
-                Text(passwordError!!, color = Color.Red, style = MaterialTheme.typography.labelSmall, modifier = Modifier.align(Alignment.Start))
             }
-            Spacer(modifier = Modifier.height(8.dp))
-
-            if (uiState.error != null) {
-                Text(uiState.error!!, color = Color.Red, style = MaterialTheme.typography.bodySmall)
-                Spacer(modifier = Modifier.height(8.dp))
-            }
-
-            NeoButton(
-                text = if (uiState.isLoading) "Loading..." else "Login",
-                onClick = {
-                    var valid = true
-                    if (email.isBlank()) { emailError = "Email is required"; valid = false }
-                    else if (!email.contains("@")) { emailError = "Invalid email format"; valid = false }
-                    if (password.isBlank()) { passwordError = "Password is required"; valid = false }
-                    if (valid) viewModel.login(email, password)
-                },
-                backgroundColor = Primary, modifier = Modifier.fillMaxWidth(), enabled = !uiState.isLoading
-            )
-            Spacer(modifier = Modifier.height(16.dp))
-            Text("Don't have an account? Register", color = Primary, fontWeight = FontWeight.Bold, modifier = Modifier.clickable { onRegisterClick() })
         }
     }
 }
