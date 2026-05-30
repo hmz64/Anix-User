@@ -56,6 +56,10 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.IconButton
@@ -122,6 +126,7 @@ import com.anix.app.ui.components.ReportDialog
 import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Comment
 import com.anix.app.data.models.Episode
+import com.anix.app.data.models.XpGrantResponse
 import com.anix.app.ui.components.LoadingIndicator
 import com.anix.app.core.util.liquidGlass
 import com.anix.app.ui.components.NeoBadge
@@ -156,8 +161,18 @@ fun VideoPlayerScreen(
 
     HandlePlayerSystemUi(isFullScreen = state.isFullscreen)
 
+    val snackbarHostState = remember { SnackbarHostState() }
+
     LaunchedEffect(episodeId) {
         viewModel.loadEpisode(episodeId, animeId)
+        viewModel.startProgressUpdates(episodeId)
+        viewModel.startXpGrant(episodeId)
+    }
+
+    LaunchedEffect(Unit) {
+        viewModel.xpGainedEvent.collect { result ->
+            snackbarHostState.showSnackbar("+${result.xpGained} XP (Level ${result.level})")
+        }
     }
 
     LaunchedEffect(showControls) {
@@ -194,7 +209,10 @@ fun VideoPlayerScreen(
     }
 
     DisposableEffect(Unit) {
-        onDispose { exoPlayer.release() }
+        onDispose {
+            viewModel.stopProgressUpdates()
+            exoPlayer.release()
+        }
     }
 
     var position by remember { mutableLongStateOf(0L) }
@@ -240,11 +258,12 @@ fun VideoPlayerScreen(
         }
     }
 
-    LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(Color.Transparent)
-    ) {
+    Box(modifier = Modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Transparent)
+        ) {
         item(key = "player") {
             Box(
                 modifier = Modifier
@@ -391,6 +410,18 @@ fun VideoPlayerScreen(
             onDismiss = { showQualitySheet = false }
         )
     }
+
+    SnackbarHost(
+        hostState = snackbarHostState,
+        modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 60.dp),
+        snackbar = { data ->
+            Snackbar(
+                snackbarData = data,
+                containerColor = AccentBlue.copy(alpha = 0.9f),
+                contentColor = TextPrimary
+            )
+        }
+    )
 }
 
 @OptIn(ExperimentalMaterial3Api::class)

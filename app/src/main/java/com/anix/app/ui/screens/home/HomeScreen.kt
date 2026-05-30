@@ -34,18 +34,28 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
+import com.anix.app.core.theme.AccentBlue
 import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
+import com.anix.app.core.theme.GlassBorder
+import com.anix.app.core.theme.GlassSurface
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
+import com.anix.app.core.theme.TextMuted
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.theme.TextSecondary
 import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Banner
+import com.anix.app.data.models.ContinueWatchingItem
 import com.anix.app.data.models.Genre
-import com.anix.app.data.models.WatchHistory
+import com.anix.app.data.models.LeaderboardUser
+import com.anix.app.data.models.MostWatchedEpisode
 import com.anix.app.ui.components.AnimeCard
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
@@ -73,13 +83,47 @@ fun HomeScreen(
                 .background(Background)
                 .verticalScroll(rememberScrollState())
         ) {
-            // Banner HorizontalPager with auto-scroll
+            // 1. Banner Pager
             if (uiState.banners.isNotEmpty()) {
                 BannerPager(banners = uiState.banners, onClick = { onAnimeClick(it) })
                 Spacer(modifier = Modifier.height(8.dp))
             }
 
-            // Trending Now
+            // 2. XP Leaderboard
+            if (uiState.leaderboard.isNotEmpty()) {
+                SectionHeader(
+                    title = "Leaderboard",
+                    onSeeAll = { onSeeAllClick("leaderboard") }
+                )
+                LeaderboardSection(users = uiState.leaderboard.take(5))
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // 3. Continue Watching
+            if (uiState.continueWatching.isNotEmpty()) {
+                SectionHeader(
+                    title = "Lanjutkan Menonton",
+                    onSeeAll = { onSeeAllClick("continue") }
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .horizontalScroll(rememberScrollState())
+                        .padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    uiState.continueWatching.take(5).forEach { item ->
+                        ContinueWatchingCard(
+                            item = item,
+                            modifier = Modifier.width(200.dp),
+                            onClick = { onAnimeClick(item.id.toString()) }
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // 4. Trending Now
             SectionHeader(
                 title = "Trending Now",
                 onSeeAll = { onSeeAllClick("trending") }
@@ -103,14 +147,11 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Genres
-            Text(
-                text = "Genres",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier.padding(horizontal = 12.dp)
+            // 5. Genres
+            SectionHeader(
+                title = "Genres",
+                onSeeAll = { onSeeAllClick("genres") }
             )
-            Spacer(modifier = Modifier.height(8.dp))
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -124,7 +165,7 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // New Releases
+            // 6. New Releases
             SectionHeader(
                 title = "New Releases",
                 onSeeAll = { onSeeAllClick("new") }
@@ -148,7 +189,26 @@ fun HomeScreen(
             }
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Tayang Hari Ini (Schedule)
+            // 7. Most Watched
+            if (uiState.mostWatched.isNotEmpty()) {
+                SectionHeader(
+                    title = "Most Watched",
+                    onSeeAll = { onSeeAllClick("most-watched") }
+                )
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 12.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    uiState.mostWatched.take(5).forEach { episode ->
+                        MostWatchedRow(episode = episode, onClick = { onAnimeClick(episode.seriesId) })
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // 8. Tayang Hari Ini
             if (uiState.schedule.isNotEmpty()) {
                 SectionHeader(
                     title = "Tayang Hari Ini",
@@ -164,33 +224,126 @@ fun HomeScreen(
                         ScheduleItem(anime = anime, onClick = { onAnimeClick(anime.id) })
                     }
                 }
-                Spacer(modifier = Modifier.height(16.dp))
-            }
-
-            // Lanjutkan Menonton
-            if (uiState.continueWatching.isNotEmpty()) {
-                SectionHeader(
-                    title = "Lanjutkan Menonton",
-                    onSeeAll = { onSeeAllClick("continue") }
-                )
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .horizontalScroll(rememberScrollState())
-                        .padding(horizontal = 12.dp),
-                    horizontalArrangement = Arrangement.spacedBy(12.dp)
-                ) {
-                    uiState.continueWatching.take(5).forEach { history ->
-                        ContinueWatchingItem(
-                            history = history,
-                            modifier = Modifier.width(200.dp),
-                            onClick = { onAnimeClick(history.animeId) }
-                        )
-                    }
-                }
                 Spacer(modifier = Modifier.height(24.dp))
             }
         }
+    }
+}
+
+@Composable
+private fun LeaderboardSection(users: List<LeaderboardUser>) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 12.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp)
+    ) {
+        users.forEachIndexed { index, user ->
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(12.dp))
+                    .background(GlassSurface)
+                    .border(BorderStroke(1.dp, GlassBorder), RoundedCornerShape(12.dp))
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "#${index + 1}",
+                    color = if (index < 3) AccentBlue else TextMuted,
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 14.sp,
+                    modifier = Modifier.width(32.dp)
+                )
+                AsyncImage(
+                    model = user.avatar,
+                    contentDescription = null,
+                    modifier = Modifier
+                        .size(36.dp)
+                        .clip(CircleShape)
+                        .border(BorderStroke(1.dp, GlassBorder), CircleShape),
+                    contentScale = ContentScale.Crop
+                )
+                Spacer(Modifier.width(10.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(user.username, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                    Text("Lv.${user.level} - ${user.xp} XP", color = TextMuted, fontSize = 11.sp)
+                }
+            }
+        }
+    }
+}
+
+@Composable
+private fun ContinueWatchingCard(
+    item: ContinueWatchingItem,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(GlassSurface)
+            .border(BorderStroke(1.dp, GlassBorder), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+    ) {
+        AsyncImage(
+            model = item.coverUrl,
+            contentDescription = item.title,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(120.dp)
+                .clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp)),
+            contentScale = ContentScale.Crop
+        )
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(8.dp)
+        ) {
+            Text(
+                text = item.title,
+                color = TextPrimary,
+                fontWeight = FontWeight.Bold,
+                fontSize = 13.sp,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis
+            )
+            Text(
+                text = "Eps. ${item.episodeNumber}",
+                color = TextSecondary,
+                fontSize = 11.sp
+            )
+        }
+    }
+}
+
+@Composable
+private fun MostWatchedRow(episode: MostWatchedEpisode, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(GlassSurface)
+            .border(BorderStroke(1.dp, GlassBorder), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = episode.coverUrl,
+            contentDescription = episode.title,
+            modifier = Modifier
+                .size(56.dp)
+                .clip(RoundedCornerShape(6.dp)),
+            contentScale = ContentScale.Crop
+        )
+        Spacer(Modifier.width(10.dp))
+        Column(modifier = Modifier.weight(1f)) {
+            Text(episode.title, color = TextPrimary, fontWeight = FontWeight.Bold, fontSize = 13.sp, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            Text("Ep. ${episode.number}", color = TextSecondary, fontSize = 11.sp)
+        }
+        Text("${episode.viewCount}", color = AccentBlue, fontWeight = FontWeight.Bold, fontSize = 12.sp)
     }
 }
 
@@ -219,8 +372,8 @@ private fun BannerPager(banners: List<Banner>, onClick: (String) -> Unit) {
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(horizontal = 12.dp)
-                    .clip(RoundedCornerShape(8.dp))
-                    .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp))
+                    .clip(RoundedCornerShape(12.dp))
+                    .border(BorderStroke(1.dp, GlassBorder), RoundedCornerShape(12.dp))
                     .clickable {
                         if (banner.linkUrl.isNotEmpty()) onClick(banner.linkUrl)
                     }
@@ -274,11 +427,11 @@ private fun ScheduleItem(anime: AnimeSeries, onClick: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .clip(RoundedCornerShape(8.dp))
-            .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(8.dp))
-            .background(Surface)
-            .padding(8.dp)
-            .clickable { onClick() },
+            .clip(RoundedCornerShape(12.dp))
+            .background(GlassSurface)
+            .border(BorderStroke(1.dp, GlassBorder), RoundedCornerShape(12.dp))
+            .clickable { onClick() }
+            .padding(8.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         AsyncImage(
@@ -286,8 +439,7 @@ private fun ScheduleItem(anime: AnimeSeries, onClick: () -> Unit) {
             contentDescription = anime.title,
             modifier = Modifier
                 .size(64.dp)
-                .clip(RoundedCornerShape(4.dp))
-                .border(BorderStroke(1.dp, BorderBlack), RoundedCornerShape(4.dp)),
+                .clip(RoundedCornerShape(6.dp)),
             contentScale = ContentScale.Crop
         )
         Spacer(modifier = Modifier.width(12.dp))
@@ -295,58 +447,13 @@ private fun ScheduleItem(anime: AnimeSeries, onClick: () -> Unit) {
             Text(
                 text = anime.title,
                 style = MaterialTheme.typography.titleSmall,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = TextPrimary
             )
             Text(
                 text = "${anime.type} • ${anime.totalEpisodes} eps",
                 style = MaterialTheme.typography.bodySmall,
-                color = Color.Gray
-            )
-        }
-    }
-}
-
-@Composable
-private fun ContinueWatchingItem(
-    history: WatchHistory,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    val anime = history.anime
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(8.dp))
-            .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp))
-            .clickable { onClick() }
-    ) {
-        AsyncImage(
-            model = anime?.poster ?: "",
-            contentDescription = anime?.title,
-            modifier = Modifier
-                .fillMaxSize()
-                .height(120.dp),
-            contentScale = ContentScale.Crop
-        )
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(Color.Black.copy(alpha = 0.4f))
-        )
-        Column(
-            modifier = Modifier
-                .align(Alignment.BottomStart)
-                .padding(8.dp)
-        ) {
-            Text(
-                text = anime?.title ?: "Unknown",
-                style = MaterialTheme.typography.bodyMedium,
-                fontWeight = FontWeight.Bold,
-                color = Color.White
-            )
-            Text(
-                text = "Eps. ${history.episode?.number ?: "?"}",
-                style = MaterialTheme.typography.bodySmall,
-                color = Color.White.copy(alpha = 0.8f)
+                color = TextMuted
             )
         }
     }
@@ -364,7 +471,8 @@ private fun SectionHeader(title: String, onSeeAll: () -> Unit) {
         Text(
             text = title,
             style = MaterialTheme.typography.titleLarge,
-            fontWeight = FontWeight.Bold
+            fontWeight = FontWeight.Bold,
+            color = TextPrimary
         )
         Text(
             text = "See All",

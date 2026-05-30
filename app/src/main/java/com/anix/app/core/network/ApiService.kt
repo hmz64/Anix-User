@@ -325,4 +325,23 @@ interface ApiService {
     // Banners (public - needs to be added to backend)
     @GET("api/banners")
     suspend fun getBanners(): Response<ApiResponse<List<Banner>>>
+
+    // Leaderboard & XP
+    @GET("api/leaderboard")
+    suspend fun getLeaderboard(
+        @Query("limit") limit: Int = 20
+    ): Response<ApiResponse<List<LeaderboardUser>>>
+
+    @POST("api/xp/grant")
+    suspend fun grantXp(@Body request: XpGrantRequest): Response<ApiResponse<XpGrantResponse>>
+
+    // Most Watched
+    @GET("api/episodes/most-watched")
+    suspend fun getMostWatched(
+        @Query("limit") limit: Int = 10
+    ): Response<ApiResponse<List<MostWatchedEpisode>>>
+
+    // Continue Watching
+    @GET("api/user/profile/continue-watching")
+    suspend fun getContinueWatching(): Response<ApiResponse<List<ContinueWatchingItem>>>
 }

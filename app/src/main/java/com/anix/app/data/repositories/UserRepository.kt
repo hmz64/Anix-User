@@ -340,4 +340,46 @@ class UserRepository(private val api: ApiService) {
             Result.failure(e)
         }
     }
+
+    suspend fun getLeaderboard(limit: Int = 20): Result<List<LeaderboardUser>> {
+        return try {
+            val response = api.getLeaderboard(limit)
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to fetch leaderboard"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun grantXp(episodeId: String): Result<XpGrantResponse> {
+        return try {
+            val response = api.grantXp(XpGrantRequest(episodeId))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Result.success(body.data)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to grant XP"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    suspend fun getContinueWatching(): Result<List<ContinueWatchingItem>> {
+        return try {
+            val response = api.getContinueWatching()
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(body.data ?: emptyList())
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to fetch continue watching"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

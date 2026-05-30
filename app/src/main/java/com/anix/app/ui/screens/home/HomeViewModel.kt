@@ -5,8 +5,10 @@ import androidx.lifecycle.viewModelScope
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.data.models.AnimeSeries
 import com.anix.app.data.models.Banner
+import com.anix.app.data.models.ContinueWatchingItem
 import com.anix.app.data.models.Genre
-import com.anix.app.data.models.WatchHistory
+import com.anix.app.data.models.LeaderboardUser
+import com.anix.app.data.models.MostWatchedEpisode
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -20,7 +22,9 @@ data class HomeUiState(
     val genres: List<Genre> = emptyList(),
     val banners: List<Banner> = emptyList(),
     val schedule: List<AnimeSeries> = emptyList(),
-    val continueWatching: List<WatchHistory> = emptyList()
+    val leaderboard: List<LeaderboardUser> = emptyList(),
+    val continueWatching: List<ContinueWatchingItem> = emptyList(),
+    val mostWatched: List<MostWatchedEpisode> = emptyList()
 )
 
 class HomeViewModel : ViewModel() {
@@ -43,7 +47,9 @@ class HomeViewModel : ViewModel() {
                 val genres = animeRepo.getGenres().getOrNull().orEmpty()
                 val banners = animeRepo.getBanners().getOrNull().orEmpty()
                 val schedule = animeRepo.getSchedule().getOrNull().orEmpty()
-                val continueWatching = userRepo.getWatchHistory(limit = 5).getOrNull().orEmpty()
+                val leaderboard = userRepo.getLeaderboard(limit = 10).getOrNull().orEmpty()
+                val continueWatching = userRepo.getContinueWatching().getOrNull().orEmpty()
+                val mostWatched = animeRepo.getMostWatched(limit = 10).getOrNull().orEmpty()
                 _uiState.value = HomeUiState(
                     isLoading = false,
                     trendingAnime = trending,
@@ -51,7 +57,9 @@ class HomeViewModel : ViewModel() {
                     genres = genres,
                     banners = banners,
                     schedule = schedule,
-                    continueWatching = continueWatching
+                    leaderboard = leaderboard,
+                    continueWatching = continueWatching,
+                    mostWatched = mostWatched
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)

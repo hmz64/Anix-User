@@ -10,8 +10,11 @@ import com.anix.app.data.models.Episode
 import com.anix.app.data.models.User
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
@@ -48,6 +51,10 @@ class VideoPlayerViewModel : ViewModel() {
     val uiState: StateFlow<VideoPlayerUiState> = _uiState.asStateFlow()
 
     private var progressJob: Job? = null
+    private var xpGrantJob: Job? = null
+
+    private val _xpGainedEvent = MutableSharedFlow<XpGrantResponse>()
+    val xpGainedEvent: SharedFlow<XpGrantResponse> = _xpGainedEvent.asSharedFlow()
 
     private var currentEpisodeId: String? = null
 
@@ -192,6 +199,28 @@ class VideoPlayerViewModel : ViewModel() {
     fun stopProgressUpdates() {
         progressJob?.cancel()
         progressJob = null
+        xpGrantJob?.cancel()
+        xpGrantJob = null
+    }
+
+    fun startXpGrant(episodeId: String) {
+        xpGrantJob?.cancel()
+        xpGrantJob = viewModelScope.launch {
+            while (true) {
+                delay(60_000)
+                userRepo.grantXp(episodeId).onSuccess { result ->
+                    _xpGainedEvent.emit(result)
+                }
+            }
+        }
+    }
+
+    fun grantXpNow(episodeId: String) {
+        viewModelScope.launch {
+            userRepo.grantXp(episodeId).onSuccess { result ->
+                _xpGainedEvent.emit(result)
+            }
+        }
     }
 
     fun setPlaying(playing: Boolean) {

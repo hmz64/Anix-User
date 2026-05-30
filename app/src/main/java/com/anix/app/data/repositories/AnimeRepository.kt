@@ -138,4 +138,17 @@ class AnimeRepository(private val api: ApiService) {
     suspend fun getAnimeByCategory(category: String, page: Int = 1, genre: String? = null, status: String? = null, type: String? = null, sortBy: String? = null): Result<List<AnimeSeries>> {
         return getAnimeList(page = page, genre = genre, sort = sortBy)
     }
+
+    suspend fun getMostWatched(limit: Int = 10): Result<List<MostWatchedEpisode>> {
+        return try {
+            val response = api.getMostWatched(limit)
+            if (response.isSuccessful && response.body()?.success == true) {
+                Result.success(response.body()!!.data ?: emptyList())
+            } else {
+                Result.failure(Exception(response.body()?.error ?: "Failed to fetch most watched"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
 }

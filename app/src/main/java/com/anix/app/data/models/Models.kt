@@ -410,6 +410,44 @@ data class GiftPremiumRequest(
 // Player
 data class HeatwavePoint(val fraction: Float, val score: Float)
 
+// Leaderboard & XP
+data class LeaderboardUser(
+    val id: String = "",
+    val username: String = "",
+    val avatar: String = "",
+    val xp: Int = 0,
+    val level: Int = 1
+)
+
+data class MostWatchedEpisode(
+    val id: String = "",
+    @SerializedName("series_id") val seriesId: String = "",
+    val title: String = "",
+    @SerializedName("cover_url") val coverUrl: String = "",
+    val number: Int = 0,
+    @SerializedName("view_count") val viewCount: Int = 0
+)
+
+data class ContinueWatchingItem(
+    val id: String = "",
+    val title: String = "",
+    @SerializedName("cover_url") val coverUrl: String = "",
+    @SerializedName("episode_id") val episodeId: String = "",
+    @SerializedName("episode_number") val episodeNumber: Int = 0,
+    val progress: Int = 0,
+    val duration: String = ""
+)
+
+data class XpGrantRequest(
+    @SerializedName("episode_id") val episodeId: String
+)
+
+data class XpGrantResponse(
+    @SerializedName("xp_gained") val xpGained: Int = 0,
+    @SerializedName("total_xp") val totalXp: Int = 0,
+    val level: Int = 1
+)
+
 // Banner
 data class Banner(
     val id: String = "",
