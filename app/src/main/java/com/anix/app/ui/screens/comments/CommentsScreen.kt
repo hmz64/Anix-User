@@ -51,7 +51,9 @@ import coil.request.ImageRequest
 import com.anix.app.core.theme.Background
 import com.anix.app.core.network.ApiClient
 import com.anix.app.core.theme.AccentBlue
+import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.GlassBorder
+import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.TextMuted
 import com.anix.app.core.theme.TextPrimary
 import com.anix.app.core.theme.TextSecondary
