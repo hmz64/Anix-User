@@ -1,6 +1,5 @@
 package com.anix.app.ui.components
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -9,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
@@ -28,25 +28,32 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImage
 import com.anix.app.core.network.ApiClient
+import com.anix.app.core.theme.AccentBlue
 import com.anix.app.core.theme.AccentOrange
-import com.anix.app.core.theme.BorderBlack
-import com.anix.app.core.theme.Primary
-import com.anix.app.data.models.Comment
+import com.anix.app.core.theme.GlassBorder
+import com.anix.app.core.theme.TextMuted
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.util.liquidGlass
 
 @Composable
 fun CommentItem(
-    comment: Comment,
+    comment: com.anix.app.data.models.Comment,
     modifier: Modifier = Modifier,
     onReply: (() -> Unit)? = null,
-    onReport: ((Comment) -> Unit)? = null,
+    onReport: ((com.anix.app.data.models.Comment) -> Unit)? = null,
     onViewReplies: (() -> Unit)? = null
 ) {
     val bannerUrl = ApiClient.resolveUrl(comment.userBanner)?.ifEmpty { null }
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(vertical = 4.dp, horizontal = 8.dp)
-            .border(BorderStroke(2.dp, BorderBlack), RoundedCornerShape(8.dp))
+            .padding(horizontal = 16.dp, vertical = 6.dp)
+            .liquidGlass(
+                shape = RoundedCornerShape(16.dp),
+                blurRadius = 20f,
+                alpha = 0.10f,
+                showGlow = false
+            )
     ) {
         Box {
             if (bannerUrl != null) {
@@ -56,7 +63,11 @@ fun CommentItem(
                     modifier = Modifier.fillMaxWidth(),
                     contentScale = ContentScale.Crop
                 )
-                Box(Modifier.matchParentSize().background(Color.Black.copy(alpha = 0.3f)))
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .background(Color(0xFF050A18).copy(alpha = 0.40f))
+                )
             }
             Column(Modifier.padding(12.dp).then(if (bannerUrl != null) Modifier.fillMaxWidth() else Modifier)) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
@@ -66,7 +77,7 @@ fun CommentItem(
                         modifier = Modifier
                             .size(32.dp)
                             .clip(CircleShape)
-                            .border(BorderStroke(1.5.dp, BorderBlack), CircleShape),
+                            .border(1.dp, GlassBorder.copy(alpha = 0.4f), CircleShape),
                         contentScale = ContentScale.Crop
                     )
                     Spacer(modifier = Modifier.width(8.dp))
@@ -74,7 +85,7 @@ fun CommentItem(
                         text = comment.username,
                         style = MaterialTheme.typography.labelLarge,
                         fontWeight = FontWeight.Bold,
-                        color = if (bannerUrl != null) Color.White else Color.Unspecified
+                        color = if (bannerUrl != null) Color.White else TextPrimary
                     )
                     Spacer(modifier = Modifier.width(6.dp))
                     NeoBadge(
@@ -86,14 +97,14 @@ fun CommentItem(
                     Text(
                         text = comment.createdAt.take(10),
                         style = MaterialTheme.typography.bodySmall,
-                        color = if (bannerUrl != null) Color.White.copy(alpha = 0.8f) else Color.Gray
+                        color = if (bannerUrl != null) Color.White.copy(alpha = 0.8f) else TextMuted
                     )
                 }
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = comment.content,
                     style = MaterialTheme.typography.bodyMedium,
-                    color = if (bannerUrl != null) Color.White else Color.Unspecified
+                    color = if (bannerUrl != null) Color.White else TextPrimary
                 )
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(
@@ -104,7 +115,7 @@ fun CommentItem(
                             text = "Reply",
                             modifier = Modifier.clickable { onReply() },
                             style = MaterialTheme.typography.labelMedium,
-                            color = Primary,
+                            color = AccentBlue,
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -113,7 +124,7 @@ fun CommentItem(
                             text = "Report",
                             modifier = Modifier.clickable { onReport(comment) },
                             style = MaterialTheme.typography.labelMedium,
-                            color = Color.Red,
+                            color = Color(0xFFFF453A),
                             fontWeight = FontWeight.Bold
                         )
                     }
@@ -130,7 +141,7 @@ fun CommentItem(
                                 modifier = Modifier
                                     .size(24.dp)
                                     .clip(CircleShape)
-                                    .border(BorderStroke(1.dp, BorderBlack), CircleShape),
+                                    .border(1.dp, GlassBorder.copy(alpha = 0.4f), CircleShape),
                                 contentScale = ContentScale.Crop
                             )
                             Spacer(modifier = Modifier.width(6.dp))
@@ -138,11 +149,13 @@ fun CommentItem(
                                 Text(
                                     text = reply.username,
                                     style = MaterialTheme.typography.labelSmall,
-                                    fontWeight = FontWeight.Bold
+                                    fontWeight = FontWeight.Bold,
+                                    color = TextPrimary
                                 )
                                 Text(
                                     text = reply.content,
-                                    style = MaterialTheme.typography.bodySmall
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = TextPrimary
                                 )
                             }
                         }
@@ -154,7 +167,7 @@ fun CommentItem(
                                 .padding(start = 16.dp, top = 4.dp)
                                 .clickable { onViewReplies() },
                             style = MaterialTheme.typography.labelSmall,
-                            color = Primary,
+                            color = AccentBlue,
                             fontWeight = FontWeight.Bold
                         )
                     }

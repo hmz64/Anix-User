@@ -1,30 +1,29 @@
 package com.anix.app.ui.components
-import androidx.compose.foundation.border
 
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.aspectRatio
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
-import com.anix.app.core.theme.AccentOrange
-import com.anix.app.core.theme.BorderBlack
-import com.anix.app.core.theme.Primary
+import com.anix.app.core.theme.AccentBlue
+import com.anix.app.core.theme.TextPrimary
+import com.anix.app.core.util.liquidGlass
 
 @Composable
 fun AnimeCard(
@@ -34,12 +33,14 @@ fun AnimeCard(
     modifier: Modifier = Modifier,
     onClick: () -> Unit = {}
 ) {
-    val shape = RoundedCornerShape(8.dp)
-    Column(
+    Box(
         modifier = modifier
-            .clip(shape)
-            .background(Color.White, shape)
-            .border(BorderStroke(2.dp, BorderBlack), shape)
+            .fillMaxWidth()
+            .liquidGlass(
+                shape = RoundedCornerShape(12.dp),
+                blurRadius = 16f,
+                alpha = 0.08f
+            )
             .clickable { onClick() }
     ) {
         Box(
@@ -51,37 +52,47 @@ fun AnimeCard(
                 model = posterUrl,
                 contentDescription = title,
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .aspectRatio(0.7f)
-                    .clip(RoundedCornerShape(topStart = 8.dp, topEnd = 8.dp)),
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(12.dp)),
                 contentScale = ContentScale.Crop
             )
+
             Box(
                 modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(4.dp)
-                    .background(AccentOrange, RoundedCornerShape(4.dp))
-                    .border(BorderStroke(1.5.dp, BorderBlack), RoundedCornerShape(4.dp))
+                    .align(Alignment.TopStart)
+                    .padding(6.dp)
+                    .clip(RoundedCornerShape(50.dp))
+                    .background(AccentBlue.copy(alpha = 0.85f))
                     .padding(horizontal = 6.dp, vertical = 2.dp)
             ) {
                 Text(
                     text = String.format("%.1f", rating),
-                    style = MaterialTheme.typography.labelSmall,
-                    fontWeight = FontWeight.Bold,
-                    color = Color.White
+                    color = TextPrimary,
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+
+            Box(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .background(
+                        Brush.verticalGradient(
+                            listOf(Color.Transparent, Color(0xCC050A18))
+                        )
+                    )
+                    .padding(8.dp)
+            ) {
+                Text(
+                    text = title,
+                    color = TextPrimary,
+                    fontSize = 12.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis
                 )
             }
         }
-        Text(
-            text = title,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 6.dp, vertical = 4.dp),
-            style = MaterialTheme.typography.labelMedium,
-            fontWeight = FontWeight.Bold,
-            maxLines = 2,
-            overflow = TextOverflow.Ellipsis,
-            color = Color.Black
-        )
     }
 }
