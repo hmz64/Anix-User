@@ -339,7 +339,8 @@ fun VideoPlayerScreen(
                 submitting = state.submittingComment,
                 sort = state.sortMode,
                 episodeId = episodeId,
-                currentUserId = state.currentUserId,
+                currentUserId = currentUserId,
+                currentUserAvatar = state.currentUserAvatar,
                 onTextChange = { viewModel.setCommentText(it) },
                 onSubmit = { viewModel.submitComment(episodeId) },
                 onDelete = { viewModel.deleteComment(episodeId, it) },
@@ -830,6 +831,7 @@ private fun Comments(
     sort: String,
     episodeId: String,
     currentUserId: String?,
+    currentUserAvatar: String? = null,
     onTextChange: (String) -> Unit,
     onSubmit: () -> Unit,
     onDelete: (String) -> Unit,
@@ -872,12 +874,14 @@ private fun Comments(
             Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
-                Modifier
-                    .size(32.dp)
-                    .clip(CircleShape)
-                    .border(2.dp, BorderBlack, CircleShape)
-                    .background(Color.White)
+            val inputAvatarUrl = ApiClient.resolveUrl(currentUserAvatar)?.ifEmpty { null }
+            AsyncImage(
+                model = inputAvatarUrl,
+                contentDescription = null,
+                modifier = Modifier.size(32.dp).clip(CircleShape).border(2.dp, BorderBlack, CircleShape),
+                placeholder = rememberVectorPainter(Icons.Filled.Person),
+                error = rememberVectorPainter(Icons.Filled.Person),
+                contentScale = ContentScale.Crop
             )
             Spacer(Modifier.width(8.dp))
             NeoTextField(
@@ -931,7 +935,7 @@ private fun CommentRow(comment: Comment, currentUserId: String?, onDelete: () ->
     val avatarPlaceholder = rememberVectorPainter(Icons.Filled.Person)
     val bannerPlaceholder = rememberVectorPainter(Icons.Outlined.Image)
     Card(
-        modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 6.dp),
+        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 6.dp),
         shape = RoundedCornerShape(8.dp),
         colors = CardDefaults.cardColors(containerColor = if (bannerUrl != null) Color.Transparent else Color.White),
         border = BorderStroke(1.5.dp, BorderBlack)

@@ -34,7 +34,8 @@ data class VideoPlayerUiState(
     val sortMode: String = "top",
     val currentQuality: String = "720p",
     val playbackSpeed: Float = 1.0f,
-    val currentUserId: String? = null
+    val currentUserId: String? = null,
+    val currentUserAvatar: String? = null
 )
 
 class VideoPlayerViewModel : ViewModel() {
@@ -52,7 +53,10 @@ class VideoPlayerViewModel : ViewModel() {
     init {
         viewModelScope.launch {
             authRepo.me().onSuccess { user ->
-                _uiState.value = _uiState.value.copy(currentUserId = user.id.toString())
+                _uiState.value = _uiState.value.copy(
+                    currentUserId = user.id.toString(),
+                    currentUserAvatar = user.avatar
+                )
             }
         }
     }
