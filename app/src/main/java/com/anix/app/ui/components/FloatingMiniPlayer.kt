@@ -163,7 +163,7 @@ fun FloatingMiniPlayer(
                         }
                 )
 
-                AnimatedVisibility(
+                androidx.compose.animation.AnimatedVisibility(
                     visible = showHud,
                     enter = fadeIn(),
                     exit = fadeOut(),
