@@ -194,7 +194,12 @@ fun VideoPlayerScreen(
 
     LaunchedEffect(state.videoUrl) {
         if (state.videoUrl.isNotEmpty()) {
-            exoPlayer.setMediaItem(MediaItem.fromUri(state.videoUrl))
+            exoPlayer.setMediaItem(
+                MediaItem.Builder()
+                    .setUri(state.videoUrl)
+                    .setMediaId(state.videoUrl)
+                    .build()
+            )
             exoPlayer.prepare()
             if (playerViewModel != null && playerViewModel!!.savedPosition > 0) {
                 exoPlayer.seekTo(playerViewModel!!.savedPosition)

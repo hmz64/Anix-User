@@ -405,6 +405,7 @@ data class Notification(
     val type: String = "",
     val title: String = "",
     val body: String = "",
+    @SerializedName("image_url") val imageUrl: String = "",
     val read: Boolean = false,
     val data: String? = null,
     val createdAt: String = ""
