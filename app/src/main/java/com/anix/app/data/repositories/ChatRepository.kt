@@ -89,9 +89,10 @@ class ChatRepository(private val api: ApiService) {
         }
     }
 
-    suspend fun respondFriendRequest(accept: Boolean): Result<FriendRequest> {
+    suspend fun respondFriendRequest(requestId: String, accept: Boolean): Result<FriendRequest> {
         return try {
-            val response = api.respondFriendRequest(FriendRequestAction(accept))
+            val action = if (accept) "accept" else "reject"
+            val response = api.respondFriendRequest(FriendRequestAction(requestId, action))
             val body = response.body()
             if (response.isSuccessful && body?.success == true && body.data != null) {
                 Result.success(body.data)

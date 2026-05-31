@@ -83,7 +83,7 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val api = ServiceLocator.getApiService()
-                val response = api.updateNameRaw(mapOf("show_leaderboard" to enabled))
+                val response = api.updateSettingsRaw(mapOf("show_leaderboard" to enabled))
                 if (response.isSuccessful) {
                     _uiState.value = _uiState.value.copy(successMessage = "Updated")
                 }
@@ -97,7 +97,7 @@ class SettingsViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 val api = ServiceLocator.getApiService()
-                val response = api.updateNameRaw(mapOf("push_enabled" to enabled))
+                val response = api.updateSettingsRaw(mapOf("push_enabled" to enabled))
                 if (response.isSuccessful) {
                     _uiState.value = _uiState.value.copy(successMessage = "Updated")
                 }

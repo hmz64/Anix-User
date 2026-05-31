@@ -65,7 +65,7 @@ object Routes {
     const val SEARCH = "search"
     const val ANIME_DETAIL = "anime/{animeId}"
     const val VIDEO_PLAYER = "player/{episodeId}/{animeId}"
-    const val COMMENTS = "comments/{animeId}"
+    const val COMMENTS = "comments/{animeId}/{episodeId}"
     const val CHAT_LIST = "chat_list"
     const val CHAT_DETAIL = "chat/{conversationId}"
     const val CLAN_LIST = "clans"

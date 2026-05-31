@@ -47,7 +47,7 @@ class CommentsViewModel : ViewModel() {
         _uiState.value = _uiState.value.copy(isLoadingMore = true)
         val nextPage = _uiState.value.currentPage + 1
         viewModelScope.launch {
-            repo.getComments(episodeId).onSuccess { newComments ->
+            repo.getComments(episodeId, page = nextPage, limit = perPage).onSuccess { newComments ->
                 val all = _uiState.value.comments + newComments
                 _uiState.value = _uiState.value.copy(
                     comments = all, isLoadingMore = false,

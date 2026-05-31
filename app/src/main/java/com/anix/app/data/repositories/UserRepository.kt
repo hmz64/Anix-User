@@ -187,9 +187,9 @@ class UserRepository(private val api: ApiService) {
         }
     }
 
-    suspend fun getComments(episodeId: String): Result<List<Comment>> {
+    suspend fun getComments(episodeId: String, page: Int = 1, limit: Int = 20): Result<List<Comment>> {
         return try {
-            val response = api.getComments(episodeId)
+            val response = api.getComments(episodeId, page, limit)
             val body = response.body()
             if (response.isSuccessful && body?.success == true) {
                 Result.success(body.data ?: emptyList())
@@ -313,9 +313,10 @@ class UserRepository(private val api: ApiService) {
         }
     }
 
-    suspend fun respondFriendRequest(accept: Boolean): Result<Unit> {
+    suspend fun respondFriendRequest(requestId: String, accept: Boolean): Result<Unit> {
         return try {
-            val response = api.respondFriendRequest(FriendRequestAction(accept))
+            val action = if (accept) "accept" else "reject"
+            val response = api.respondFriendRequest(FriendRequestAction(requestId, action))
             val body = response.body()
             if (response.isSuccessful && body?.success == true) {
                 Result.success(Unit)

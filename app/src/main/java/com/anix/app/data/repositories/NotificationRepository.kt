@@ -48,7 +48,17 @@ class NotificationRepository(private val api: ApiService) {
     }
 
     suspend fun markRead(notificationId: String): Result<Unit> {
-        return markAllRead()
+        return try {
+            val response = api.markNotificationRead(mapOf("id" to notificationId))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true) {
+                Result.success(Unit)
+            } else {
+                Result.failure(Exception(body?.error ?: "Failed to mark read"))
+            }
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
     }
 
     suspend fun upsertToken(token: String): Result<Unit> {

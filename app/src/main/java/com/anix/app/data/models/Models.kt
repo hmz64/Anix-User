@@ -250,7 +250,8 @@ data class FriendRequest(
 )
 
 data class FriendRequestAction(
-    val accept: Boolean
+    @SerializedName("request_id") val requestId: String,
+    val action: String
 )
 
 data class SearchUsersResponse(

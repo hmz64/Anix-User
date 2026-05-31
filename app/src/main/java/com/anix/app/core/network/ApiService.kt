@@ -146,6 +146,9 @@ interface ApiService {
     @PUT("api/user/update/privacy")
     suspend fun updatePrivacy(@Body request: PrivacyRequest): Response<ApiResponse<User>>
 
+    @PUT("api/user/update/privacy")
+    suspend fun updateSettingsRaw(@Body request: Map<String, @JvmSuppressWildcards Any>): Response<ApiResponse<User>>
+
     @Multipart
     @PUT("api/user/update/avatar")
     suspend fun updateAvatar(@Part file: okhttp3.MultipartBody.Part): Response<ApiResponse<User>>
@@ -305,6 +308,9 @@ interface ApiService {
 
     @GET("api/notification/unread-count")
     suspend fun getUnreadCount(): Response<ApiResponse<Int>>
+
+    @POST("api/notification/mark-read")
+    suspend fun markNotificationRead(@Body request: Map<String, String>): Response<ApiResponse<Unit>>
 
     @POST("api/notification/mark-read")
     suspend fun markAllNotificationsRead(): Response<ApiResponse<Unit>>

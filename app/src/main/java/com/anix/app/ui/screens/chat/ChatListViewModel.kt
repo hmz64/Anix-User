@@ -86,7 +86,7 @@ class ChatListViewModel : ViewModel() {
 
     fun respondToRequest(requestId: String, accept: Boolean) {
         viewModelScope.launch {
-            userRepo.respondFriendRequest(accept)
+            userRepo.respondFriendRequest(requestId, accept)
                 .onSuccess { loadFriendRequests() }
         }
     }
