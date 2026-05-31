@@ -270,11 +270,12 @@ fun HomeScreen(
                                 .align(Alignment.TopEnd)
                                 .padding(end = 4.dp, top = 4.dp)
                         )
-                    }
                 }
+            }
             }
         }
     }
+}
 }
 
 @Composable
