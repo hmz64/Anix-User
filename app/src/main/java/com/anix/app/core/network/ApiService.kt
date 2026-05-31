@@ -18,7 +18,7 @@ interface ApiService {
     suspend fun login(@Body request: LoginRequest): Response<ApiResponse<AuthResponse>>
 
     @POST("api/auth/google")
-    suspend fun googleLogin(@Body request: GoogleLoginRequest): Response<ApiResponse<AuthResponse>>
+    suspend fun googleLogin(@Body request: GoogleLoginRequest): Response<okhttp3.ResponseBody>
 
     @POST("api/auth/google/complete")
     suspend fun completeGoogleRegistration(@Body request: GoogleCompleteRegistrationRequest): Response<ApiResponse<AuthResponse>>

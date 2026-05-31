@@ -7,6 +7,7 @@ import com.anix.app.core.network.ApiService
 import com.anix.app.data.models.*
 import com.google.firebase.messaging.FirebaseMessaging
 import com.google.gson.Gson
+import com.google.gson.JsonParser
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -19,31 +20,42 @@ class AuthRepository(
         return try {
             Log.d("AnixAuth", "Google login attempt")
             val response = api.googleLogin(GoogleLoginRequest(idToken))
-            val body = response.body()
-            if (response.isSuccessful && body?.success == true) {
-                // Check if response is needs_registration
-                val rawJson = Gson().toJson(body.data)
-                if (rawJson.contains("needs_registration")) {
-                    val needsReg = Gson().fromJson(rawJson, GoogleNeedsRegistration::class.java)
-                    Log.d("AnixAuth", "Google needs registration: ${needsReg.email}")
-                    return Result.success(GoogleLoginResult.NeedsRegistration(needsReg))
-                }
-                if (body.data != null) {
-                    Log.d("AnixAuth", "Google login success")
-                    ServiceLocator.saveToken(body.data.token)
-                    FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
-                        if (task.isSuccessful) {
-                            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
-                                ServiceLocator.getNotificationRepository().upsertToken(task.result)
-                            }
-                        }
+            val rawBody = response.body()?.string()
+            if (rawBody == null) {
+                Log.w("AnixAuth", "Google login: empty response body")
+                return Result.success(GoogleLoginResult.Error("Empty response"))
+            }
+            val json = JsonParser.parseString(rawBody).asJsonObject
+            val success = json.get("success")?.asBoolean ?: false
+            if (!success) {
+                val err = json.get("error")?.asString ?: "Google login failed"
+                Log.w("AnixAuth", "Google login failed: $err")
+                return Result.success(GoogleLoginResult.Error(err))
+            }
+            val data = json.getAsJsonObject("data") ?: return Result.success(GoogleLoginResult.Error("No data"))
+            // Check if needs registration
+            if (data.has("needs_registration") && data.get("needs_registration").asBoolean) {
+                val needsReg = Gson().fromJson(data, GoogleNeedsRegistration::class.java)
+                Log.d("AnixAuth", "Google needs registration: ${needsReg.email}")
+                return Result.success(GoogleLoginResult.NeedsRegistration(needsReg))
+            }
+            // Parse auth response
+            val token = data.get("access_token")?.asString ?: ""
+            if (token.isEmpty()) {
+                return Result.success(GoogleLoginResult.Error("Invalid token"))
+            }
+            val user = Gson().fromJson(data.get("user"), User::class.java)
+            val authResponse = AuthResponse(token = token, user = user)
+            Log.d("AnixAuth", "Google login success")
+            ServiceLocator.saveToken(authResponse.token)
+            FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                        ServiceLocator.getNotificationRepository().upsertToken(task.result)
                     }
-                    return Result.success(GoogleLoginResult.Success(body.data))
                 }
             }
-            val err = body?.error ?: "Google login failed"
-            Log.w("AnixAuth", "Google login failed: $err")
-            Result.success(GoogleLoginResult.Error(err))
+            Result.success(GoogleLoginResult.Success(authResponse))
         } catch (e: Exception) {
             Log.e("AnixAuth", "Google login exception: ${e.message}", e)
             Result.failure(e)
