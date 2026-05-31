@@ -24,12 +24,14 @@ data class HomeUiState(
     val schedule: List<AnimeSeries> = emptyList(),
     val leaderboard: List<LeaderboardUser> = emptyList(),
     val continueWatching: List<ContinueWatchingItem> = emptyList(),
-    val mostWatched: List<MostWatchedEpisode> = emptyList()
+    val mostWatched: List<MostWatchedEpisode> = emptyList(),
+    val unreadCount: Int = 0
 )
 
 class HomeViewModel : ViewModel() {
     private val animeRepo = ServiceLocator.getAnimeRepository()
     private val userRepo = ServiceLocator.getUserRepository()
+    private val notifRepo = ServiceLocator.getNotificationRepository()
 
     private val _uiState = MutableStateFlow(HomeUiState())
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -50,6 +52,7 @@ class HomeViewModel : ViewModel() {
                 val leaderboard = userRepo.getLeaderboard(limit = 10).getOrNull().orEmpty()
                 val continueWatching = userRepo.getContinueWatching().getOrNull().orEmpty()
                 val mostWatched = animeRepo.getMostWatched(limit = 10).getOrNull().orEmpty()
+                val unreadCount = notifRepo.getUnreadCount().getOrNull() ?: 0
                 _uiState.value = HomeUiState(
                     isLoading = false,
                     trendingAnime = trending,
@@ -59,7 +62,8 @@ class HomeViewModel : ViewModel() {
                     schedule = schedule,
                     leaderboard = leaderboard,
                     continueWatching = continueWatching,
-                    mostWatched = mostWatched
+                    mostWatched = mostWatched,
+                    unreadCount = unreadCount
                 )
             } catch (e: Exception) {
                 _uiState.value = _uiState.value.copy(isLoading = false, error = e.message)

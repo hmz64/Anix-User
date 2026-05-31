@@ -268,7 +268,8 @@ fun AppNavigation() {
                 HomeScreen(
                     onAnimeClick = { id -> Log.d("AnixNav", "onAnimeClick: $id"); navController.navigate(Routes.animeDetail(id)) },
                     onSeeAllClick = { category -> Log.d("AnixNav", "onSeeAllClick: $category"); navController.navigate(Routes.animeList(category)) },
-                    onGenreClick = { genre -> Log.d("AnixNav", "onGenreClick: $genre"); navController.navigate(Routes.animeList(genre)) }
+                    onGenreClick = { genre -> Log.d("AnixNav", "onGenreClick: $genre"); navController.navigate(Routes.animeList(genre)) },
+                    onNotificationClick = { Log.d("AnixNav", "onNotificationClick"); navController.navigate(Routes.NOTIFICATIONS) }
                 )
             }
             composable(Routes.SEARCH) {

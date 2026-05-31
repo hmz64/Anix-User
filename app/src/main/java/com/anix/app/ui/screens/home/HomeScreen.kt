@@ -22,6 +22,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Notifications
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -45,6 +50,7 @@ import com.anix.app.core.theme.Background
 import com.anix.app.core.theme.BorderBlack
 import com.anix.app.core.theme.GlassBorder
 import com.anix.app.core.theme.GlassSurface
+import com.anix.app.core.theme.GlassSurfaceHigh
 import com.anix.app.core.theme.Primary
 import com.anix.app.core.theme.Surface
 import com.anix.app.core.theme.TextMuted
@@ -59,6 +65,7 @@ import com.anix.app.data.models.MostWatchedEpisode
 import com.anix.app.ui.components.AnimeCard
 import com.anix.app.ui.components.ErrorState
 import com.anix.app.ui.components.LoadingIndicator
+import com.anix.app.ui.components.NeoBadge
 import com.anix.app.ui.components.NeoChip
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -68,6 +75,7 @@ fun HomeScreen(
     onAnimeClick: (String) -> Unit,
     onSeeAllClick: (String) -> Unit,
     onGenreClick: (String) -> Unit,
+    onNotificationClick: () -> Unit = {},
     viewModel: HomeViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -77,12 +85,17 @@ fun HomeScreen(
     } else if (uiState.error != null) {
         ErrorState(message = uiState.error!!, onRetry = { viewModel.loadData() })
     } else {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(Background)
-                .verticalScroll(rememberScrollState())
         ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(rememberScrollState())
+                    .padding(top = 60.dp)
+            ) {
             // 1. Banner Pager
             if (uiState.banners.isNotEmpty()) {
                 BannerPager(banners = uiState.banners, onClick = { onAnimeClick(it) })
@@ -225,6 +238,40 @@ fun HomeScreen(
                     }
                 }
                 Spacer(modifier = Modifier.height(24.dp))
+            }
+
+            // Header overlay (sticky)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .background(GlassSurfaceHigh)
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "Anix",
+                    fontSize = 22.sp,
+                    fontWeight = FontWeight.ExtraBold,
+                    color = TextPrimary,
+                    modifier = Modifier.weight(1f)
+                )
+                Box {
+                    IconButton(onClick = onNotificationClick) {
+                        Icon(
+                            imageVector = if (uiState.unreadCount > 0) Icons.Filled.Notifications else Icons.Outlined.Notifications,
+                            contentDescription = "Notifications",
+                            tint = TextPrimary
+                        )
+                    }
+                    if (uiState.unreadCount > 0) {
+                        NeoBadge(
+                            text = if (uiState.unreadCount > 99) "99+" else uiState.unreadCount.toString(),
+                            modifier = Modifier
+                                .align(Alignment.TopEnd)
+                                .padding(end = 4.dp, top = 4.dp)
+                        )
+                    }
+                }
             }
         }
     }
