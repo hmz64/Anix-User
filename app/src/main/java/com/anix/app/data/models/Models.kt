@@ -27,6 +27,25 @@ data class GoogleLoginRequest(
     @SerializedName("id_token") val idToken: String
 )
 
+data class GoogleCompleteRegistrationRequest(
+    @SerializedName("id_token") val idToken: String,
+    val username: String
+)
+
+sealed class GoogleLoginResult {
+    data class Success(val auth: AuthResponse) : GoogleLoginResult()
+    data class NeedsRegistration(val info: GoogleNeedsRegistration) : GoogleLoginResult()
+    data class Error(val message: String) : GoogleLoginResult()
+}
+
+data class GoogleNeedsRegistration(
+    @SerializedName("needs_registration") val needsRegistration: Boolean = false,
+    val email: String = "",
+    val name: String = "",
+    val picture: String = "",
+    @SerializedName("id_token") val idToken: String = ""
+)
+
 data class RegisterRequest(
     val username: String,
     val email: String,

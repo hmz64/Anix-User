@@ -7,10 +7,11 @@ import androidx.lifecycle.viewModelScope
 import com.anix.app.BuildConfig
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.data.models.AuthResponse
+import com.anix.app.data.models.GoogleLoginResult
+import com.anix.app.data.models.GoogleNeedsRegistration
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
-import com.google.android.gms.common.api.ApiException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -19,7 +20,8 @@ import kotlinx.coroutines.launch
 data class LoginUiState(
     val isLoading: Boolean = false,
     val error: String? = null,
-    val loginSuccess: AuthResponse? = null
+    val loginSuccess: AuthResponse? = null,
+    val googleNeedsRegistration: GoogleNeedsRegistration? = null
 )
 
 class LoginViewModel : ViewModel() {
@@ -42,13 +44,27 @@ class LoginViewModel : ViewModel() {
     fun handleGoogleResult(idToken: String) {
         _uiState.value = LoginUiState(isLoading = true)
         viewModelScope.launch {
-            authRepo.googleLogin(idToken).onSuccess { response ->
-                _uiState.value = LoginUiState(loginSuccess = response)
+            authRepo.googleLogin(idToken).onSuccess { result ->
+                when (result) {
+                    is GoogleLoginResult.Success -> {
+                        _uiState.value = LoginUiState(loginSuccess = result.auth)
+                    }
+                    is GoogleLoginResult.NeedsRegistration -> {
+                        _uiState.value = LoginUiState(googleNeedsRegistration = result.info)
+                    }
+                    is GoogleLoginResult.Error -> {
+                        _uiState.value = LoginUiState(error = result.message)
+                    }
+                }
             }.onFailure { e ->
                 Log.e("AnixAuth", "Google login failed", e)
                 _uiState.value = LoginUiState(error = e.message)
             }
         }
+    }
+
+    fun clearGoogleNeedsRegistration() {
+        _uiState.value = _uiState.value.copy(googleNeedsRegistration = null, isLoading = false)
     }
 
     fun login(email: String, password: String) {

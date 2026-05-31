@@ -51,6 +51,7 @@ import com.google.android.gms.common.api.ApiException
 fun LoginScreen(
     onRegisterClick: () -> Unit,
     onLoginSuccess: () -> Unit,
+    onGoogleRegister: () -> Unit,
     viewModel: LoginViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -83,6 +84,17 @@ fun LoginScreen(
     if (uiState.loginSuccess != null) {
         onLoginSuccess()
         return
+    }
+
+    LaunchedEffect(uiState.googleNeedsRegistration) {
+        uiState.googleNeedsRegistration?.let { info ->
+            PendingGoogleRegistration.idToken = info.idToken
+            PendingGoogleRegistration.email = info.email
+            PendingGoogleRegistration.name = info.name
+            PendingGoogleRegistration.picture = info.picture
+            viewModel.clearGoogleNeedsRegistration()
+            onGoogleRegister()
+        }
     }
 
     Scaffold(containerColor = Color.Transparent) { paddingValues ->

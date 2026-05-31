@@ -35,6 +35,7 @@ import androidx.navigation.navArgument
 import com.anix.app.ui.components.FloatingMiniPlayer
 import com.anix.app.ui.components.GlassNavBar
 import com.anix.app.ui.components.NavItem
+import com.anix.app.ui.screens.auth.GoogleRegisterScreen
 import com.anix.app.ui.screens.auth.LoginScreen
 import com.anix.app.ui.screens.auth.RegisterScreen
 import com.anix.app.ui.screens.chat.ChatDetailScreen
@@ -61,6 +62,7 @@ object Routes {
     const val SPLASH = "splash"
     const val LOGIN = "login"
     const val REGISTER = "register"
+    const val GOOGLE_REGISTER = "google_register"
     const val HOME = "home"
     const val SEARCH = "search"
     const val ANIME_DETAIL = "anime/{animeId}"
@@ -87,6 +89,7 @@ object Routes {
     fun giveawayDetail(id: String) = "giveaway/$id"
     fun animeList(category: String) = "anime_list/$category"
     fun userProfile(userId: String) = "user/$userId"
+    fun googleRegister() = "google_register"
 }
 
 private val navItems = listOf(
@@ -153,13 +156,23 @@ fun AppNavigation() {
             composable(Routes.LOGIN) {
                 LoginScreen(
                     onLoginSuccess = { Log.d("AnixNav", "onLoginSuccess"); navController.navigate(Routes.HOME) { popUpTo(Routes.LOGIN) { inclusive = true } } },
-                    onRegisterClick = { Log.d("AnixNav", "onRegisterClick"); navController.navigate(Routes.REGISTER) }
+                    onRegisterClick = { Log.d("AnixNav", "onRegisterClick"); navController.navigate(Routes.REGISTER) },
+                    onGoogleRegister = {
+                        Log.d("AnixNav", "onGoogleRegister")
+                        navController.navigate(Routes.googleRegister())
+                    }
                 )
             }
             composable(Routes.REGISTER) {
                 RegisterScreen(
                     onRegisterSuccess = { Log.d("AnixNav", "onRegisterSuccess"); navController.navigate(Routes.HOME) { popUpTo(Routes.REGISTER) { inclusive = true } } },
                     onLoginClick = { Log.d("AnixNav", "onLoginClick"); navController.popBackStack() }
+                )
+            }
+            composable(Routes.GOOGLE_REGISTER) {
+                GoogleRegisterScreen(
+                    onSuccess = { Log.d("AnixNav", "onGoogleRegSuccess"); navController.navigate(Routes.HOME) { popUpTo(0) { inclusive = true } } },
+                    onBack = { Log.d("AnixNav", "onGoogleRegBack"); navController.popBackStack() }
                 )
             }
             composable(Routes.ANIME_DETAIL, arguments = listOf(navArgument("animeId") { type = NavType.StringType })) {
