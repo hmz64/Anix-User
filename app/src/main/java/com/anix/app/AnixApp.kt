@@ -1,13 +1,20 @@
 package com.anix.app
 
+import android.Manifest
 import android.app.Application
+import android.content.pm.PackageManager
 import android.os.Build
 import android.util.Log
+import androidx.core.content.ContextCompat
 import coil.ImageLoader
 import coil.ImageLoaderFactory
 import coil.decode.GifDecoder
 import coil.decode.ImageDecoderDecoder
 import com.anix.app.core.di.ServiceLocator
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 
@@ -18,6 +25,22 @@ class AnixApp : Application(), ImageLoaderFactory {
 
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             Log.e("AnixCrash", "Uncaught exception on thread: ${thread.name}", throwable)
+        }
+
+        if (ServiceLocator.getToken() != null) {
+            registerFcmToken()
+        }
+    }
+
+    private fun registerFcmToken() {
+        FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+            if (task.isSuccessful) {
+                val token = task.result
+                Log.d("AnixFCM", "Registering token: $token")
+                CoroutineScope(Dispatchers.IO).launch {
+                    ServiceLocator.getNotificationRepository().upsertToken(token)
+                }
+            }
         }
     }
 

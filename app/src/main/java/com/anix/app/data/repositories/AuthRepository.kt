@@ -5,6 +5,10 @@ import android.util.Log
 import com.anix.app.core.di.ServiceLocator
 import com.anix.app.core.network.ApiService
 import com.anix.app.data.models.*
+import com.google.firebase.messaging.FirebaseMessaging
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AuthRepository(
     private val api: ApiService,
@@ -20,6 +24,13 @@ class AuthRepository(
             if (response.isSuccessful && body?.success == true && body.data != null) {
                 Log.d("AnixAuth", "Login success, token length: ${body.data.token.length}")
                 ServiceLocator.saveToken(body.data.token)
+                FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            ServiceLocator.getNotificationRepository().upsertToken(task.result)
+                        }
+                    }
+                }
                 Result.success(body.data)
             } else {
                 val err = errorBodyStr ?: body?.error ?: "Login failed"
@@ -42,6 +53,13 @@ class AuthRepository(
             if (response.isSuccessful && body?.success == true && body.data != null) {
                 Log.d("AnixAuth", "Register success, token length: ${body.data.token.length}")
                 ServiceLocator.saveToken(body.data.token)
+                FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        CoroutineScope(Dispatchers.IO).launch {
+                            ServiceLocator.getNotificationRepository().upsertToken(task.result)
+                        }
+                    }
+                }
                 Result.success(body.data)
             } else {
                 val err = errorBodyStr ?: body?.error ?: "Registration failed"
@@ -70,13 +88,11 @@ class AuthRepository(
 
     suspend fun logout(): Result<Unit> {
         return try {
+            ServiceLocator.getNotificationRepository().deleteToken()
             api.logout()
-            ServiceLocator.clearToken()
-            Result.success(Unit)
-        } catch (e: Exception) {
-            ServiceLocator.clearToken()
-            Result.success(Unit)
-        }
+        } catch (_: Exception) { }
+        ServiceLocator.clearToken()
+        return Result.success(Unit)
     }
 
     suspend fun refreshToken(): Result<AuthResponse> {
