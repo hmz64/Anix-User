@@ -16,7 +16,7 @@ android {
         versionName = "1.0.0"
 
         buildConfigField("String", "BASE_URL", "\"http://192.168.1.15:8080/\"")
-        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"your-web-client-id.apps.googleusercontent.com\"")
+        buildConfigField("String", "GOOGLE_WEB_CLIENT_ID", "\"320812144661-4s1gesg48fdn2an9soocvl4qc7nb1b1e.apps.googleusercontent.com\"")
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         vectorDrawables {
             useSupportLibrary = true
