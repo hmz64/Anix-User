@@ -8,6 +8,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class AnixFirebaseMessagingService : FirebaseMessagingService() {
 
@@ -18,9 +21,9 @@ class AnixFirebaseMessagingService : FirebaseMessagingService() {
 
     override fun onNewToken(token: String) {
         Log.d("AnixFCM", "Token refreshed: $token")
-        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+        CoroutineScope(Dispatchers.IO).launch {
             try {
-                com.anix.app.core.di.ServiceLocator.getNotificationRepository().upsertToken(token)
+                ServiceLocator.getNotificationRepository().upsertToken(token)
             } catch (_: Exception) { }
         }
     }
