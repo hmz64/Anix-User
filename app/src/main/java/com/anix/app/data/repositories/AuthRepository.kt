@@ -14,6 +14,33 @@ class AuthRepository(
     private val api: ApiService,
     private val context: Context
 ) {
+    suspend fun googleLogin(idToken: String): Result<AuthResponse> {
+        return try {
+            Log.d("AnixAuth", "Google login attempt")
+            val response = api.googleLogin(GoogleLoginRequest(idToken))
+            val body = response.body()
+            if (response.isSuccessful && body?.success == true && body.data != null) {
+                Log.d("AnixAuth", "Google login success")
+                ServiceLocator.saveToken(body.data.token)
+                FirebaseMessaging.getInstance().token.addOnCompleteListener { task ->
+                    if (task.isSuccessful) {
+                        kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.IO).launch {
+                            ServiceLocator.getNotificationRepository().upsertToken(task.result)
+                        }
+                    }
+                }
+                Result.success(body.data)
+            } else {
+                val err = body?.error ?: "Google login failed"
+                Log.w("AnixAuth", "Google login failed: $err")
+                Result.failure(Exception(err))
+            }
+        } catch (e: Exception) {
+            Log.e("AnixAuth", "Google login exception: ${e.message}", e)
+            Result.failure(e)
+        }
+    }
+
     suspend fun login(email: String, password: String): Result<AuthResponse> {
         return try {
             Log.d("AnixAuth", "Login attempt: $email")
