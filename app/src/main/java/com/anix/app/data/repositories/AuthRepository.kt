@@ -114,7 +114,7 @@ class AuthRepository(
     }
 
     suspend fun logout(): Result<Unit> {
-        return try {
+        try {
             ServiceLocator.getNotificationRepository().deleteToken()
             api.logout()
         } catch (_: Exception) { }
