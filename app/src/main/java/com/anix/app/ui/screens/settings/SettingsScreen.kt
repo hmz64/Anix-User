@@ -114,25 +114,43 @@ fun SettingsScreen(
         contract = ActivityResultContracts.PickVisualMedia()
     ) { uri ->
         if (uri != null) {
-            if (showAvatarPicker) {
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val ext = uri.lastPathSegment?.substringAfterLast('.') ?: "jpg"
-                val file = java.io.File(context.cacheDir, "avatar_upload_${System.currentTimeMillis()}.$ext")
-                file.outputStream().use { output -> inputStream?.copyTo(output) }
-                inputStream?.close()
-                val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
-                val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
-                viewModel.updateAvatar(part)
-            } else if (showBannerPicker) {
-                val inputStream = context.contentResolver.openInputStream(uri)
-                val ext = uri.lastPathSegment?.substringAfterLast('.') ?: "jpg"
-                val file = java.io.File(context.cacheDir, "banner_upload_${System.currentTimeMillis()}.$ext")
-                file.outputStream().use { output -> inputStream?.copyTo(output) }
-                inputStream?.close()
-                val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
-                val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
-                viewModel.updateBanner(part)
-            }
+            try {
+                if (showAvatarPicker) {
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    val mimeType = context.contentResolver.getType(uri)
+                    val ext = when {
+                        mimeType?.contains("png") == true -> "png"
+                        mimeType?.contains("gif") == true -> "gif"
+                        mimeType?.contains("webp") == true -> "webp"
+                        else -> "jpg"
+                    }
+                    val file = java.io.File(context.cacheDir, "avatar_upload_${System.currentTimeMillis()}.$ext")
+                    if (inputStream != null) {
+                        file.outputStream().use { output -> inputStream.copyTo(output) }
+                        inputStream.close()
+                        val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+                        val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
+                        viewModel.updateAvatar(part)
+                    }
+                } else if (showBannerPicker) {
+                    val inputStream = context.contentResolver.openInputStream(uri)
+                    val mimeType = context.contentResolver.getType(uri)
+                    val ext = when {
+                        mimeType?.contains("png") == true -> "png"
+                        mimeType?.contains("gif") == true -> "gif"
+                        mimeType?.contains("webp") == true -> "webp"
+                        else -> "jpg"
+                    }
+                    val file = java.io.File(context.cacheDir, "banner_upload_${System.currentTimeMillis()}.$ext")
+                    if (inputStream != null) {
+                        file.outputStream().use { output -> inputStream.copyTo(output) }
+                        inputStream.close()
+                        val requestBody = file.asRequestBody("image/*".toMediaTypeOrNull())
+                        val part = MultipartBody.Part.createFormData("file", file.name, requestBody)
+                        viewModel.updateBanner(part)
+                    }
+                }
+            } catch (_: Exception) { }
         }
         showAvatarPicker = false
         showBannerPicker = false
